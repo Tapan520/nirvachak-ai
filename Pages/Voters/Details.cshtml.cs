@@ -24,6 +24,9 @@ public class DetailsModel : PageModel
 
     public Voter? Voter { get; set; }
     public List<DoorToDoorVisit> Visits { get; set; } = new();
+    public VoterProfile? SurveyProfile { get; set; }
+    public VoterConsent? ConsentRecord { get; set; }
+    public bool SurveyCompleted { get; set; }
 
     public async Task OnGetAsync(int id)
     {
@@ -32,6 +35,9 @@ public class DetailsModel : PageModel
             .Where(v => v.VoterId == id)
             .OrderByDescending(v => v.VisitedAt)
             .ToListAsync();
+        SurveyProfile  = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == id);
+        ConsentRecord  = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == id);
+        SurveyCompleted = await _db.SurveyCompletions.AnyAsync(s => s.VoterId == id);
     }
 
     private bool IsRestrictedRole(AppUser? user)

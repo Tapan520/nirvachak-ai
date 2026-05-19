@@ -522,6 +522,46 @@ namespace Nirvachak_AI.Migrations
                     b.ToTable("Constituencies");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.CouponPool", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CouponCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsIssued")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRedeemed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("IssuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IssuedToVoterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("RedeemedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RewardConfigId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CouponCode")
+                        .IsUnique();
+
+                    b.HasIndex("IssuedToVoterId");
+
+                    b.HasIndex("RewardConfigId");
+
+                    b.ToTable("CouponPools");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.DoorToDoorVisit", b =>
                 {
                     b.Property<int>("Id")
@@ -676,6 +716,45 @@ namespace Nirvachak_AI.Migrations
                     b.ToTable("Grievances");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.RewardConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConstituencyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CouponCodePrefix")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PartnerBrand")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConstituencyId");
+
+                    b.ToTable("RewardConfigs");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.Survey", b =>
                 {
                     b.Property<int>("Id")
@@ -706,6 +785,37 @@ namespace Nirvachak_AI.Migrations
                     b.HasIndex("ConstituencyId");
 
                     b.ToTable("Surveys");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.SurveyCompletion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConstituencyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CouponId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VoterId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CouponId");
+
+                    b.HasIndex("VoterId")
+                        .IsUnique();
+
+                    b.ToTable("SurveyCompletions");
                 });
 
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.SurveyResponse", b =>
@@ -874,6 +984,94 @@ namespace Nirvachak_AI.Migrations
                     b.ToTable("Voters");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.VoterConsent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowCampaignOutreach")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowDataForAnalytics")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowSchemeNotifications")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowThirdPartyAdvertising")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowWhatsAppMessages")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ConsentGivenAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VoterId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VoterId")
+                        .IsUnique();
+
+                    b.ToTable("VoterConsents");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.VoterProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AgeBracket")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CasteCategory")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Education")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MonthlyIncomeBracket")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Occupation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PhoneVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PrimaryConcerns")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Religion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VoterId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VoterId")
+                        .IsUnique();
+
+                    b.ToTable("VoterProfiles");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.Ward", b =>
                 {
                     b.Property<int>("Id")
@@ -1007,6 +1205,24 @@ namespace Nirvachak_AI.Migrations
                     b.Navigation("Constituency");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.CouponPool", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Voter", "IssuedToVoter")
+                        .WithMany()
+                        .HasForeignKey("IssuedToVoterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Nirvachak_AI.Domain.Entities.RewardConfig", "RewardConfig")
+                        .WithMany("Coupons")
+                        .HasForeignKey("RewardConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IssuedToVoter");
+
+                    b.Navigation("RewardConfig");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.DoorToDoorVisit", b =>
                 {
                     b.HasOne("Nirvachak_AI.Domain.Entities.Voter", "Voter")
@@ -1046,6 +1262,17 @@ namespace Nirvachak_AI.Migrations
                     b.Navigation("Voter");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.RewardConfig", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Constituency", "Constituency")
+                        .WithMany()
+                        .HasForeignKey("ConstituencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Constituency");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.Survey", b =>
                 {
                     b.HasOne("Nirvachak_AI.Domain.Entities.Constituency", "Constituency")
@@ -1055,6 +1282,24 @@ namespace Nirvachak_AI.Migrations
                         .IsRequired();
 
                     b.Navigation("Constituency");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.SurveyCompletion", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.CouponPool", "Coupon")
+                        .WithMany()
+                        .HasForeignKey("CouponId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Voter", "Voter")
+                        .WithMany()
+                        .HasForeignKey("VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coupon");
+
+                    b.Navigation("Voter");
                 });
 
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.SurveyResponse", b =>
@@ -1090,6 +1335,28 @@ namespace Nirvachak_AI.Migrations
                     b.Navigation("Constituency");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.VoterConsent", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Voter", "Voter")
+                        .WithMany()
+                        .HasForeignKey("VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Voter");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.VoterProfile", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Voter", "Voter")
+                        .WithMany()
+                        .HasForeignKey("VoterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Voter");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.Ward", b =>
                 {
                     b.HasOne("Nirvachak_AI.Domain.Entities.Constituency", "Constituency")
@@ -1113,6 +1380,11 @@ namespace Nirvachak_AI.Migrations
                     b.Navigation("Voters");
 
                     b.Navigation("Wards");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.RewardConfig", b =>
+                {
+                    b.Navigation("Coupons");
                 });
 
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.Survey", b =>

@@ -138,6 +138,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/");
     options.Conventions.AllowAnonymousToPage("/Account/Login");
     options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
+    options.Conventions.AllowAnonymousToFolder("/Survey");
 });
 
 var app = builder.Build();

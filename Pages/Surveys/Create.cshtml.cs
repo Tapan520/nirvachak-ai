@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
@@ -22,7 +23,7 @@ public class CreateModel : PageModel
     }
 
     [BindProperty]
-    public Survey Survey { get; set; } = new();
+    public SurveyEntity Survey { get; set; } = new();
 
     [BindProperty]
     public int? SelectedConstituencyId { get; set; }

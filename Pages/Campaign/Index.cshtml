@@ -50,7 +50,21 @@
                         <td><span class="badge bg-info text-dark">@ev.EventType</span></td>
                         <td>@ev.ScheduledAt.ToString("dd MMM yy, h:mm tt")</td>
                         <td>@ev.Location</td>
-                        <td>@(ev.ExpectedAttendance?.ToString() ?? "�")</td>
+                        <td>
+                            @if (ev.IsCompleted && Model.CanManage)
+                            {
+                                <form method="post" asp-page-handler="UpdateAttendance" class="d-flex gap-1 align-items-center">
+                                    <input type="hidden" name="id" value="@ev.Id" />
+                                    <input type="number" name="actualAttendance" class="form-control form-control-sm" style="width:80px"
+                                           value="@ev.ActualAttendance" min="0" placeholder="Actual" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success py-0" title="Save attendance"><i class="bi bi-save"></i></button>
+                                </form>
+                            }
+                            else
+                            {
+                                @(ev.ExpectedAttendance?.ToString() ?? "-")
+                            }
+                        </td>
                         <td>
                             @if (ev.IsCompleted)
                             {
@@ -102,3 +116,4 @@
         </div>
     </div>
 </div>
+

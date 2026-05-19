@@ -35,4 +35,33 @@ public class CampaignEventsController : ApiBaseController
 
         return Ok(items);
     }
+
+    /// <summary>Create a new campaign event</summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResult), 200)]
+    public async Task<IActionResult> Create([FromBody] CreateCampaignEventRequest req)
+    {
+        var cId = GetConstituencyId() ?? 1;
+        var userName = GetUserFullName();
+
+        if (!Enum.TryParse<Domain.Enums.CampaignEventType>(req.EventType, out var evtType))
+            evtType = Domain.Enums.CampaignEventType.Other;
+
+        _db.CampaignEvents.Add(new Domain.Entities.CampaignEvent
+        {
+            Title                = req.Title.Trim(),
+            EventType            = evtType,
+            Location             = req.Location.Trim(),
+            ScheduledAt          = req.ScheduledAt,
+            ExpectedAttendance   = req.ExpectedAttendance,
+            Description          = req.Description,
+            TargetWards          = req.TargetWards,
+            TargetBoothNumbers   = req.TargetBoothNumbers,
+            OrganizedByName      = userName,
+            ConstituencyId       = cId
+        });
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResult(true, "Campaign event created successfully."));
+    }
 }

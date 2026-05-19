@@ -51,7 +51,9 @@ export default function GrievancesScreen() {
           <View style={s.center}><Text style={{ color: '#868e96' }}>No grievances found.</Text></View>
         }
         renderItem={({ item: g }) => (
-          <View style={[s.card, { borderLeftColor: STATUS_COLOR[g.status] ?? '#adb5bd' }]}>
+          <TouchableOpacity
+            style={[s.card, { borderLeftColor: STATUS_COLOR[g.status] ?? '#adb5bd' }]}
+            onPress={() => nav.navigate('GrievanceDetail', { id: g.id })}>
             <View style={s.cardTop}>
               <Text style={s.cardTitle} numberOfLines={1}>{g.title}</Text>
               <View style={[s.badge, { backgroundColor: (PRIORITY_COLOR[g.priority] ?? '#adb5bd') + '25' }]}>
@@ -61,16 +63,16 @@ export default function GrievancesScreen() {
               </View>
             </View>
             <View style={s.meta}>
-              <Text style={s.metaTxt}>?? {g.reportedBy ?? 'Anonymous'}</Text>
-              {g.ward && <Text style={s.metaTxt}>?? Ward {g.ward}</Text>}
-              <Text style={s.metaTxt}>?? {new Date(g.reportedAt).toLocaleDateString('en-IN')}</Text>
+              <Text style={s.metaTxt}>{g.reportedBy ?? 'Anonymous'}</Text>
+              {g.ward && <Text style={s.metaTxt}>Ward {g.ward}</Text>}
+              <Text style={s.metaTxt}>{new Date(g.reportedAt).toLocaleDateString('en-IN')}</Text>
             </View>
             <View style={[s.statusBadge, { backgroundColor: (STATUS_COLOR[g.status] ?? '#adb5bd') + '20' }]}>
               <Text style={[s.statusTxt, { color: STATUS_COLOR[g.status] ?? '#868e96' }]}>
                 {g.status}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>

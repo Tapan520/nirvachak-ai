@@ -1,0 +1,328 @@
+@page
+@model Nirvachak_AI.Pages.VoterSurvey.IndexModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voter Survey — Nirvachak AI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body { background: linear-gradient(135deg, #e8eeff 0%, #f5f7ff 100%); min-height: 100vh; }
+        .survey-wrap { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+        .brand-bar { background: #3b5bdb; color: #fff; padding: 0.6rem 1.2rem; border-radius: 0 0 12px 12px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; }
+        .step-pill { font-size: 0.7rem; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 20px; }
+        .concern-chip input[type=checkbox] { display: none; }
+        .concern-chip label {
+            cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px;
+            padding: 5px 14px; font-size: 0.82rem; transition: all 0.15s; display: inline-block;
+        }
+        .concern-chip label:hover { border-color: #3b5bdb; color: #3b5bdb; }
+        .concern-chip input[type=checkbox]:checked + label { background: #3b5bdb; color: #fff; border-color: #3b5bdb; }
+        .section-title { font-size: 0.9rem; font-weight: 700; color: #3b5bdb; margin-bottom: 0.75rem; }
+        .consent-card { background: #f8f9ff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="text-center pt-3 pb-1">
+        <span class="brand-bar">
+            <i class="bi bi-bar-chart-fill"></i> Nirvachak AI &nbsp;·&nbsp; Voter Self-Survey
+        </span>
+    </div>
+
+    <div class="survey-wrap">
+        <div class="text-center mb-4">
+            <p class="text-muted small mt-2 mb-0">
+                <i class="bi bi-shield-lock me-1"></i>
+                Complete this quick survey and receive a reward coupon as a thank-you.
+                Your information is stored securely.
+            </p>
+        </div>
+
+        @* ?? Already completed ???????????????????????????????????? *@
+        @if (Model.Step == "already_done")
+        {
+            <div class="card shadow-sm border-0 text-center p-5">
+                <i class="bi bi-check-circle-fill text-success mb-3" style="font-size:3rem"></i>
+                <h5 class="fw-bold">Survey Already Submitted!</h5>
+                <p class="text-muted small mb-0">
+                    Thank you, <strong>@Model.FoundVoter?.Name</strong>. Your response has already been recorded.
+                    Each voter may submit only once.
+                </p>
+            </div>
+        }
+
+        @* Step 1: EPIC Lookup — also auto-submits when ?epic= param is present *@
+        @if (Model.Step == "lookup" || Model.Step == "prelookup")
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary step-pill">Step 1 of 2</span>
+                        <h5 class="fw-bold mb-0">Enter Your Voter ID</h5>
+                    </div>
+                    <p class="text-muted small mb-4">
+                        Your EPIC (Voter ID) number is printed on your Voter ID card, e.g. <code>MH010012</code>
+                    </p>
+                    <form method="post" asp-page-handler="Lookup" id="epicForm">
+                        <div asp-validation-summary="All" class="alert alert-danger small py-2 mb-3"></div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">EPIC / Voter ID Number</label>
+                            <input asp-for="EpicNumber"
+                                   class="form-control form-control-lg font-monospace text-uppercase"
+                                   placeholder="e.g. MH010012"
+                                   autocomplete="off" autofocus
+                                   value="@Model.EpicNumber" />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Continue to Survey
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @if (Model.Step == "prelookup")
+            {
+                <script>document.addEventListener('DOMContentLoaded',()=>document.getElementById('epicForm').submit());</script>
+            }
+        }
+
+        @* ?? Step 2: Profile + Consent Form ?????????????????????? *@
+        @if (Model.Step == "form" && Model.FoundVoter is not null)
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-header py-3" style="background:#3b5bdb; color:#fff; border-radius: calc(0.375rem - 1px) calc(0.375rem - 1px) 0 0;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="badge bg-white text-primary step-pill me-2">Step 2 of 2</span>
+                            <strong>@Model.FoundVoter.Name</strong>
+                        </div>
+                        <span class="badge bg-white bg-opacity-20 font-monospace" style="color:#fff; border: 1px solid rgba(255,255,255,0.4)">
+                            @Model.FoundVoter.VoterId
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" asp-page-handler="Submit">
+                        <input asp-for="VoterDbId" type="hidden" />
+
+                        <p class="section-title"><i class="bi bi-person-lines-fill me-2"></i>About You</p>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Age Bracket *</label>
+                                <select asp-for="AgeBracket" class="form-select" required>
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.AgeBrackets)
+                                    { <option value="@o" selected="@(Model.AgeBracket == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Caste Category *</label>
+                                <select asp-for="CasteCategory" class="form-select" required>
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.CasteCategories)
+                                    { <option value="@o" selected="@(Model.CasteCategory == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Religion *</label>
+                                <select asp-for="Religion" class="form-select" required>
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.Religions)
+                                    { <option value="@o" selected="@(Model.Religion == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Education *</label>
+                                <select asp-for="Education" class="form-select" required>
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.Educations)
+                                    { <option value="@o" selected="@(Model.Education == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Occupation *</label>
+                                <select asp-for="Occupation" class="form-select" required>
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.Occupations)
+                                    { <option value="@o" selected="@(Model.Occupation == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">
+                                    Monthly Income <span class="text-muted fw-normal">(Optional)</span>
+                                </label>
+                                <select asp-for="MonthlyIncomeBracket" class="form-select">
+                                    <option value="">— Prefer not to say —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.IncomeBrackets)
+                                    { <option value="@o" selected="@(Model.MonthlyIncomeBracket == o)">@o</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Preferred Language</label>
+                                <select asp-for="PreferredLanguage" class="form-select">
+                                    <option value="">— Select —</option>
+                                    @foreach (var o in Nirvachak_AI.Pages.VoterSurvey.IndexModel.Languages)
+                                    { <option value="@o" selected="@(Model.PreferredLanguage == o)">@o</option> }
+                                </select>
+                            </div>
+                        </div>
+
+                        <p class="section-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Your Top Concerns
+                            <span class="text-muted fw-normal" style="font-size:0.78rem">(Pick up to 3)</span>
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 mb-4" id="concernChips">
+                            @foreach (var issue in Nirvachak_AI.Pages.VoterSurvey.IndexModel.IssueList)
+                            {
+                                var safeId = "concern_" + issue.Replace(" ", "_").Replace("/", "_").Replace("&", "_");
+                                <span class="concern-chip">
+                                    <input type="checkbox" id="@safeId" name="PrimaryConcerns" value="@issue"
+                                           @(Model.PrimaryConcerns.Contains(issue) ? "checked" : "") />
+                                    <label for="@safeId">@issue</label>
+                                </span>
+                            }
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <p class="section-title">
+                            <i class="bi bi-shield-check me-2"></i>Your Consent &amp; Data Use
+                        </p>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey("ConsentRequired"))
+                        {
+                            <div class="alert alert-danger py-2 small mb-3">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                @ViewData.ModelState["ConsentRequired"]!.Errors[0].ErrorMessage
+                            </div>
+                        }
+
+                        @* ?? MANDATORY CONSENT ?? *@
+                        <div class="card border-warning mb-3" id="consentCard">
+                            <div class="card-header bg-warning bg-opacity-10 border-warning py-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-gift-fill text-warning fs-5"></i>
+                                <div>
+                                    <span class="fw-bold small">Required to claim your reward</span>
+                                    <span class="badge bg-danger ms-2 small">Mandatory</span>
+                                </div>
+                            </div>
+                            <div class="card-body py-3">
+                                <p class="small text-muted mb-3">
+                                    To receive your reward coupon and any future offers or advertisements from
+                                    our partner brands, we need your permission to share your anonymised
+                                    demographic profile (age group, area, interests) with trusted third-party
+                                    advertisers and coupon partners. <strong>You will not receive a reward
+                                    without accepting this.</strong>
+                                </p>
+                                <div class="form-check p-3 rounded" style="background:#fffbe6; border:1px solid #ffc107;">
+                                    <input asp-for="ConsentThirdPartyAdvertising"
+                                           class="form-check-input consent-mandatory"
+                                           type="checkbox" id="consentThirdParty" />
+                                    <label class="form-check-label small fw-semibold" for="consentThirdParty">
+                                        <i class="bi bi-check2-circle me-1 text-warning"></i>
+                                        I agree that my anonymised demographic information (age bracket, location,
+                                        interests and concerns) may be shared with third-party advertisers and
+                                        coupon partners to send me relevant offers, advertisements, and my
+                                        reward coupon.
+                                    </label>
+                                </div>
+                                <div id="consentMandatoryError" class="alert alert-danger py-2 small mt-2 d-none">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    You must accept this to proceed and claim your reward.
+                                </div>
+                            </div>
+                        </div>
+
+                        @* ?? OPTIONAL CONSENTS ?? *@
+                        <div class="card border-0 bg-light mb-3">
+                            <div class="card-header bg-light border-bottom py-2">
+                                <span class="fw-semibold small text-muted">
+                                    <i class="bi bi-toggles me-2"></i>Additional Preferences
+                                    <span class="badge bg-secondary ms-2">Optional</span>
+                                </span>
+                            </div>
+                            <div class="card-body py-3">
+                                <p class="small text-muted mb-3">
+                                    These are entirely optional. You can choose any, all, or none.
+                                    They do not affect your reward.
+                                </p>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="form-check">
+                                        <input asp-for="ConsentCampaignOutreach" class="form-check-input" type="checkbox" />
+                                        <label asp-for="ConsentCampaignOutreach" class="form-check-label small">
+                                            I agree to be contacted for campaign outreach (calls / visits)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="ConsentWhatsApp" class="form-check-input" type="checkbox" />
+                                        <label asp-for="ConsentWhatsApp" class="form-check-label small">
+                                            I agree to receive WhatsApp messages from the campaign
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="ConsentSchemeNotifications" class="form-check-input" type="checkbox" />
+                                        <label asp-for="ConsentSchemeNotifications" class="form-check-label small">
+                                            I agree to receive government scheme and benefit notifications
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="ConsentAnalytics" class="form-check-input" type="checkbox" />
+                                        <label asp-for="ConsentAnalytics" class="form-check-label small">
+                                            I agree to my data being used anonymously for campaign analytics
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-success btn-lg w-100" disabled>
+                            <i class="bi bi-gift-fill me-2"></i>Submit &amp; Claim My Reward
+                        </button>
+                        <p class="text-muted text-center small mt-2 mb-0">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            Accept the mandatory consent above to unlock this button.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enforce max 3 concern checkbox selections
+        document.querySelectorAll('#concernChips input[type=checkbox]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const checked = document.querySelectorAll('#concernChips input[type=checkbox]:checked');
+                if (checked.length > 3) cb.checked = false;
+            });
+        });
+
+        // Consent gate: submit button unlocks ONLY when mandatory third-party consent is checked
+        const mandatoryCb   = document.getElementById('consentThirdParty');
+        const submitBtn     = document.getElementById('submitBtn');
+        const mandatoryErr  = document.getElementById('consentMandatoryError');
+        const consentCard   = document.getElementById('consentCard');
+
+        function updateSubmitState() {
+            const accepted = mandatoryCb && mandatoryCb.checked;
+            if (submitBtn)    submitBtn.disabled = !accepted;
+            if (mandatoryErr) mandatoryErr.classList.toggle('d-none', !!accepted);
+            if (consentCard)  consentCard.className = accepted
+                ? 'card border-success mb-3'
+                : 'card border-warning mb-3';
+        }
+
+        if (mandatoryCb) mandatoryCb.addEventListener('change', updateSubmitState);
+
+        // Run on load — re-apply state after server-side validation round-trip
+        updateSubmitState();
+    </script>
+</body>
+</html>

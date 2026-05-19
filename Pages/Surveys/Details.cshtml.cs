@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
@@ -21,7 +22,7 @@ public class DetailsModel : PageModel
 
     private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.CampaignManager, UserRole.Candidate];
 
-    public Survey Survey { get; set; } = null!;
+    public SurveyEntity Survey { get; set; } = null!;
     public Dictionary<int, int> RatingBreakdown { get; set; } = new();
     public double AvgRating { get; set; }
     public bool CanManage { get; set; }

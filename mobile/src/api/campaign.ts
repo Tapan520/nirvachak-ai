@@ -19,3 +19,11 @@ export const getCampaignEvents = async (upcoming?: boolean): Promise<CampaignEve
     { params: upcoming ? { upcoming: true } : {} });
   return data;
 };
+
+export const createCampaignEvent = async (req: {
+  title: string; eventType: string; location: string;
+  scheduledAt: string; expectedAttendance?: number;
+  description?: string; targetWards?: string; targetBoothNumbers?: string;
+}): Promise<void> => {
+  await apiClient.post('/campaignevents', req);
+};

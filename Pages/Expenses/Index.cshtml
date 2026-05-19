@@ -4,51 +4,113 @@
     ViewData["Title"] = "Expense Tracker";
 }
 
+@* ── EC Budget Gauge ────────────────────────────────────────────── *@
+<div class="card mb-4 border-@(Model.ECBudgetPercent >= 90 ? "danger" : Model.ECBudgetPercent >= 75 ? "warning" : "success")">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div>
+                <span class="fw-bold"><i class="bi bi-bank2 me-2"></i>EC Spending Limit</span>
+                <span class="ms-2 small text-muted">&#8377;@Model.TotalAmount.ToString("N0") of &#8377;@Model.ECBudgetLimit.ToString("N0") used</span>
+            </div>
+            <span class="badge bg-@(Model.ECBudgetPercent >= 90 ? "danger" : Model.ECBudgetPercent >= 75 ? "warning text-dark" : "success") fs-6">
+                @Model.ECBudgetPercent%
+            </span>
+        </div>
+        <div class="progress" style="height:16px; border-radius:8px;">
+            <div class="progress-bar @(Model.ECBudgetPercent >= 90 ? "bg-danger" : Model.ECBudgetPercent >= 75 ? "bg-warning" : "bg-success")"
+                 style="width:@Model.ECBudgetPercent%; border-radius:8px;">
+                @Model.ECBudgetPercent%
+            </div>
+        </div>
+        @if (Model.ECBudgetPercent >= 90)
+        {
+            <div class="text-danger small mt-1 fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Critical: Approaching EC spending limit. Review all expenses immediately.</div>
+        }
+        else if (Model.ECBudgetPercent >= 75)
+        {
+            <div class="text-warning small mt-1 fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>Warning: Over 75% of EC budget spent.</div>
+        }
+    </div>
+</div>
+
+@* ── Summary + Category Pie ─────────────────────────────────────── *@
 <div class="row g-3 mb-3">
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header small fw-semibold"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Spending by Category</div>
             <div class="card-body">
-                <div class="fs-4 fw-bold">?@Model.TotalAmount.ToString("N0")</div>
-                <div class="small text-muted">Total Expenses</div>
+                <div style="height:200px"><canvas id="categoryChart"></canvas></div>
             </div>
         </div>
     </div>
-    @foreach (var cat in Model.CategoryTotals)
-    {
-        <div class="col-md-2">
-            <div class="card text-center">
-                <div class="card-body py-2">
-                    <div class="fw-bold">?@cat.Value.ToString("N0")</div>
-                    <div class="small text-muted">@cat.Key</div>
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header small fw-semibold"><i class="bi bi-list-ul me-2"></i>Category Totals</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    @foreach (var cat in Model.CategoryTotals)
+                    {
+                        var catPct = Model.TotalAmount > 0 ? (int)Math.Round((double)cat.Value / (double)Model.TotalAmount * 100) : 0;
+                        <div class="col-6">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>@cat.Key</span>
+                                <span class="fw-semibold">&#8377;@cat.Value.ToString("N0") <span class="text-muted">(@catPct%)</span></span>
+                            </div>
+                            <div class="progress" style="height:6px">
+                                <div class="progress-bar bg-warning" style="width:@catPct%"></div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-    }
+    </div>
 </div>
 
-<div class="d-flex justify-content-between mb-3">
-@if (Model.Constituencies.Any())
-{
-    <form method="get" class="d-flex align-items-center gap-2">
-        <label class="fw-semibold text-nowrap"><i class="bi bi-geo-alt me-1"></i>Constituency:</label>
-        <select name="SelectedConstituencyId" class="form-select form-select-sm" style="max-width:240px" onchange="this.form.submit()">
-            <option value="">-- All Constituencies --</option>
-            @foreach (var c in Model.Constituencies)
-            {
-                <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
-            }
-        </select>
-        @if (Model.SelectedConstituencyId.HasValue)
+@* ── Filters + Add ──────────────────────────────────────────────── *@
+<div class="d-flex justify-content-between mb-3 flex-wrap gap-2">
+    <form method="get" class="d-flex flex-wrap align-items-end gap-2">
+        @if (Model.Constituencies.Any())
         {
-            <a href="?SelectedConstituencyId=" class="btn btn-sm btn-outline-secondary">Clear</a>
+            <select name="SelectedConstituencyId" class="form-select form-select-sm" style="max-width:200px" onchange="this.form.submit()">
+                <option value="">All Constituencies</option>
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                }
+            </select>
+        }
+        <div class="d-flex align-items-center gap-1">
+            <label class="form-label small mb-0 text-nowrap fw-semibold">From</label>
+            <input type="date" name="DateFrom" class="form-control form-control-sm" style="max-width:150px"
+                   value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label class="form-label small mb-0 text-nowrap fw-semibold">To</label>
+            <input type="date" name="DateTo" class="form-control form-control-sm" style="max-width:150px"
+                   value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+        @if (Model.SelectedConstituencyId.HasValue || Model.DateFrom.HasValue || Model.DateTo.HasValue)
+        {
+            <a href="?" class="btn btn-sm btn-outline-secondary">Clear</a>
         }
     </form>
-}
-else
-{
-    <div></div>
-}
     <a asp-page="/Expenses/Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Expense</a>
+    <a asp-page="/Expenses/Index" asp-page-handler="ExportCsv"
+       asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
+       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-download me-1"></i>Download CSV
+    </a>
+    <a asp-page="/Reports/Expenses"
+       asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
+       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+       target="_blank" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i>Print Report
+    </a>
 </div>
 
 <div class="card">
@@ -86,7 +148,7 @@ else
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="5" class="fw-bold text-end">Total:</td>
-                            <td class="fw-bold">?@Model.TotalAmount.ToString("N0")</td>
+                            <td class="fw-bold">&#8377;@Model.TotalAmount.ToString("N0")</td>
                             <td colspan="2"></td>
                         </tr>
                     </tfoot>
@@ -95,3 +157,24 @@ else
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    @if (Model.CategoryTotals.Any())
+    {
+        <text>
+    new Chart(document.getElementById('categoryChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryTotals.Keys)),
+            datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CategoryTotals.Values)),
+                backgroundColor: ['#f76707','#2f9e44','#1971c2','#ae3ec9','#e67700','#adb5bd'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { font: { size: 11 }, boxWidth: 12 } } } }
+    });
+        </text>
+    }
+</script>
+}

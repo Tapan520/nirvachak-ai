@@ -39,6 +39,41 @@ public class GrievancesController : ApiBaseController
         return Ok(items);
     }
 
+    /// <summary>Get grievance detail by id</summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(GrievanceDetailResponse), 200)]
+    public async Task<IActionResult> GetDetail(int id)
+    {
+        var g = await _db.Grievances.FindAsync(id);
+        if (g == null) return NotFound(new ApiResult(false, "Not found."));
+        return Ok(new GrievanceDetailResponse(
+            g.Id, g.Title, g.Description ?? string.Empty,
+            g.Status.ToString(), g.Priority.ToString(),
+            g.ReportedBy, g.ReporterPhone, g.Ward, g.Location,
+            null, null, g.ResolutionNotes, g.ReportedAt, g.ResolvedAt));
+    }
+
+    /// <summary>Update grievance status</summary>
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(ApiResult), 200)]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateGrievanceStatusRequest req)
+    {
+        var g = await _db.Grievances.FindAsync(id);
+        if (g == null) return NotFound(new ApiResult(false, "Not found."));
+
+        if (!Enum.TryParse<GrievanceStatus>(req.Status, out var status))
+            return BadRequest(new ApiResult(false, "Invalid status value."));
+
+        g.Status = status;
+        if (!string.IsNullOrWhiteSpace(req.ResolutionNotes))
+            g.ResolutionNotes = req.ResolutionNotes.Trim();
+        if (status == GrievanceStatus.Resolved || status == GrievanceStatus.Closed)
+            g.ResolvedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResult(true, "Status updated successfully."));
+    }
+
     /// <summary>Submit a new grievance</summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResult), 200)]

@@ -29,6 +29,7 @@ public class IndexModel : PageModel
 
     public List<BoothTurnoutDto> BoothTurnout { get; set; } = new();
     public List<Voter> TodayVoters { get; set; } = new();
+    public List<Voter> NotYetVotedFavour { get; set; } = new();
     public List<Constituency> Constituencies { get; set; } = new();
     public bool IsAdmin { get; set; }
     public int TotalVoters { get; set; }
@@ -58,6 +59,14 @@ public class IndexModel : PageModel
             .Where(v => v.ConstituencyId == ConstituencyId && !v.IsDeleted)
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
             .Take(500).ToListAsync();
+
+        // Priority chase list: Favour voters who haven't voted yet
+        NotYetVotedFavour = await _db.Voters
+            .Where(v => v.ConstituencyId == ConstituencyId && !v.IsDeleted
+                     && v.ElectionDayStatus == ElectionDayStatus.NotVoted
+                     && v.Sentiment == VoterSentiment.Favour)
+            .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
+            .Take(200).ToListAsync();
     }
 
     public async Task<IActionResult> OnPostMarkVotedAsync(int voterId)

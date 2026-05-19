@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Voters;
 
@@ -11,17 +13,20 @@ public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
+    private readonly AuditService _audit;
     private const int PageSize = 50;
 
-    public IndexModel(AppDbContext db, UserManager<AppUser> userManager)
+    public IndexModel(AppDbContext db, UserManager<AppUser> userManager, AuditService audit)
     {
         _db = db;
         _userManager = userManager;
+        _audit = audit;
     }
 
     public List<Voter> Voters { get; set; } = new();
     public List<int> BoothNumbers { get; set; } = new();
     public List<Constituency> Constituencies { get; set; } = new();
+    public List<Ward> Wards { get; set; } = new();
     public bool IsAdmin { get; set; }
     public bool CanImportCsv { get; set; }
     public int TotalCount { get; set; }
@@ -37,6 +42,8 @@ public class IndexModel : PageModel
     public string? SentimentFilter { get; set; }
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public string? GenderFilter { get; set; }
+    [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+    public string? WardFilter { get; set; }
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public int CurrentPage { get; set; } = 1;
 
@@ -58,6 +65,14 @@ public class IndexModel : PageModel
         }
         else if (user?.ConstituencyId.HasValue == true)
             query = query.Where(v => v.ConstituencyId == user.ConstituencyId);
+
+        // Load wards for the active constituency
+        var cId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
+        if (cId.HasValue)
+            Wards = await _db.Wards.Where(w => w.ConstituencyId == cId.Value).OrderBy(w => w.WardNumber).ToListAsync();
+
+        if (!string.IsNullOrEmpty(WardFilter))
+            query = query.Where(v => v.WardNumber == WardFilter);
 
         if (!string.IsNullOrWhiteSpace(Search))
             query = query.Where(v => v.Name.Contains(Search) || v.VoterId.Contains(Search) ||
@@ -92,5 +107,32 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             allVoters = allVoters.Where(v => v.ConstituencyId == user.ConstituencyId);
         BoothNumbers = await allVoters.Select(v => v.BoothNumber).Distinct().OrderBy(n => n).ToListAsync();
+    }
+
+    public async Task<IActionResult> OnPostBulkSentimentAsync(List<int> selectedIds, VoterSentiment bulkSentiment)
+    {
+        if (selectedIds == null || selectedIds.Count == 0)
+        {
+            TempData["Error"] = "No voters selected.";
+            return RedirectToPage();
+        }
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null) return Forbid();
+
+        var voters = await _db.Voters
+            .Where(v => selectedIds.Contains(v.Id) && !v.IsDeleted)
+            .ToListAsync();
+
+        foreach (var voter in voters)
+            voter.Sentiment = bulkSentiment;
+
+        _audit.Track(currentUser.Id, currentUser.FullName,
+            "BulkUpdateSentiment", "Voter", string.Join(",", selectedIds),
+            $"Bulk sentiment set to {bulkSentiment} for {voters.Count} voters",
+            currentUser.ConstituencyId);
+
+        await _db.SaveChangesAsync();
+        TempData["Message"] = $"Sentiment updated to '{bulkSentiment}' for {voters.Count} voter(s).";
+        return RedirectToPage();
     }
 }

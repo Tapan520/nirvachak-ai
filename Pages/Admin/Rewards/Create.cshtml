@@ -1,0 +1,73 @@
+@page
+@model Nirvachak_AI.Pages.Admin.Rewards.CreateModel
+@{
+    ViewData["Title"] = "Create Reward";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-gift-fill me-2 text-success"></i>Create New Reward
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+                    <div class="row g-3">
+                        @if (Model.IsAdmin)
+                        {
+                            <div class="col-12">
+                                <label asp-for="SelectedConstituencyId" class="form-label fw-semibold">Constituency *</label>
+                                <select asp-for="SelectedConstituencyId" class="form-select">
+                                    <option value="">— Select Constituency —</option>
+                                    @foreach (var c in Model.Constituencies)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        <div class="col-12">
+                            <label asp-for="Title" class="form-label fw-semibold">Reward Title *</label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g. Free Coffee Coupon" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="2"
+                                      placeholder="Details voters will see on their reward coupon"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PartnerBrand" class="form-label fw-semibold">Partner Brand</label>
+                            <input asp-for="PartnerBrand" class="form-control" placeholder="e.g. Cafe Coffee Day" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CouponCodePrefix" class="form-label fw-semibold">Coupon Code Prefix *</label>
+                            <input asp-for="CouponCodePrefix" class="form-control font-monospace text-uppercase"
+                                   placeholder="NIRV" maxlength="8" />
+                            <div class="form-text">Codes will look like: <code>NIRV123456</code></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ExpiryDate" class="form-label fw-semibold">Expiry Date *</label>
+                            <input asp-for="ExpiryDate" type="date" class="form-control"
+                                   value="@Model.ExpiryDate.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="ExpiryDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CouponCount" class="form-label fw-semibold">Coupons to Generate *</label>
+                            <input asp-for="CouponCount" type="number" class="form-control" min="1" max="50000" />
+                            <div class="form-text">Unique codes are auto-generated in bulk.</div>
+                            <span asp-validation-for="CouponCount" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save me-1"></i>Create Reward
+                        </button>
+                        <a asp-page="/Admin/Rewards/Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

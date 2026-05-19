@@ -19,6 +19,17 @@ public class BoothAnalyticsRow
     public int Floating { get; set; }
 }
 
+public class DemographicSentimentRow
+{
+    public string Group    { get; set; } = "";
+    public int    Favour   { get; set; }
+    public int    Against  { get; set; }
+    public int    Neutral  { get; set; }
+    public int    Floating { get; set; }
+    public int    Unknown  { get; set; }
+    public int    Total    => Favour + Against + Neutral + Floating + Unknown;
+}
+
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -52,6 +63,8 @@ public class IndexModel : PageModel
     public int FemaleVoters { get; set; }
     public int OtherVoters { get; set; }
     public List<BoothAnalyticsRow> BoothAnalytics { get; set; } = new();
+    public List<DemographicSentimentRow> ReligionSentimentMatrix { get; set; } = new();
+    public List<DemographicSentimentRow> CasteSentimentMatrix    { get; set; } = new();
 
     public async Task OnGetAsync()
     {
@@ -137,13 +150,48 @@ public class IndexModel : PageModel
             BoothAnalytics.Add(new BoothAnalyticsRow
             {
                 BoothNumber = bn,
-                Total = await bVoters.CountAsync(),
-                Favour = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Favour),
-                Against = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Against),
-                Neutral = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Neutral),
-                Unknown = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Unknown),
+                Total    = await bVoters.CountAsync(),
+                Favour   = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Favour),
+                Against  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Against),
+                Neutral  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Neutral),
+                Unknown  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Unknown),
                 Floating = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Floating)
             });
         }
+
+        // #14 – Demographic × Sentiment matrices
+        var voterSentimentPairs = await query
+            .Select(v => new { v.Id, v.Sentiment })
+            .ToListAsync();
+        if (voterSentimentPairs.Any())
+        {
+            var sentimentLookup = voterSentimentPairs.ToDictionary(v => v.Id, v => v.Sentiment);
+            var allVoterIds = sentimentLookup.Keys.ToList();
+            var vProfiles = await _db.VoterProfiles
+                .Where(p => allVoterIds.Contains(p.VoterId))
+                .AsNoTracking()
+                .ToListAsync();
+            ReligionSentimentMatrix = BuildSentimentMatrix(vProfiles, sentimentLookup, p => p.Religion);
+            CasteSentimentMatrix    = BuildSentimentMatrix(vProfiles, sentimentLookup, p => p.CasteCategory);
+        }
     }
+
+    private static List<DemographicSentimentRow> BuildSentimentMatrix(
+        List<VoterProfile> profiles,
+        Dictionary<int, VoterSentiment> sentimentMap,
+        Func<VoterProfile, string?> keySelector)
+        => profiles
+            .Where(p => !string.IsNullOrEmpty(keySelector(p)) && sentimentMap.ContainsKey(p.VoterId))
+            .GroupBy(p => keySelector(p)!)
+            .Select(g => new DemographicSentimentRow
+            {
+                Group    = g.Key,
+                Favour   = g.Count(p => sentimentMap[p.VoterId] == VoterSentiment.Favour),
+                Against  = g.Count(p => sentimentMap[p.VoterId] == VoterSentiment.Against),
+                Neutral  = g.Count(p => sentimentMap[p.VoterId] == VoterSentiment.Neutral),
+                Floating = g.Count(p => sentimentMap[p.VoterId] == VoterSentiment.Floating),
+                Unknown  = g.Count(p => sentimentMap[p.VoterId] == VoterSentiment.Unknown),
+            })
+            .OrderByDescending(r => r.Total)
+            .ToList();
 }

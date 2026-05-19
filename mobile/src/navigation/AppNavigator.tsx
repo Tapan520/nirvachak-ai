@@ -13,6 +13,7 @@ import ElectionDayScreen from '../screens/ElectionDayScreen';
 import BoothsScreen from '../screens/BoothsScreen';
 import GrievancesScreen from '../screens/GrievancesScreen';
 import AddGrievanceScreen from '../screens/AddGrievanceScreen';
+import GrievanceDetailScreen from '../screens/GrievanceDetailScreen';
 import VolunteersScreen from '../screens/VolunteersScreen';
 import CampaignEventsScreen from '../screens/CampaignEventsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
@@ -82,6 +83,8 @@ export default function AppNavigator() {
             {/* Grievance Stack */}
             <Stack.Screen name="AddGrievance" component={AddGrievanceScreen}
               options={{ headerShown: true, title: 'Add Grievance', headerTintColor: BRAND }} />
+            <Stack.Screen name="GrievanceDetail" component={GrievanceDetailScreen}
+              options={{ headerShown: true, title: 'Grievance Details', headerTintColor: BRAND }} />
             {/* More ? full screens */}
             <Stack.Screen name="Booths" component={BoothsScreen}
               options={{ headerShown: true, title: 'Booth Management', headerTintColor: BRAND }} />

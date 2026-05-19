@@ -16,15 +16,29 @@
 @if (Model.IsAdmin)
 {
     <div class="col-12">
-        <form method="get" class="d-flex align-items-center gap-2">
-            <label class="fw-semibold mb-0 text-nowrap">Constituency:</label>
-            <select name="constituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()" style="max-width:280px">
-                @foreach (var c in Model.Constituencies)
-                {
-                    <option value="@c.Id" selected="@(Model.ConstituencyId == c.Id)">@c.Name</option>
-                }
-            </select>
-        </form>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <label class="fw-semibold mb-0 text-nowrap">Constituency:</label>
+                <select name="constituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()" style="max-width:280px">
+                    @foreach (var c in Model.Constituencies)
+                    {
+                        <option value="@c.Id" selected="@(Model.ConstituencyId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </form>
+            <a asp-page="/Reports/ElectionDay" asp-route-ConstituencyFilter="@Model.ConstituencyId"
+               target="_blank" class="btn btn-sm btn-outline-secondary ms-auto">
+                <i class="bi bi-printer me-1"></i>Print Report
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="col-12 d-flex justify-content-end">
+        <a asp-page="/Reports/ElectionDay" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-printer me-1"></i>Print Report
+        </a>
     </div>
 }
 <div class="col-md-4">
@@ -89,7 +103,7 @@
 </div>
 
 <!-- Booth-wise Turnout -->
-<div class="card">
+<div class="card mb-4">
     <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Booth-wise Live Turnout</div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -116,6 +130,59 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- Priority Chase List: Favour voters not yet voted -->
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <span>
+            <i class="bi bi-person-exclamation me-2 text-danger"></i>
+            <strong>Chase List</strong> — Favour Voters Not Yet Voted
+        </span>
+        <span class="badge bg-danger">@Model.NotYetVotedFavour.Count pending</span>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.NotYetVotedFavour.Any())
+        {
+            <div class="text-center text-success py-4">
+                <i class="bi bi-check2-all fs-2 d-block mb-2"></i>All tracked Favour voters have voted!
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Name</th><th>EPIC</th><th>Booth</th><th>Mobile</th><th>Contact</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var v in Model.NotYetVotedFavour)
+                    {
+                        var msg = Uri.EscapeDataString($"Dear {v.Name}, please cast your vote today. Your vote matters!");
+                        <tr>
+                            <td class="fw-semibold small">@v.Name</td>
+                            <td class="font-monospace small">@v.VoterId</td>
+                            <td><span class="badge bg-secondary">@v.BoothNumber</span></td>
+                            <td class="small">@(v.MobileNumber ?? "—")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(v.MobileNumber))
+                                {
+                                    <a href="https://wa.me/91@(v.MobileNumber)?text=@msg" target="_blank"
+                                       class="btn btn-sm btn-success py-0 px-2" title="WhatsApp reminder">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </a>
+                                    <a href="tel:@v.MobileNumber" class="btn btn-sm btn-outline-primary py-0 px-2 ms-1" title="Call">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>
 

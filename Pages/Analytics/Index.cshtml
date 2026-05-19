@@ -142,6 +142,39 @@ else if (Model.SelectedConstituency != null)
     </div>
 </div>
 
+@* ── Religion × Sentiment + Caste × Sentiment matrices (#14) ── *@
+@if (Model.ReligionSentimentMatrix.Any() || Model.CasteSentimentMatrix.Any())
+{
+    <div class="row g-3 mb-4">
+        @if (Model.ReligionSentimentMatrix.Any())
+        {
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header small fw-semibold">
+                        <i class="bi bi-bar-chart-stacked me-2 text-warning"></i>Religion &times; Sentiment
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height:260px"><canvas id="religionSentimentChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (Model.CasteSentimentMatrix.Any())
+        {
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header small fw-semibold">
+                        <i class="bi bi-bar-chart-stacked me-2 text-primary"></i>Caste Category &times; Sentiment
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height:260px"><canvas id="casteSentimentChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
 <div class="card">
     <div class="card-header"><i class="bi bi-table me-2"></i>Booth-wise Summary</div>
     <div class="card-body p-0">
@@ -223,4 +256,46 @@ else if (Model.SelectedConstituency != null)
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 </script>
+
+@if (Model.ReligionSentimentMatrix.Any())
+{
+    <script>
+    new Chart(document.getElementById('religionSentimentChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Group))),
+            datasets: [
+                { label: 'Favour',   data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Favour))),   backgroundColor: '#51cf66', borderRadius: 3 },
+                { label: 'Against',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Against))),  backgroundColor: '#ff6b6b', borderRadius: 3 },
+                { label: 'Neutral',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Neutral))),  backgroundColor: '#74c0fc', borderRadius: 3 },
+                { label: 'Floating', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Floating))), backgroundColor: '#ffd43b', borderRadius: 3 },
+                { label: 'Unknown',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ReligionSentimentMatrix.Select(r => r.Unknown))),  backgroundColor: '#adb5bd', borderRadius: 3 }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } } }
+    });
+    </script>
+}
+
+@if (Model.CasteSentimentMatrix.Any())
+{
+    <script>
+    new Chart(document.getElementById('casteSentimentChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Group))),
+            datasets: [
+                { label: 'Favour',   data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Favour))),   backgroundColor: '#51cf66', borderRadius: 3 },
+                { label: 'Against',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Against))),  backgroundColor: '#ff6b6b', borderRadius: 3 },
+                { label: 'Neutral',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Neutral))),  backgroundColor: '#74c0fc', borderRadius: 3 },
+                { label: 'Floating', data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Floating))), backgroundColor: '#ffd43b', borderRadius: 3 },
+                { label: 'Unknown',  data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CasteSentimentMatrix.Select(r => r.Unknown))),  backgroundColor: '#adb5bd', borderRadius: 3 }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } } }
+    });
+    </script>
+}
 }

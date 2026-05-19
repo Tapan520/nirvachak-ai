@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
@@ -37,7 +38,7 @@ public class IndexModel : PageModel
 
     public List<SurveyRow> Surveys { get; set; } = new();
 
-    public record SurveyRow(Survey Survey, int ResponseCount, double AvgRating);
+    public record SurveyRow(SurveyEntity Survey, int ResponseCount, double AvgRating);
 
     public async Task OnGetAsync()
     {
@@ -75,7 +76,7 @@ public class IndexModel : PageModel
             Booths = await boothQuery.OrderBy(b => b.BoothNumber).ToListAsync();
         }
 
-        IQueryable<Survey> query = _db.Surveys
+        IQueryable<SurveyEntity> query = _db.Surveys
             .Include(s => s.Constituency)
             .Include(s => s.Responses)
             .OrderByDescending(s => s.CreatedAt);

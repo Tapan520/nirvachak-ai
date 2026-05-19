@@ -36,7 +36,7 @@
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
-                    <tr><th>Name</th><th>Phone</th><th>Task</th><th>Area</th><th>Booths</th><th>Status</th><th></th></tr>
+                    <tr><th>Name</th><th>Phone</th><th>Task</th><th>Area</th><th>Booths</th><th class="text-center">Visits</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody>
                 @foreach (var v in Model.Volunteers)
@@ -47,8 +47,12 @@
                         </td>
                         <td>@v.Phone</td>
                         <td><span class="badge bg-info text-dark">@v.Task</span></td>
-                        <td>@(v.AssignedArea ?? "�")</td>
-                        <td>@(v.AssignedBoothNumbers ?? "�")</td>
+                        <td>@(v.AssignedArea ?? "-")</td>
+                        <td>@(v.AssignedBoothNumbers ?? "-")</td>
+                        <td class="text-center">
+                            @{ var visitCount = Model.VolunteerVisitCounts.GetValueOrDefault(v.Name, 0); }
+                            <span class="badge @(visitCount > 0 ? "bg-success" : "bg-light text-muted")">@visitCount</span>
+                        </td>
                         <td>
                             <span class="badge @(v.IsActive ? "bg-success" : "bg-secondary")">
                                 @(v.IsActive ? "Active" : "Inactive")
@@ -85,10 +89,11 @@
                 }
                 @if (!Model.Volunteers.Any())
                 {
-                    <tr><td colspan="7" class="text-center text-muted py-4">No volunteers added yet.</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">No volunteers added yet.</td></tr>
                 }
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+

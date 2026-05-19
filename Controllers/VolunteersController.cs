@@ -33,4 +33,31 @@ public class VolunteersController : ApiBaseController
 
         return Ok(items);
     }
+
+    /// <summary>Create a new volunteer</summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResult), 200)]
+    public async Task<IActionResult> Create([FromBody] CreateVolunteerRequest req)
+    {
+        var cId = GetConstituencyId() ?? 1;
+        if (!Enum.TryParse<Domain.Enums.VolunteerTask>(req.Task, out var task))
+            task = Domain.Enums.VolunteerTask.Other;
+
+        _db.Volunteers.Add(new Domain.Entities.Volunteer
+        {
+            Name                 = req.Name.Trim(),
+            Phone                = req.Phone.Trim(),
+            Email                = req.Email,
+            Address              = req.Address,
+            Task                 = task,
+            AssignedArea         = req.AssignedArea,
+            AssignedBoothNumbers = req.AssignedBoothNumbers,
+            Notes                = req.Notes,
+            ConstituencyId       = cId,
+            IsActive             = true
+        });
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResult(true, "Volunteer added successfully."));
+    }
 }

@@ -1,0 +1,163 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.Admin.Rewards.DetailsModel
+@{
+    ViewData["Title"] = "Reward Details";
+}
+
+@if (Model.Reward is null)
+{
+    <div class="alert alert-warning">Reward not found.</div>
+    return;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-gift-fill me-2 text-success"></i>@Model.Reward.Title</h4>
+        @if (!string.IsNullOrEmpty(Model.Reward.PartnerBrand))
+        {
+            <small class="text-muted">Partner: <strong>@Model.Reward.PartnerBrand</strong></small>
+        }
+    </div>
+    <a asp-page="/Admin/Rewards/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show small py-2">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@* ?? Stats Cards ??????????????????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-secondary">@Model.TotalCoupons</div>
+                <div class="small text-muted">Total Coupons</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-success">@Model.AvailableCount</div>
+                <div class="small text-muted">Available</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-primary">@Model.IssuedCount</div>
+                <div class="small text-muted">Issued</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="fs-3 fw-bold text-warning">@Model.RedeemedCount</div>
+                <div class="small text-muted">Redeemed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ?? Config Info ??????????????????????????????????????????????????? *@
+<div class="card mb-4">
+    <div class="card-header fw-semibold small">Reward Configuration</div>
+    <div class="card-body">
+        <div class="row g-2 small">
+            <div class="col-md-3"><strong>Status:</strong>
+                @if (Model.Reward.IsActive && Model.Reward.ExpiryDate > DateTime.Now)
+                { <span class="badge bg-success ms-1">Active</span> }
+                else if (Model.Reward.ExpiryDate <= DateTime.Now)
+                { <span class="badge bg-danger ms-1">Expired</span> }
+                else
+                { <span class="badge bg-secondary ms-1">Inactive</span> }
+            </div>
+            <div class="col-md-3"><strong>Expiry:</strong> @Model.Reward.ExpiryDate.ToString("dd MMM yyyy")</div>
+            <div class="col-md-3"><strong>Code Prefix:</strong> <code>@Model.Reward.CouponCodePrefix</code></div>
+            <div class="col-md-3"><strong>Constituency:</strong> @(Model.Reward.Constituency?.Name ?? "—")</div>
+            @if (!string.IsNullOrEmpty(Model.Reward.Description))
+            {
+                <div class="col-12"><strong>Description:</strong> @Model.Reward.Description</div>
+            }
+        </div>
+    </div>
+</div>
+
+@* ?? Coupon Table ??????????????????????????????????????????????????? *@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Coupon Pool</span>
+        <small class="text-muted">Page @Model.CurrentPage of @Model.TotalPages</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Status</th>
+                        <th>Issued To</th>
+                        <th>Issued At</th>
+                        <th>Redeemed At</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var c in Model.Coupons)
+                {
+                    <tr>
+                        <td class="font-monospace fw-semibold">@c.CouponCode</td>
+                        <td>
+                            @if (c.IsRedeemed)
+                            { <span class="badge bg-warning text-dark">Redeemed</span> }
+                            else if (c.IsIssued)
+                            { <span class="badge bg-primary">Issued</span> }
+                            else
+                            { <span class="badge bg-light text-muted">Available</span> }
+                        </td>
+                        <td class="small">@(c.IssuedToVoter?.Name ?? "—")</td>
+                        <td class="small">@(c.IssuedAt.HasValue ? c.IssuedAt.Value.ToString("dd MMM yy") : "—")</td>
+                        <td class="small">@(c.RedeemedAt.HasValue ? c.RedeemedAt.Value.ToString("dd MMM yy") : "—")</td>
+                        <td>
+                            @if (c.IsIssued && !c.IsRedeemed)
+                            {
+                                <form method="post" asp-page-handler="MarkRedeemed" class="d-inline">
+                                    <input type="hidden" name="couponId" value="@c.Id" />
+                                    <input type="hidden" name="rewardId" value="@Model.Reward.Id" />
+                                    <button type="submit" class="btn btn-xs btn-outline-warning py-0 px-2 small">
+                                        Mark Redeemed
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <small class="text-muted">Page @Model.CurrentPage of @Model.TotalPages</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int p = Math.Max(1, Model.CurrentPage - 2); p <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); p++)
+                    {
+                        <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-route-id="@Model.Reward.Id" asp-route-page="@p">@p</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

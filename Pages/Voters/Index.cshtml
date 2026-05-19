@@ -21,6 +21,21 @@
     </div>
 </div>
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show py-2 small" role="alert">
+        <i class="bi bi-check2-circle me-1"></i>@TempData["Message"]
+        <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show py-2 small" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i>@TempData["Error"]
+        <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <!-- Filters -->
 <div class="card mb-3">
     <div class="card-body py-2">
@@ -39,6 +54,15 @@
             }
             <div class="col-md-3">
                 <input asp-for="Search" class="form-control form-control-sm" placeholder="Search name / EPIC / mobile..." />
+            </div>
+            <div class="col-md-2">
+                <select asp-for="WardFilter" class="form-select form-select-sm">
+                    <option value="">All Wards</option>
+                    @foreach (var w in Model.Wards)
+                    {
+                        <option value="@w.WardNumber">Ward @w.WardNumber – @w.WardName</option>
+                    }
+                </select>
             </div>
             <div class="col-md-2">
                 <select asp-for="BoothFilter" class="form-select form-select-sm">
@@ -76,12 +100,32 @@
     </div>
 </div>
 
+<form method="post" asp-page-handler="BulkSentiment" id="bulkForm">
+<div class="card mb-2" id="bulkActionBar" style="display:none">
+    <div class="card-body py-2 d-flex align-items-center gap-3 bg-primary-subtle">
+        <span class="small fw-semibold text-primary"><span id="selectedCount">0</span> voter(s) selected</span>
+        <select name="bulkSentiment" class="form-select form-select-sm" style="max-width:160px">
+            @foreach (var s in Enum.GetValues<VoterSentiment>())
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil-square me-1"></i>Update Sentiment
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearSelection()">
+            <i class="bi bi-x-lg me-1"></i>Clear
+        </button>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
+                        <th style="width:36px"><input type="checkbox" id="selectAll" class="form-check-input" title="Select all"></th>
                         <th>#</th>
                         <th>EPIC</th>
                         <th>Name</th>
@@ -97,6 +141,7 @@
                 @foreach (var v in Model.Voters)
                 {
                     <tr class="voter-@v.Sentiment.ToString().ToLower()">
+                        <td><input type="checkbox" name="selectedIds" value="@v.Id" class="form-check-input voter-checkbox"></td>
                         <td class="text-muted small">@v.SerialNumber</td>
                         <td><span class="badge bg-light text-dark font-monospace">@v.VoterId</span></td>
                         <td>
@@ -135,7 +180,7 @@
                 }
                 @if (!Model.Voters.Any())
                 {
-                    <tr><td colspan="9" class="text-center text-muted py-4">No voters found. <a asp-page="/Voters/Import">Import voters</a></td></tr>
+                    <tr><td colspan="10" class="text-center text-muted py-4">No voters found. <a asp-page="/Voters/Import">Import voters</a></td></tr>
                 }
                 </tbody>
             </table>
@@ -153,7 +198,7 @@
                         <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
                             <a class="page-link" asp-page="/Voters/Index" asp-route-currentPage="@p"
                                asp-route-search="@Model.Search" asp-route-constituencyFilter="@Model.ConstituencyFilter"
-                               asp-route-boothFilter="@Model.BoothFilter"
+                               asp-route-wardFilter="@Model.WardFilter" asp-route-boothFilter="@Model.BoothFilter"
                                asp-route-sentimentFilter="@Model.SentimentFilter" asp-route-genderFilter="@Model.GenderFilter">@p</a>
                         </li>
                     }
@@ -162,3 +207,31 @@
         </div>
     }
 </div>
+</form>
+
+@section Scripts {
+<script>
+    const selectAll = document.getElementById('selectAll');
+    const bar       = document.getElementById('bulkActionBar');
+    const countEl   = document.getElementById('selectedCount');
+
+    function updateBar() {
+        const n = document.querySelectorAll('.voter-checkbox:checked').length;
+        countEl.textContent = n;
+        bar.style.display = n > 0 ? 'block' : 'none';
+    }
+
+    selectAll.addEventListener('change', function () {
+        document.querySelectorAll('.voter-checkbox').forEach(cb => cb.checked = this.checked);
+        updateBar();
+    });
+
+    document.querySelectorAll('.voter-checkbox').forEach(cb =>
+        cb.addEventListener('change', updateBar));
+
+    function clearSelection() {
+        document.querySelectorAll('.voter-checkbox, #selectAll').forEach(cb => cb.checked = false);
+        updateBar();
+    }
+</script>
+}

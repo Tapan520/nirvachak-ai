@@ -12,9 +12,10 @@
     "ios": {
       "bundleIdentifier": "com.india.nirvachak"
     },
+    "owner": "tapansingh",
     "extra": {
       "eas": {
-        "projectId": "81d94d95-a662-44f6-b1ac-17a1397893e6"
+        "projectId": "4f0edbb0-4b41-4776-9a8e-e4109c0b49b8"
       }
     }
   }

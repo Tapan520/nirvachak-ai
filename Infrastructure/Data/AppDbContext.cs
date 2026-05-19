@@ -23,6 +23,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementAcknowledgement> AnnouncementAcknowledgements => Set<AnnouncementAcknowledgement>();
 
+    // ── Voter Self-Survey Module ──────────────────────────────────
+    public DbSet<VoterProfile> VoterProfiles => Set<VoterProfile>();
+    public DbSet<VoterConsent> VoterConsents => Set<VoterConsent>();
+    public DbSet<RewardConfig> RewardConfigs => Set<RewardConfig>();
+    public DbSet<CouponPool> CouponPools => Set<CouponPool>();
+    public DbSet<SurveyCompletion> SurveyCompletions => Set<SurveyCompletion>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -43,6 +50,37 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(u => u.Constituency)
             .WithMany()
             .HasForeignKey(u => u.ConstituencyId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // ── Voter Self-Survey Module ──────────────────────────────
+        builder.Entity<VoterProfile>()
+            .HasIndex(v => v.VoterId).IsUnique();
+
+        builder.Entity<VoterConsent>()
+            .HasIndex(v => v.VoterId).IsUnique();
+
+        builder.Entity<SurveyCompletion>()
+            .HasIndex(v => v.VoterId).IsUnique();
+
+        builder.Entity<CouponPool>()
+            .HasIndex(c => c.CouponCode).IsUnique();
+
+        builder.Entity<CouponPool>()
+            .HasOne(c => c.RewardConfig)
+            .WithMany(r => r.Coupons)
+            .HasForeignKey(c => c.RewardConfigId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CouponPool>()
+            .HasOne(c => c.IssuedToVoter)
+            .WithMany()
+            .HasForeignKey(c => c.IssuedToVoterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<SurveyCompletion>()
+            .HasOne(s => s.Coupon)
+            .WithMany()
+            .HasForeignKey(s => s.CouponId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

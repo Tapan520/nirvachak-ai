@@ -70,10 +70,79 @@
 
     <div class="col-md-8">
         <div class="card mb-3">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-clipboard2-data-fill me-2 text-secondary"></i>Self-Survey Profile</span>
+                @if (Model.SurveyCompleted)
+                {
+                    <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Survey Completed</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Not Yet Completed</span>
+                }
+            </div>
+            @if (Model.SurveyProfile != null)
+            {
+                <div class="card-body">
+                    <div class="row g-2 small">
+                        <div class="col-6"><strong>Age Bracket:</strong> @(Model.SurveyProfile.AgeBracket ?? "—")</div>
+                        <div class="col-6"><strong>Caste Category:</strong> @(Model.SurveyProfile.CasteCategory ?? "—")</div>
+                        <div class="col-6"><strong>Religion:</strong> @(Model.SurveyProfile.Religion ?? "—")</div>
+                        <div class="col-6"><strong>Education:</strong> @(Model.SurveyProfile.Education ?? "—")</div>
+                        <div class="col-6"><strong>Occupation:</strong> @(Model.SurveyProfile.Occupation ?? "—")</div>
+                        <div class="col-6"><strong>Income Bracket:</strong> @(Model.SurveyProfile.MonthlyIncomeBracket ?? "—")</div>
+                        <div class="col-6"><strong>Language:</strong> @(Model.SurveyProfile.PreferredLanguage ?? "—")</div>
+                        @if (!string.IsNullOrEmpty(Model.SurveyProfile.PrimaryConcerns))
+                        {
+                            var concerns = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Model.SurveyProfile.PrimaryConcerns) ?? new();
+                            <div class="col-12">
+                                <strong>Top Concerns:</strong>
+                                @foreach (var c in concerns)
+                                {
+                                    <span class="badge bg-warning text-dark me-1">@c</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    @if (Model.ConsentRecord != null)
+                    {
+                        <hr class="my-2" />
+                        <div class="small fw-semibold mb-1"><i class="bi bi-shield-check me-1 text-success"></i>Consents Given</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            @if (Model.ConsentRecord.AllowThirdPartyAdvertising)
+                            { <span class="badge bg-success">3rd-Party Ads</span> }
+                            @if (Model.ConsentRecord.AllowCampaignOutreach)
+                            { <span class="badge bg-primary">Campaign Outreach</span> }
+                            @if (Model.ConsentRecord.AllowWhatsAppMessages)
+                            { <span class="badge bg-success">WhatsApp</span> }
+                            @if (Model.ConsentRecord.AllowSchemeNotifications)
+                            { <span class="badge bg-info text-dark">Scheme Notifications</span> }
+                            @if (Model.ConsentRecord.AllowDataForAnalytics)
+                            { <span class="badge bg-secondary">Analytics</span> }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card-body text-center text-muted py-3 small">
+                    <i class="bi bi-inbox me-1"></i>Voter has not completed the self-survey yet.
+                    @if (!string.IsNullOrEmpty(Model.Voter?.MobileNumber))
+                    {
+                        var surveyUrl = $"{Request.Scheme}://{Request.Host}/Survey";
+                        var msg = Uri.EscapeDataString($"Dear {Model.Voter.Name}, please fill in this quick voter survey and claim your reward: {surveyUrl}");
+                        <a href="https://wa.me/91@(Model.Voter.MobileNumber)?text=@msg" target="_blank"
+                           class="btn btn-sm btn-success ms-2 py-0">
+                            <i class="bi bi-whatsapp me-1"></i>Send Survey Link
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="card mb-3">
             <div class="card-header"><i class="bi bi-person-lines-fill me-2"></i>Voter Information</div>
             <div class="card-body">
-                <div class="row g-2 small">
-                    <div class="col-6"><strong>Serial No.:</strong> @Model.Voter.SerialNumber</div>
                     <div class="col-6"><strong>EPIC No.:</strong> <span class="font-monospace">@Model.Voter.VoterId</span></div>
                     <div class="col-6"><strong>Age:</strong> @Model.Voter.Age</div>
                     <div class="col-6"><strong>Gender:</strong> @(Model.Voter.Gender == "M" ? "Male" : Model.Voter.Gender == "F" ? "Female" : "Other")</div>
@@ -97,7 +166,28 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><i class="bi bi-door-open me-2"></i>Door-to-Door Visit History</div>
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-door-open me-2"></i>Door-to-Door Visit History</span>
+                @if (Model.Visits.Any())
+                {
+                    <span class="badge bg-secondary">@Model.Visits.Count visit(s)</span>
+                }
+            </div>
+            @if (Model.Visits.Any())
+            {
+                var latest = Model.Visits.First();
+                <div class="card-body py-2 border-bottom bg-light">
+                    <div class="small fw-semibold text-muted mb-1"><i class="bi bi-clock me-1"></i>Latest visit — @latest.VisitedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt") by @latest.WorkerName</div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge bg-info text-dark">@latest.Status</span>
+                        <span class="badge badge-@latest.SentimentAfterVisit.ToString().ToLower()">@latest.SentimentAfterVisit</span>
+                        @if (!string.IsNullOrEmpty(latest.Notes))
+                        {
+                            <span class="small text-dark fst-italic">&ldquo;@latest.Notes&rdquo;</span>
+                        }
+                    </div>
+                </div>
+            }
             <div class="card-body p-0">
                 @if (!Model.Visits.Any())
                 {

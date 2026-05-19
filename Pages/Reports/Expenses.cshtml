@@ -1,0 +1,216 @@
+@page
+@model Nirvachak_AI.Pages.Reports.ExpensesModel
+@{
+    ViewData["Title"] = "Expense Report";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Report — @Model.ConstituencyName</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body { font-size: 13px; background: #fff; }
+
+        .report-header { border-bottom: 2px solid #1a1f2e; padding-bottom: 10px; margin-bottom: 16px; }
+        .report-header h3 { color: #1a1f2e; margin: 0; }
+        .report-header .meta { color: #6c757d; font-size: 0.8rem; }
+
+        .kpi-box { border: 1px solid #dee2e6; border-radius: 8px; padding: 12px 16px; text-align: center; }
+        .kpi-box .kpi-value { font-size: 1.6rem; font-weight: 700; }
+        .kpi-box .kpi-label { font-size: 0.78rem; color: #6c757d; }
+
+        .section-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+                         letter-spacing: 0.06em; color: #495057; border-bottom: 1px solid #e9ecef;
+                         padding-bottom: 4px; margin-bottom: 10px; }
+
+        .gauge-bar { height: 14px; border-radius: 7px; background: #e9ecef; overflow: hidden; }
+        .gauge-fill { height: 100%; border-radius: 7px; }
+
+        table { font-size: 0.82rem; }
+
+        .no-print { display: block; }
+        @@media print {
+            .no-print { display: none !important; }
+            body { font-size: 11px; }
+            @@page { size: A4 portrait; margin: 12mm 10mm; }
+            .page-break { page-break-before: always; }
+            a { color: inherit !important; text-decoration: none !important; }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    @* Controls *@
+    <div class="no-print d-flex flex-wrap gap-2 mb-3 align-items-center">
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <i class="bi bi-printer me-1"></i>Print / Save PDF
+        </button>
+        <a asp-page="/Expenses/Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back to Expenses
+        </a>
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center ms-2">
+            @if (Model.IsAdmin && Model.Constituencies.Any())
+            {
+                <select name="SelectedConstituencyId" class="form-select form-select-sm" style="max-width:200px" onchange="this.form.submit()">
+                    <option value="">All Constituencies</option>
+                    @foreach (var c in Model.Constituencies)
+                    {
+                        <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            }
+            <input type="date" name="DateFrom" class="form-control form-control-sm" style="max-width:145px"
+                   value="@Model.DateFrom?.ToString("yyyy-MM-dd")" placeholder="From" />
+            <input type="date" name="DateTo" class="form-control form-control-sm" style="max-width:145px"
+                   value="@Model.DateTo?.ToString("yyyy-MM-dd")" placeholder="To" />
+            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+        </form>
+    </div>
+
+    @* Report header *@
+    <div class="report-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3><i class="bi bi-cash-coin me-2"></i>EC Expense Report</h3>
+                <div class="meta">
+                    Constituency: <strong>@(string.IsNullOrEmpty(Model.ConstituencyName) ? "All" : Model.ConstituencyName)</strong>
+                    @if (Model.DateFrom.HasValue || Model.DateTo.HasValue)
+                    {
+                        <span>&nbsp;|&nbsp; Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "—") to @(Model.DateTo?.ToString("dd MMM yyyy") ?? "—")</span>
+                    }
+                    &nbsp;|&nbsp; Generated: @Model.GeneratedAt.ToString("dd MMM yyyy, h:mm tt")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* KPI row *@
+    <div class="row g-3 mb-4">
+        <div class="col-3">
+            <div class="kpi-box">
+                <div class="kpi-value text-dark">&#8377;@Model.TotalAmount.ToString("N0")</div>
+                <div class="kpi-label">Total Expenses</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="kpi-box">
+                <div class="kpi-value text-muted">&#8377;@Model.ECBudgetLimit.ToString("N0")</div>
+                <div class="kpi-label">EC Ceiling Limit</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="kpi-box">
+                <div class="kpi-value @(Model.ECBudgetPercent >= 90 ? "text-danger" : Model.ECBudgetPercent >= 75 ? "text-warning" : "text-success")">
+                    @Model.ECBudgetPercent%
+                </div>
+                <div class="kpi-label">Budget Used</div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="kpi-box">
+                <div class="kpi-value text-success">@Model.Expenses.Count(e => e.IsECCompliant)</div>
+                <div class="kpi-label">EC-Compliant Entries</div>
+            </div>
+        </div>
+    </div>
+
+    @* Budget gauge *@
+    <div class="mb-4">
+        <div class="d-flex justify-content-between small mb-1">
+            <span class="fw-semibold">EC Budget Usage</span>
+            <span>&#8377;@Model.TotalAmount.ToString("N0") of &#8377;@Model.ECBudgetLimit.ToString("N0")</span>
+        </div>
+        <div class="gauge-bar">
+            <div class="gauge-fill @(Model.ECBudgetPercent >= 90 ? "bg-danger" : Model.ECBudgetPercent >= 75 ? "bg-warning" : "bg-success")"
+                 style="width:@Model.ECBudgetPercent%"></div>
+        </div>
+        @if (Model.ECBudgetPercent >= 90)
+        {
+            <div class="text-danger small mt-1 fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Critical: Approaching EC spending limit.</div>
+        }
+        else if (Model.ECBudgetPercent >= 75)
+        {
+            <div class="text-warning small mt-1 fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>Warning: Over 75% of EC budget spent.</div>
+        }
+    </div>
+
+    @* Category summary *@
+    @if (Model.CategoryTotals.Any())
+    {
+        <div class="section-title"><i class="bi bi-pie-chart me-1"></i>Spending by Category</div>
+        <div class="row g-2 mb-4">
+            @foreach (var cat in Model.CategoryTotals.OrderByDescending(x => x.Value))
+            {
+                var catPct = Model.TotalAmount > 0 ? (int)Math.Round((double)cat.Value / (double)Model.TotalAmount * 100) : 0;
+                <div class="col-6 col-md-4">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="fw-semibold">@cat.Key</span>
+                        <span>&#8377;@cat.Value.ToString("N0") <span class="text-muted">(@catPct%)</span></span>
+                    </div>
+                    <div class="gauge-bar" style="height:6px">
+                        <div class="gauge-fill bg-warning" style="width:@catPct%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @* Full expense list *@
+    <div class="section-title"><i class="bi bi-list-ul me-1"></i>Detailed Expense Register (@Model.Expenses.Count entries)</div>
+    <table class="table table-bordered table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Payee</th>
+                <th>Voucher</th>
+                <th class="text-end">Amount (&#8377;)</th>
+                <th class="text-center">EC</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{ int rowNo = 1; }
+        @foreach (var e in Model.Expenses)
+        {
+            <tr>
+                <td class="text-muted">@(rowNo++)</td>
+                <td class="text-nowrap">@e.ExpenseDate.ToString("dd MMM yy")</td>
+                <td>@e.Description</td>
+                <td><span class="badge bg-info text-dark">@e.Category</span></td>
+                <td>@(e.PayeeName ?? "—")</td>
+                <td class="font-monospace small">@(e.VoucherNumber ?? "—")</td>
+                <td class="text-end fw-bold">@e.Amount.ToString("N2")</td>
+                <td class="text-center">
+                    @if (e.IsECCompliant)
+                    { <span class="badge bg-success">?</span> }
+                    else
+                    { <span class="badge bg-danger">?</span> }
+                </td>
+            </tr>
+        }
+        @if (!Model.Expenses.Any())
+        {
+            <tr><td colspan="8" class="text-center text-muted py-3">No expenses found.</td></tr>
+        }
+        </tbody>
+        <tfoot class="table-light fw-bold">
+            <tr>
+                <td colspan="6" class="text-end">Grand Total</td>
+                <td class="text-end">&#8377;@Model.TotalAmount.ToString("N2")</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="mt-3 text-muted small text-center no-print">
+        Report generated by Nirvachak AI &mdash; @Model.GeneratedAt.ToString("dd MMM yyyy, h:mm tt")
+    </div>
+
+</body>
+</html>

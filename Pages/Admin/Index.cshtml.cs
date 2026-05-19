@@ -27,6 +27,13 @@ public class IndexModel : PageModel
     public List<AppUser> Users { get; set; } = new();
     public List<AuditLog> AuditLogs { get; set; } = new();
 
+    [BindProperty(SupportsGet = true)] public string? AuditUserFilter   { get; set; }
+    [BindProperty(SupportsGet = true)] public string? AuditActionFilter { get; set; }
+    [BindProperty(SupportsGet = true)] public DateTime? AuditDateFrom   { get; set; }
+    [BindProperty(SupportsGet = true)] public DateTime? AuditDateTo     { get; set; }
+    public List<string> AuditUsers   { get; set; } = new();
+    public List<string> AuditActions { get; set; } = new();
+
     public async Task OnGetAsync()
     {
         var currentUser = await _userManager.GetUserAsync(User);
@@ -43,10 +50,16 @@ public class IndexModel : PageModel
         }
 
         Users = await query.ToListAsync();
-        AuditLogs = await _db.AuditLogs
-            .OrderByDescending(a => a.CreatedAt)
-            .Take(20)
-            .ToListAsync();
+
+        IQueryable<AuditLog> auditQ = _db.AuditLogs.OrderByDescending(a => a.CreatedAt);
+        if (!string.IsNullOrEmpty(AuditUserFilter))   auditQ = auditQ.Where(a => a.UserName == AuditUserFilter);
+        if (!string.IsNullOrEmpty(AuditActionFilter)) auditQ = auditQ.Where(a => a.Action == AuditActionFilter);
+        if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());
+        if (AuditDateTo.HasValue)   auditQ = auditQ.Where(a => a.CreatedAt <= AuditDateTo.Value.ToUniversalTime().AddDays(1));
+
+        AuditLogs   = await auditQ.Take(50).ToListAsync();
+        AuditUsers  = await _db.AuditLogs.Select(a => a.UserName).Distinct().OrderBy(x => x).ToListAsync();
+        AuditActions = await _db.AuditLogs.Select(a => a.Action).Distinct().OrderBy(x => x).ToListAsync();
     }
 
     public async Task<IActionResult> OnPostToggleAsync(string userId)

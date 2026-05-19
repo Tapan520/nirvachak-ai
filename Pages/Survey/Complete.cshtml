@@ -1,0 +1,98 @@
+@page
+@model Nirvachak_AI.Pages.VoterSurvey.CompleteModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thank You — Nirvachak AI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body { background: linear-gradient(135deg, #e8eeff 0%, #f5f7ff 100%); min-height: 100vh; }
+        .complete-wrap { max-width: 520px; margin: 0 auto; padding: 2rem 1rem; }
+        .brand-bar { background: #3b5bdb; color: #fff; padding: 0.6rem 1.2rem; border-radius: 0 0 12px 12px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; }
+        .coupon-box {
+            border: 2px dashed #198754; border-radius: 12px;
+            background: #f0fff4; padding: 1.5rem; text-align: center;
+        }
+        .coupon-code {
+            font-family: monospace; font-size: 2rem; font-weight: 700;
+            letter-spacing: 0.15em; color: #198754;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center pt-3 pb-1">
+        <span class="brand-bar">
+            <i class="bi bi-bar-chart-fill"></i> Nirvachak AI &nbsp;·&nbsp; Voter Self-Survey
+        </span>
+    </div>
+
+    <div class="complete-wrap">
+        <div class="card shadow-sm border-0 text-center p-4 p-md-5">
+            <i class="bi bi-check-circle-fill text-success mb-3" style="font-size: 3.5rem"></i>
+
+            <h4 class="fw-bold mb-1">
+                @if (Model.AlreadyDone)
+                {
+                    <span>Already Submitted!</span>
+                }
+                else
+                {
+                    <span>Thank You@(Model.VoterName != null ? $", {Model.VoterName}" : "")! ??</span>
+                }
+            </h4>
+
+            <p class="text-muted mb-4">
+                @if (Model.AlreadyDone)
+                {
+                    <span>You have already completed this survey. Each voter may submit only once.</span>
+                }
+                else
+                {
+                    <span>Your survey response has been recorded successfully.</span>
+                }
+            </p>
+
+            @if (Model.HasCoupon)
+            {
+                <div class="coupon-box mb-4">
+                    <div class="text-muted small mb-2">
+                        <i class="bi bi-gift-fill text-success me-1"></i>
+                        <strong>Your Reward Coupon</strong>
+                        @if (!string.IsNullOrEmpty(Model.RewardTitle))
+                        {
+                            <span> — @Model.RewardTitle</span>
+                        }
+                    </div>
+                    <div class="coupon-code">@Model.CouponCode</div>
+                    @if (!string.IsNullOrEmpty(Model.Brand))
+                    {
+                        <div class="text-muted small mt-1">Partner: <strong>@Model.Brand</strong></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Expiry))
+                    {
+                        <div class="text-muted small">Valid till: <strong>@Model.Expiry</strong></div>
+                    }
+                    <button class="btn btn-sm btn-outline-success mt-3"
+                            onclick="navigator.clipboard.writeText('@Model.CouponCode');this.textContent='? Copied!'">
+                        <i class="bi bi-clipboard me-1"></i>Copy Code
+                    </button>
+                </div>
+                <p class="text-muted small">Show this code at the partner outlet to redeem your reward.</p>
+            }
+            else if (!Model.AlreadyDone)
+            {
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No reward coupons are available at this time. Thank you for participating!
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>

@@ -28,6 +28,9 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int? SelectedBoothNumber { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public string? PriorityFilter { get; set; }
+
     public List<Constituency> Constituencies { get; set; } = new();
     public List<Ward> Wards { get; set; } = new();
     public List<Booth> Booths { get; set; } = new();
@@ -79,6 +82,8 @@ public class IndexModel : PageModel
             query = query.Where(g => g.Ward == SelectedWard);
         if (SelectedBoothNumber.HasValue)
             query = query.Where(g => g.BoothNumber == SelectedBoothNumber.Value);
+        if (!string.IsNullOrEmpty(PriorityFilter) && Enum.TryParse<GrievancePriority>(PriorityFilter, out var prio))
+            query = query.Where(g => g.Priority == prio);
 
         Grievances = await query.ToListAsync();
         OpenCount = Grievances.Count(g => g.Status == GrievanceStatus.Open);

@@ -74,4 +74,18 @@ public class IndexModel : PageModel
         }
         return RedirectToPage();
     }
+
+    public async Task<IActionResult> OnPostUpdateAttendanceAsync(int id, int actualAttendance)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null || !ManageRoles.Contains(user.Role)) return Forbid();
+        var ev = await _db.CampaignEvents.FindAsync(id);
+        if (ev != null)
+        {
+            ev.ActualAttendance = actualAttendance;
+            await _db.SaveChangesAsync();
+            TempData["Message"] = $"Attendance updated for '{ev.Title}'.";
+        }
+        return RedirectToPage();
+    }
 }

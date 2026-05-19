@@ -24,6 +24,7 @@ public class IndexModel : PageModel
     public List<Constituency> Constituencies { get; set; } = new();
     public bool IsAdmin { get; set; }
     public bool CanManage { get; set; }
+    public Dictionary<string, int> VolunteerVisitCounts { get; set; } = new();
 
     [BindProperty(SupportsGet = true)]
     public int? ConstituencyFilter { get; set; }
@@ -45,6 +46,15 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             query = query.Where(v => v.ConstituencyId == user.ConstituencyId);
         Volunteers = await query.ToListAsync();
+
+        // Count door-to-door visits matched by volunteer name
+        var names = Volunteers.Select(v => v.Name).ToHashSet();
+        var visitCounts = await _db.DoorToDoorVisits
+            .Where(d => names.Contains(d.WorkerName))
+            .GroupBy(d => d.WorkerName)
+            .Select(g => new { Name = g.Key, Count = g.Count() })
+            .ToListAsync();
+        VolunteerVisitCounts = visitCounts.ToDictionary(x => x.Name, x => x.Count);
     }
 
     public async Task<IActionResult> OnPostToggleAsync(int id)

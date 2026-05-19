@@ -1,0 +1,455 @@
+@page
+@model Nirvachak_AI.Pages.Analytics.SurveyDemographicsModel
+@{
+    ViewData["Title"] = "Voter Consent Analytics";
+    var activeTab = Model.FilterTab ?? "analytics";
+}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-person-check-fill me-2 text-primary"></i>Voter Consent Analytics</h4>
+        <p class="text-muted small mb-0">Survey Demographics &amp; Consent Analytics — completions, consents, demographics and outreach.</p>
+    </div>
+    @* Filter bar *@
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+        <input type="hidden" name="FilterTab" value="@activeTab" />
+        @if (Model.AvailableWards.Any())
+        {
+            <select name="FilterWard" class="form-select form-select-sm" style="max-width:160px" onchange="this.form.submit()">
+                <option value="">All Wards</option>
+                @foreach (var w in Model.AvailableWards)
+                {
+                    <option value="@w" selected="@(Model.FilterWard == w)">Ward @w</option>
+                }
+            </select>
+        }
+        @if (Model.AvailableBooths.Any())
+        {
+            <select name="FilterBooth" class="form-select form-select-sm" style="max-width:160px" onchange="this.form.submit()">
+                <option value="">All Booths</option>
+                @foreach (var b in Model.AvailableBooths)
+                {
+                    <option value="@b" selected="@(Model.FilterBooth == b)">Booth @b</option>
+                }
+            </select>
+        }
+        @if (Model.FilterBooth.HasValue || !string.IsNullOrEmpty(Model.FilterWard))
+        {
+            <a href="?FilterTab=@activeTab" class="btn btn-sm btn-outline-secondary">Clear</a>
+        }
+    </form>
+</div>
+
+@* ?? Summary Cards ???????????????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-primary">@Model.CompletedCount</div>
+                <div class="small text-muted">Completed</div>
+                <span class="badge bg-primary bg-opacity-10 text-primary small">@Model.CompletionRate%</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-danger">@Model.PendingCount</div>
+                <div class="small text-muted">Pending</div>
+                <span class="badge bg-danger bg-opacity-10 text-danger small">not yet done</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-success">@Model.CouponsIssued</div>
+                <div class="small text-muted">Coupons Issued</div>
+                <span class="badge bg-success bg-opacity-10 text-success small">@Model.CouponsRedeemed redeemed</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-warning">@Model.ConsentThirdParty</div>
+                <div class="small text-muted">3rd-Party Consent</div>
+                @{ var tpRate = Model.CompletedCount > 0 ? (int)Math.Round((double)Model.ConsentThirdParty / Model.CompletedCount * 100) : 0; }
+                <span class="badge bg-warning bg-opacity-10 text-warning small">@tpRate% rate</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-info">@Model.ConsentWhatsApp</div>
+                <div class="small text-muted">WhatsApp Consent</div>
+                @{ var waRate = Model.CompletedCount > 0 ? (int)Math.Round((double)Model.ConsentWhatsApp / Model.CompletedCount * 100) : 0; }
+                <span class="badge bg-info bg-opacity-10 text-info small">@waRate% rate</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body px-2 py-3">
+                <div class="fs-3 fw-bold text-secondary">@Model.ConsentCampaign</div>
+                <div class="small text-muted">Outreach Consent</div>
+                @{ var ocRate = Model.CompletedCount > 0 ? (int)Math.Round((double)Model.ConsentCampaign / Model.CompletedCount * 100) : 0; }
+                <span class="badge bg-secondary bg-opacity-10 text-secondary small">@ocRate% rate</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ?? Tab navigation ??????????????????????????????????????????????? *@
+<ul class="nav nav-tabs mb-4" id="analyticsTab">
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "analytics" ? "active" : "")"
+           href="?FilterTab=analytics&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+            <i class="bi bi-bar-chart-line me-1"></i>Demographics &amp; Consent
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "completed" ? "active" : "")"
+           href="?FilterTab=completed&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+            <i class="bi bi-check2-circle me-1"></i>Completed
+            <span class="badge bg-success ms-1">@Model.CompletedCount</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activeTab == "pending" ? "active" : "")"
+           href="?FilterTab=pending&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+            <i class="bi bi-hourglass-split me-1"></i>Pending — Send Link
+            <span class="badge bg-danger ms-1">@Model.PendingCount</span>
+        </a>
+    </li>
+</ul>
+
+@* ???????????????????????????????????????????????????????????????? *@
+@* TAB 1 — DEMOGRAPHICS & CONSENT                                  *@
+@* ???????????????????????????????????????????????????????????????? *@
+@if (activeTab == "analytics")
+{
+    @if (!Model.CanViewStats)
+    {
+        <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-1"></i>
+            Detailed analytics are visible to Admin, Campaign Manager and Candidate roles only.
+            Use the <strong>Completed</strong> and <strong>Pending</strong> tabs to manage your area.
+        </div>
+    }
+    else
+    {
+        @* Consent Rates *@
+        <div class="card mb-4">
+            <div class="card-header fw-semibold small">
+                <i class="bi bi-shield-check me-2 text-success"></i>Consent Rates
+            </div>
+            <div class="card-body">
+                @{
+                    void ConsentBar(string label, int count, string color)
+                    {
+                        var pct = Model.CompletedCount > 0 ? (int)Math.Round((double)count / Model.CompletedCount * 100) : 0;
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>@label</span>
+                                <span class="fw-semibold">@count <span class="text-muted">(@pct%)</span></span>
+                            </div>
+                            <div class="progress" style="height:8px">
+                                <div class="progress-bar bg-@color" style="width:@pct%"></div>
+                            </div>
+                        </div>;
+                    }
+                    ConsentBar("Third-Party Advertising (Mandatory)", Model.ConsentThirdParty, "warning");
+                    ConsentBar("Campaign Outreach",                   Model.ConsentCampaign,   "primary");
+                    ConsentBar("WhatsApp Messages",                   Model.ConsentWhatsApp,   "success");
+                    ConsentBar("Scheme Notifications",                Model.ConsentScheme,     "info");
+                    ConsentBar("Data for Analytics",                  Model.ConsentAnalytics,  "secondary");
+                }
+            </div>
+        </div>
+
+        @* Demographic Grids *@
+        <div class="row g-3 mb-4">
+            @{
+                void DemoCard(string title, string icon, Dictionary<string, int> data, string color)
+                {
+                    var total = data.Values.Sum();
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header small fw-semibold"><i class="bi @icon me-2"></i>@title</div>
+                            <div class="card-body py-2">
+                                @if (data.Any())
+                                {
+                                    @foreach (var kv in data)
+                                    {
+                                        var pct = total > 0 ? (int)Math.Round((double)kv.Value / total * 100) : 0;
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span>@kv.Key</span>
+                                                <span class="fw-semibold">@kv.Value <span class="text-muted">(@pct%)</span></span>
+                                            </div>
+                                            <div class="progress" style="height:6px">
+                                                <div class="progress-bar bg-@color" style="width:@pct%"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else { <p class="text-muted small text-center py-3 mb-0">No data yet</p> }
+                            </div>
+                        </div>
+                    </div>;
+                }
+                DemoCard("Caste Category", "bi-people-fill",      Model.ByCaste,      "primary");
+                DemoCard("Religion",       "bi-star-fill",        Model.ByReligion,   "warning");
+                DemoCard("Education",      "bi-mortarboard-fill", Model.ByEducation,  "info");
+                DemoCard("Occupation",     "bi-briefcase-fill",   Model.ByOccupation, "success");
+                DemoCard("Monthly Income", "bi-currency-rupee",   Model.ByIncome,     "danger");
+                DemoCard("Age Bracket",    "bi-person-fill",      Model.ByAgeBracket, "secondary");
+            }
+        </div>
+
+        @* Top Concerns *@
+        @if (Model.TopConcerns.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header small fw-semibold">
+                    <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Top Voter Concerns
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @{ var maxC = Model.TopConcerns.Values.Max(); }
+                        @foreach (var kv in Model.TopConcerns)
+                        {
+                            var pct = maxC > 0 ? (int)Math.Round((double)kv.Value / maxC * 100) : 0;
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span class="fw-semibold">@kv.Key</span>
+                                    <span class="text-muted">@kv.Value responses</span>
+                                </div>
+                                <div class="progress" style="height:10px">
+                                    <div class="progress-bar bg-warning" style="width:@pct%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Completion by Booth *@
+        @if (Model.CompletionByBooth.Any())
+        {
+            <div class="card">
+                <div class="card-header small fw-semibold"><i class="bi bi-building me-2"></i>Completions by Booth</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        @foreach (var kv in Model.CompletionByBooth.OrderBy(x => x.Key))
+                        {
+                            <div class="col-6 col-md-2">
+                                <div class="card text-center border-0 bg-light">
+                                    <div class="card-body py-2">
+                                        <div class="fw-bold fs-5">@kv.Value</div>
+                                        <div class="small text-muted">Booth @kv.Key</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                    No survey responses yet. Use the <strong>Pending</strong> tab to send the survey link to voters.
+                </div>
+            </div>
+        }
+    }
+}
+
+@* ???????????????????????????????????????????????????????????????? *@
+@* TAB 2 — COMPLETED VOTERS                                        *@
+@* ???????????????????????????????????????????????????????????????? *@
+@if (activeTab == "completed")
+{
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small">
+                <i class="bi bi-check2-circle me-2 text-success"></i>
+                Voters Who Completed the Survey
+                <span class="badge bg-success ms-2">@Model.CompletedVoters.Count</span>
+            </span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Voter Name</th>
+                            <th>EPIC No.</th>
+                            <th class="text-center">Booth</th>
+                            <th class="text-center">Ward</th>
+                            <th>Completed On</th>
+                            <th>Coupon</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (!Model.CompletedVoters.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">No voters have completed the survey yet.</td></tr>
+                    }
+                    @foreach (var v in Model.CompletedVoters)
+                    {
+                        <tr>
+                            <td class="fw-semibold small">@v.Name</td>
+                            <td class="font-monospace small">@v.VoterEpic</td>
+                            <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
+                            <td class="text-center small">@(v.WardNumber ?? "—")</td>
+                            <td class="small text-muted">@v.CompletedAt.ToLocalTime().ToString("dd MMM yy, hh:mm tt")</td>
+                            <td>
+                                @if (v.HasCoupon && !string.IsNullOrEmpty(v.CouponCode))
+                                {
+                                    <span class="badge bg-success font-monospace">@v.CouponCode</span>
+                                }
+                                else if (v.HasCoupon)
+                                {
+                                    <span class="badge bg-secondary">Issued</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@* ???????????????????????????????????????????????????????????????? *@
+@* TAB 3 — PENDING VOTERS + SEND SURVEY LINK                       *@
+@* ???????????????????????????????????????????????????????????????? *@
+@if (activeTab == "pending")
+{
+    <div class="alert alert-info small d-flex gap-2 align-items-start mb-3">
+        <i class="bi bi-info-circle-fill fs-5 mt-1 flex-shrink-0"></i>
+        <div>
+            Share the survey link with voters below via <strong>WhatsApp</strong> or <strong>Email</strong>.
+            The link takes them directly to the voter self-survey form.
+            Survey URL: <code id="surveyUrl">@Model.SurveyBaseUrl</code>
+            <button class="btn btn-xs btn-outline-secondary ms-2 py-0 px-2 small"
+                    onclick="navigator.clipboard.writeText('@Model.SurveyBaseUrl');this.textContent='? Copied'">
+                <i class="bi bi-clipboard me-1"></i>Copy
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold small">
+                <i class="bi bi-hourglass-split me-2 text-danger"></i>
+                Voters Yet to Complete the Survey
+                <span class="badge bg-danger ms-2">@Model.PendingVoters.Count</span>
+            </span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small">
+                    <i class="bi bi-whatsapp text-success me-1"></i>
+                    Click a voter row's WhatsApp button to send them the link individually.
+                </span>
+                <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportPendingCsv"
+                   asp-route-FilterBooth="@Model.FilterBooth"
+                   asp-route-FilterWard="@Model.FilterWard"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-download me-1"></i>Download CSV
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Voter Name</th>
+                            <th>EPIC No.</th>
+                            <th class="text-center">Booth</th>
+                            <th class="text-center">Ward</th>
+                            <th>Mobile</th>
+                            <th class="text-center">Send Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (!Model.PendingVoters.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-check2-all text-success me-1"></i>
+                                All voters in your area have completed the survey!
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var v in Model.PendingVoters)
+                    {
+                        var surveyLink   = Model.SurveyBaseUrl;
+                        var voterGreet   = Uri.EscapeDataString(
+                            $"Dear {v.Name}, please fill in this quick voter survey and claim your reward coupon: {surveyLink}");
+                        var waLink       = $"https://wa.me/91{v.MobileNumber?.Trim()}?text={voterGreet}";
+                        var emailSubject = Uri.EscapeDataString("Complete Your Voter Survey & Claim Your Reward");
+                        var emailBody    = Uri.EscapeDataString(
+                            $"Dear {v.Name},\n\nPlease complete the voter survey at the link below and receive a reward coupon as a thank-you:\n\n{surveyLink}\n\nThank you.");
+                        var emailLink    = $"mailto:?subject={emailSubject}&body={emailBody}";
+
+                        <tr>
+                            <td class="fw-semibold small">@v.Name</td>
+                            <td class="font-monospace small">@v.VoterEpic</td>
+                            <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
+                            <td class="text-center small">@(v.WardNumber ?? "—")</td>
+                            <td class="small">
+                                @if (!string.IsNullOrEmpty(v.MobileNumber))
+                                { <span class="font-monospace">@v.MobileNumber</span> }
+                                else
+                                { <span class="text-muted">—</span> }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    @if (!string.IsNullOrEmpty(v.MobileNumber))
+                                    {
+                                        <a href="@waLink" target="_blank"
+                                           class="btn btn-sm btn-success py-0 px-2"
+                                           title="Send via WhatsApp to @v.MobileNumber">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary py-0 px-2" disabled title="No mobile number">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </button>
+                                    }
+                                    <a href="@emailLink"
+                                       class="btn btn-sm btn-outline-primary py-0 px-2"
+                                       title="Send via Email">
+                                        <i class="bi bi-envelope-fill"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                            title="Copy link"
+                                            onclick="navigator.clipboard.writeText('@surveyLink');this.innerHTML='<i class=\'bi bi-check2\'></i>'">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+

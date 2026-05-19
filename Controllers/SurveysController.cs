@@ -33,4 +33,29 @@ public class SurveysController : ApiBaseController
 
         return Ok(items);
     }
+
+    /// <summary>Submit a response to a survey</summary>
+    [HttpPost("{id}/respond")]
+    [ProducesResponseType(typeof(ApiResult), 200)]
+    public async Task<IActionResult> Respond(int id, [FromBody] SubmitSurveyResponseRequest req)
+    {
+        var survey = await _db.Surveys.FindAsync(id);
+        if (survey == null) return NotFound(new ApiResult(false, "Survey not found."));
+        if (!survey.IsActive) return BadRequest(new ApiResult(false, "This survey is no longer active."));
+
+        _db.SurveyResponses.Add(new Domain.Entities.SurveyResponse
+        {
+            SurveyId        = id,
+            RespondentName  = req.RespondentName,
+            RespondentPhone = req.RespondentPhone,
+            Ward            = req.Ward,
+            BoothNumber     = req.BoothNumber,
+            Rating          = req.Rating,
+            Feedback        = req.Feedback,
+            RespondedAt     = DateTime.UtcNow
+        });
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResult(true, "Response submitted successfully."));
+    }
 }

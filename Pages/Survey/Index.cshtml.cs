@@ -78,6 +78,25 @@ public class IndexModel : PageModel
             return Page();
         }
 
+        // Basic rate-limit: max 10 lookups per IP per minute (via session counter)
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var lookupKey = $"survey_lookup_{ip}";
+        if (HttpContext.Session.TryGetValue(lookupKey, out var raw))
+        {
+            var attempts = BitConverter.ToInt32(raw);
+            if (attempts >= 10)
+            {
+                ModelState.AddModelError(nameof(EpicNumber), "Too many attempts. Please try again later.");
+                Step = "lookup";
+                return Page();
+            }
+            HttpContext.Session.Set(lookupKey, BitConverter.GetBytes(attempts + 1));
+        }
+        else
+        {
+            HttpContext.Session.Set(lookupKey, BitConverter.GetBytes(1));
+        }
+
         var voter = await _db.Voters
             .FirstOrDefaultAsync(v => v.VoterId == EpicNumber.Trim().ToUpper() && !v.IsDeleted);
 

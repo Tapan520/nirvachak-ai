@@ -33,13 +33,17 @@
     {
         var roleStr = currentUser.Role.ToString();
         var now = DateTime.UtcNow;
+        var ackedIds = await LayoutDb.AnnouncementAcknowledgements
+            .Where(ack => ack.UserId == currentUser.Id)
+            .Select(ack => ack.AnnouncementId)
+            .ToListAsync();
         annUnread = await LayoutDb.Announcements.CountAsync(a =>
             a.IsActive
             && a.RequiresAcknowledgement
             && (a.ExpiresAt == null || a.ExpiresAt > now)
             && (a.ConstituencyId == null || a.ConstituencyId == currentUser.ConstituencyId)
             && (a.TargetRoles == "All" || a.TargetRoles.Contains(roleStr))
-            && !LayoutDb.AnnouncementAcknowledgements.Any(ack => ack.AnnouncementId == a.Id && ack.UserId == currentUser.Id));
+            && !ackedIds.Contains(a.Id));
     }
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->

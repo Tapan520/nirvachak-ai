@@ -67,6 +67,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // ?? JWT Auth (Mobile API) ?????????????????????????????????????
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key is not configured. Set it via environment variable or user secrets.");
 builder.Services.AddAuthentication()
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
@@ -78,8 +80,7 @@ builder.Services.AddAuthentication()
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero
         };
     });
@@ -95,6 +96,15 @@ builder.Services.AddScoped<ElectionDayService>();
 builder.Services.AddScoped<VoterSlipService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<AuditService>();
+
+// Session (used for survey rate-limiting on public pages)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // ?? SignalR ???????????????????????????????????????????????????
 builder.Services.AddSignalR();
@@ -161,6 +171,7 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseCors("AllowAll");
 app.UseRouting();
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 

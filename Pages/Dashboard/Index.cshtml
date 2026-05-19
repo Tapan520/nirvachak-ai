@@ -656,18 +656,24 @@ else
 }
 
 @section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
 <script>
     function clearChildren(ids) {
         ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     }
+</script>
+
+@if (!Model.IsFieldWorker)
+{
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
     const chartOpts = {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } }
     };
 </script>
 
-@if (!Model.IsFieldWorker && Model.SentimentBreakdown.Any())
+@if (Model.SentimentBreakdown.Any())
 {
     <script>
     new Chart(document.getElementById('sentimentChart').getContext('2d'), {
@@ -682,7 +688,7 @@ else
     </script>
 }
 
-@if (!Model.IsFieldWorker && Model.ReligionBreakdown.Any())
+@if (Model.ReligionBreakdown.Any())
 {
     <script>
     new Chart(document.getElementById('religionChart').getContext('2d'), {
@@ -697,7 +703,7 @@ else
     </script>
 }
 
-@if (!Model.IsFieldWorker && Model.CasteBreakdown.Any())
+@if (Model.CasteBreakdown.Any())
 {
     <script>
     new Chart(document.getElementById('casteChart').getContext('2d'), {
@@ -710,5 +716,6 @@ else
         options: chartOpts
     });
     </script>
+}
 }
 }

@@ -193,14 +193,19 @@ public class IndexModel : PageModel
         }
 
         var voterIds = await voters.Select(v => v.Id).ToListAsync();
-        var profiles = await _db.VoterProfiles
-            .Where(p => voterIds.Contains(p.VoterId))
-            .AsNoTracking().ToListAsync();
 
-        ProfiledVoterCount   = profiles.Count;
+        // Use chunked Contains to stay within SQLite IN-clause limits
+        ProfiledVoterCount   = await _db.VoterProfiles
+            .CountAsync(p => voters.Select(v => v.Id).Contains(p.VoterId));
         SurveyCompletedCount = await _db.SurveyCompletions
-            .Where(s => voterIds.Contains(s.VoterId)).CountAsync();
+            .CountAsync(s => voters.Select(v => v.Id).Contains(s.VoterId));
         SurveyPendingCount   = TotalVoters - SurveyCompletedCount;
+
+        var profiles = voterIds.Count == 0
+            ? new List<VoterProfile>()
+            : await _db.VoterProfiles
+                .Where(p => voterIds.Contains(p.VoterId))
+                .AsNoTracking().ToListAsync();
 
         ReligionBreakdown = profiles
             .Where(p => !string.IsNullOrEmpty(p.Religion))

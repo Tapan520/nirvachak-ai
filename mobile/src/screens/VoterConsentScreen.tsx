@@ -181,33 +181,36 @@ function CompletedTab({ filterBooth, filterWard }: { filterBooth?: number; filte
             }
             renderItem={({ item: v }) => (
               <View style={[s.voterRow, { borderLeftColor: '#2f9e44' }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.voterName}>{v.name}</Text>
-                  <Text style={s.voterMeta}>
-                    {v.voterEpic} · Booth {v.boothNumber}
-                    {v.wardNumber ? ` · Ward ${v.wardNumber}` : ''}
-                  </Text>
-                  {v.mobileNumber
-                    ? <Text style={s.voterPhone}>{v.mobileNumber}</Text>
-                    : null}
-                  <Text style={{ fontSize: 11, color: '#2f9e44', marginTop: 2 }}>
-                    ? {new Date(v.completedAt).toLocaleDateString('en-IN')}
-                  </Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  {v.hasCoupon && v.couponCode
-                    ? <View style={s.couponBadge}>
-                        <Text style={s.couponTxt}>{v.couponCode}</Text>
-                      </View>
-                    : v.hasCoupon
-                      ? <View style={[s.couponBadge, { backgroundColor: '#e9ecef' }]}>
-                          <Text style={[s.couponTxt, { color: '#868e96' }]}>Issued</Text>
-                        </View>
+                {/* Top: name / meta / coupon */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.voterName}>{v.name}</Text>
+                    <Text style={s.voterMeta}>
+                      {v.voterEpic} · Booth {v.boothNumber}
+                      {v.wardNumber ? ` · Ward ${v.wardNumber}` : ''}
+                    </Text>
+                    {v.mobileNumber
+                      ? <Text style={s.voterPhone}>{v.mobileNumber}</Text>
                       : null}
-                  <TouchableOpacity style={s.editBtn}
+                    <Text style={{ fontSize: 11, color: '#2f9e44', marginTop: 2 }}>
+                      ? {new Date(v.completedAt).toLocaleDateString('en-IN')}
+                    </Text>
+                  </View>
+                  {v.hasCoupon && (
+                    <View style={[s.couponBadge, { marginLeft: 8 }]}>
+                      <Text style={s.couponTxt}>
+                        {v.couponCode ? v.couponCode : 'Issued'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {/* Bottom: action buttons always fully visible */}
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity
+                    style={s.editBtn}
                     onPress={() => nav.navigate('EditVoterSurvey', { voterId: v.id })}>
                     <Ionicons name="create-outline" size={14} color="#3b5bdb" />
-                    <Text style={s.editBtnTxt}>Edit</Text>
+                    <Text style={s.editBtnTxt}>Edit Survey</Text>
                   </TouchableOpacity>
                   {v.mobileNumber && (
                     <TouchableOpacity style={s.waBtn}
@@ -496,8 +499,8 @@ const s = StyleSheet.create({
                      paddingVertical: 10, elevation: 1, gap: 8 },
   searchInput:     { flex: 1, fontSize: 13, color: '#212529' },
   voterRow:        { backgroundColor: '#fff', borderRadius: 10, padding: 14,
-                     marginBottom: 8, flexDirection: 'row', alignItems: 'center',
-                     borderLeftWidth: 4, elevation: 1, gap: 10 },
+                     marginBottom: 8, flexDirection: 'column',
+                     borderLeftWidth: 4, elevation: 1 },
   voterName:       { fontSize: 14, fontWeight: '700', color: '#212529' },
   voterMeta:       { fontSize: 11, color: '#868e96', marginTop: 2 },
   voterPhone:      { fontSize: 11, color: '#4dabf7', marginTop: 2 },

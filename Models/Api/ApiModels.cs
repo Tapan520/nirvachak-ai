@@ -124,6 +124,26 @@ public record BoothAnalyticsItem(
     int BoothNumber, int Total,
     int Favour, int Against, int Neutral, int Unknown, int Floating);
 
+// ── Voter Consent / Survey Analytics ─────────────────────────────
+public record VoterConsentStatsResponse(
+    int TotalVoters, int CompletedCount, int PendingCount, double CompletionRate,
+    int CouponsIssued, int CouponsRedeemed,
+    int ConsentThirdParty, int ConsentCampaign, int ConsentWhatsApp,
+    int ConsentScheme, int ConsentAnalytics,
+    List<int> AvailableBooths, List<string> AvailableWards,
+    List<BoothSurveyCount> CompletionByBooth);
+
+public record BoothSurveyCount(int BoothNumber, int Count);
+
+public record SurveyCompletedVoter(
+    int Id, string Name, string VoterEpic, string? MobileNumber,
+    int BoothNumber, string? WardNumber,
+    DateTime CompletedAt, bool HasCoupon, string? CouponCode);
+
+public record SurveyPendingVoter(
+    int Id, string Name, string VoterEpic, string? MobileNumber,
+    int BoothNumber, string? WardNumber);
+
 // ── Generic ───────────────────────────────────────────────────────
 public record ApiResult(bool Success, string? Message = null);
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize, int TotalPages);

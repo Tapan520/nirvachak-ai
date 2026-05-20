@@ -77,6 +77,7 @@ export default function MoreScreen() {
         <MenuItem icon="stats-chart-outline"   label="Analytics"        desc="Sentiment & voter insights"       color="#7950f2" screen="Analytics" />
         <MenuItem icon="clipboard-outline"     label="Surveys"          desc="Active surveys & responses"       color="#f59f00" screen="Surveys" />
         <MenuItem icon="wallet-outline"        label="Expenses"         desc="Campaign expense tracker"         color="#2f9e44" screen="Expenses" />
+        <MenuItem icon="clipboard-check-outline" label="Voter Consent"   desc="Survey completions & pending outreach" color="#0c8599" screen="VoterConsent" />
       </View>
 
       <Text style={s.sectionTitle}>Account</Text>

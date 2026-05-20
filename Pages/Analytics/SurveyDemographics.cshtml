@@ -4,11 +4,14 @@
     ViewData["Title"] = "Voter Consent Analytics";
     var activeTab = Model.FilterTab ?? "analytics";
 }
+@if (TempData["Message"] != null)
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show py-2 mb-3"><i class="bi bi-check2-circle me-2"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h4 class="mb-0"><i class="bi bi-person-check-fill me-2 text-primary"></i>Voter Consent Analytics</h4>
-        <p class="text-muted small mb-0">Survey Demographics &amp; Consent Analytics — completions, consents, demographics and outreach.</p>
+        <p class="text-muted small mb-0">Survey Demographics &amp; Consent Analytics ï¿½ completions, consents, demographics and outreach.</p>
     </div>
     @* Export survey profiles button *@
     <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportProfilesCsv"
@@ -126,14 +129,14 @@
     <li class="nav-item">
         <a class="nav-link @(activeTab == "pending" ? "active" : "")"
            href="?FilterTab=pending&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
-            <i class="bi bi-hourglass-split me-1"></i>Pending — Send Link
+            <i class="bi bi-hourglass-split me-1"></i>Pending ï¿½ Send Link
             <span class="badge bg-danger ms-1">@Model.PendingCount</span>
         </a>
     </li>
 </ul>
 
 @* ???????????????????????????????????????????????????????????????? *@
-@* TAB 1 — DEMOGRAPHICS & CONSENT                                  *@
+@* TAB 1 ï¿½ DEMOGRAPHICS & CONSENT                                  *@
 @* ???????????????????????????????????????????????????????????????? *@
 @if (activeTab == "analytics")
 {
@@ -279,7 +282,7 @@
 }
 
 @* ???????????????????????????????????????????????????????????????? *@
-@* TAB 2 — COMPLETED VOTERS                                        *@
+@* TAB 2 ï¿½ COMPLETED VOTERS                                        *@
 @* ???????????????????????????????????????????????????????????????? *@
 @if (activeTab == "completed")
 {
@@ -293,7 +296,7 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <input type="text" id="completedSearch"
                        class="form-control form-control-sm" style="max-width:220px"
-                       placeholder="Search name / EPIC / mobile…"
+                       placeholder="Search name / EPIC / mobileï¿½"
                        oninput="filterCompletedTable(this.value)" />
                 <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportCompletedCsv"
                    asp-route-FilterBooth="@Model.FilterBooth"
@@ -315,12 +318,13 @@
                             <th>Mobile</th>
                             <th>Completed On</th>
                             <th>Coupon</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                     @if (!Model.CompletedVoters.Any())
                     {
-                        <tr><td colspan="7" class="text-center text-muted py-4">No voters have completed the survey yet.</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-4">No voters have completed the survey yet.</td></tr>
                     }
                     @foreach (var v in Model.CompletedVoters)
                     {
@@ -329,8 +333,8 @@
                             <td class="fw-semibold small">@v.Name</td>
                             <td class="font-monospace small">@v.VoterEpic</td>
                             <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
-                            <td class="text-center small">@(v.WardNumber ?? "—")</td>
-                            <td class="small font-monospace">@(v.MobileNumber ?? "—")</td>
+                            <td class="text-center small">@(v.WardNumber ?? "â€”")</td>
+                            <td class="small font-monospace">@(v.MobileNumber ?? "â€”")</td>
                             <td class="small text-muted">@v.CompletedAt.ToLocalTime().ToString("dd MMM yy, h:mm tt")</td>
                             <td>
                                 @if (v.HasCoupon && !string.IsNullOrEmpty(v.CouponCode))
@@ -343,8 +347,17 @@
                                 }
                                 else
                                 {
-                                    <span class="text-muted small">—</span>
+                                    <span class="text-muted small">â€”</span>
                                 }
+                            </td>
+                            <td class="text-center">
+                                <a asp-page="/Analytics/EditVoterSurvey"
+                                   asp-route-voterId="@v.VoterId"
+                                   asp-route-returnBooth="@Model.FilterBooth"
+                                   asp-route-returnWard="@Model.FilterWard"
+                                   class="btn btn-sm btn-outline-primary py-0 px-2">
+                                    <i class="bi bi-pencil-square me-1"></i>Edit
+                                </a>
                             </td>
                         </tr>
                     }
@@ -385,7 +398,7 @@
 }
 
 @* ???????????????????????????????????????????????????????????????? *@
-@* TAB 3 — PENDING VOTERS + SEND SURVEY LINK                       *@
+@* TAB 3 ï¿½ PENDING VOTERS + SEND SURVEY LINK                       *@
 @* ???????????????????????????????????????????????????????????????? *@
 @if (activeTab == "pending")
 {
@@ -460,12 +473,12 @@
                             <td class="fw-semibold small">@v.Name</td>
                             <td class="font-monospace small">@v.VoterEpic</td>
                             <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
-                            <td class="text-center small">@(v.WardNumber ?? "—")</td>
+                            <td class="text-center small">@(v.WardNumber ?? "ï¿½")</td>
                             <td class="small">
                                 @if (!string.IsNullOrEmpty(v.MobileNumber))
                                 { <span class="font-monospace">@v.MobileNumber</span> }
                                 else
-                                { <span class="text-muted">—</span> }
+                                { <span class="text-muted">ï¿½</span> }
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1">

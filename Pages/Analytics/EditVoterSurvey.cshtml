@@ -1,0 +1,326 @@
+@page
+@model Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel
+@{
+    ViewData["Title"] = "Edit Voter Survey";
+    var M = Model;
+}
+
+@* ?? Voter identity banner ??????????????????????????????????????? *@
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+        <h4 class="mb-1">
+            <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Survey Profile
+        </h4>
+        @if (M.FoundVoter is not null)
+        {
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-dark fs-6 font-monospace">@M.FoundVoter.VoterId</span>
+                <strong>@M.FoundVoter.Name</strong>
+                <span class="badge bg-secondary">Booth @M.FoundVoter.BoothNumber</span>
+                @if (!string.IsNullOrEmpty(M.FoundVoter.WardNumber))
+                { <span class="badge bg-secondary">Ward @M.FoundVoter.WardNumber</span> }
+                @if (M.LastUpdatedAt.HasValue)
+                {
+                    <span class="text-muted small">
+                        <i class="bi bi-clock me-1"></i>Last updated @M.LastUpdatedAt.Value.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")
+                    </span>
+                }
+            </div>
+        }
+    </div>
+    <a asp-page="/Analytics/SurveyDemographics"
+       asp-route-FilterTab="completed"
+       asp-route-FilterBooth="@M.ReturnBooth"
+       asp-route-FilterWard="@M.ReturnWard"
+       class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Completed
+    </a>
+</div>
+
+<form method="post">
+    <input type="hidden" asp-for="VoterId" />
+    <input type="hidden" asp-for="ReturnBooth" />
+    <input type="hidden" asp-for="ReturnWard" />
+
+    <div class="row g-4">
+
+        @* ?? LEFT COLUMN: Demographic profile ?????????????????? *@
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header fw-semibold small">
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>Demographic Profile
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        @* Age Bracket *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Age Bracket</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.AgeBrackets)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="AgeBracket" value="@o" id="age_@o.Replace("–","-")" />
+                                        <label class="form-check-label small" for="age_@o.Replace("–","-")">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Caste Category *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Caste Category</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.CasteCategories)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="CasteCategory" value="@o" id="caste_@o" />
+                                        <label class="form-check-label small" for="caste_@o">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Religion *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Religion</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.Religions)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="Religion" value="@o" id="rel_@o" />
+                                        <label class="form-check-label small" for="rel_@o">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Education *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Education</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.Educations)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="Education" value="@o" id="edu_@o.Replace(" ","")" />
+                                        <label class="form-check-label small" for="edu_@o.Replace(" ","")">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Occupation *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Occupation</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.Occupations)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="Occupation" value="@o" id="occ_@o" />
+                                        <label class="form-check-label small" for="occ_@o">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Monthly Income *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Monthly Income <span class="text-muted fw-normal">(Optional)</span></label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.IncomeBrackets)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="MonthlyIncomeBracket" value="@o" id="inc_@o.Replace("<","lt").Replace("+","plus")" />
+                                        <label class="form-check-label small" for="inc_@o.Replace("<","lt").Replace("+","plus")">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Preferred Language *@
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Preferred Language</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var o in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.Languages)
+                                {
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input" type="radio"
+                                               asp-for="PreferredLanguage" value="@o" id="lang_@o" />
+                                        <label class="form-check-label small" for="lang_@o">@o</label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Primary Concerns — up to 3 *@
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">
+                                Top Concerns
+                                <span class="text-muted fw-normal">(Pick up to 3)</span>
+                            </label>
+                            <div class="d-flex flex-wrap gap-2" id="concernChips">
+                                @foreach (var issue in Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel.IssueList)
+                                {
+                                    var safeId = "concern_" + issue.Replace(" ", "_").Replace("/", "_").Replace("&", "_");
+                                    <div class="concern-chip">
+                                        <input type="checkbox" id="@safeId"
+                                               name="PrimaryConcerns" value="@issue"
+                                               @(M.PrimaryConcerns.Contains(issue) ? "checked" : "") />
+                                        <label for="@safeId" class="btn btn-sm @(M.PrimaryConcerns.Contains(issue) ? "btn-primary" : "btn-outline-secondary")">
+                                            @issue
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ?? RIGHT COLUMN: Consents ????????????????????????????? *@
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header fw-semibold small">
+                    <i class="bi bi-shield-check me-2 text-success"></i>Consent &amp; Data Use
+                </div>
+                <div class="card-body p-0">
+
+                    @* Mandatory consent *@
+                    <div class="p-3 border-bottom bg-warning bg-opacity-10">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       asp-for="ConsentThirdPartyAdvertising" id="consentTP" />
+                            </div>
+                            <div>
+                                <label class="form-check-label fw-semibold small" for="consentTP">
+                                    3rd-Party Advertising
+                                    <span class="badge bg-danger ms-1">Mandatory</span>
+                                </label>
+                                <p class="text-muted small mb-0 mt-1">
+                                    Allow anonymised demographic data to be shared with partner brands
+                                    for coupon delivery and targeted advertisements.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Optional consents *@
+                    @{
+                        void ConsentRow(string fieldId, string label, string desc, string aspFor)
+                        {
+                            <div class="p-3 border-bottom">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="form-check form-switch mt-1">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="@fieldId" name="@aspFor"
+                                               value="true"
+                                               @(aspFor == "ConsentCampaignOutreach"    && M.ConsentCampaignOutreach    ? "checked" : "")
+                                               @(aspFor == "ConsentWhatsApp"            && M.ConsentWhatsApp            ? "checked" : "")
+                                               @(aspFor == "ConsentSchemeNotifications" && M.ConsentSchemeNotifications ? "checked" : "")
+                                               @(aspFor == "ConsentAnalytics"           && M.ConsentAnalytics           ? "checked" : "") />
+                                    </div>
+                                    <div>
+                                        <label class="form-check-label fw-semibold small" for="@fieldId">@label</label>
+                                        <p class="text-muted small mb-0 mt-1">@desc</p>
+                                    </div>
+                                </div>
+                            </div>;
+                        }
+                    }
+                    @* Use asp-for switches for the optional consents *@
+                    <div class="p-3 border-bottom">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       asp-for="ConsentCampaignOutreach" id="consentCO" />
+                            </div>
+                            <div>
+                                <label class="form-check-label fw-semibold small" for="consentCO">Campaign Outreach</label>
+                                <p class="text-muted small mb-0 mt-1">Allow campaign team to contact this voter (calls / visits).</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border-bottom">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       asp-for="ConsentWhatsApp" id="consentWA" />
+                            </div>
+                            <div>
+                                <label class="form-check-label fw-semibold small" for="consentWA">WhatsApp Messages</label>
+                                <p class="text-muted small mb-0 mt-1">Allow campaign WhatsApp messages to this voter.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border-bottom">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       asp-for="ConsentSchemeNotifications" id="consentSN" />
+                            </div>
+                            <div>
+                                <label class="form-check-label fw-semibold small" for="consentSN">Scheme Notifications</label>
+                                <p class="text-muted small mb-0 mt-1">Allow government scheme and benefit notifications.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="form-check form-switch mt-1">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                       asp-for="ConsentAnalytics" id="consentAN" />
+                            </div>
+                            <div>
+                                <label class="form-check-label fw-semibold small" for="consentAN">Data for Analytics</label>
+                                <p class="text-muted small mb-0 mt-1">Allow anonymous use of data for campaign analytics.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ?? Save / Cancel ??????????????????????????????????? *@
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="bi bi-check2-circle me-2"></i>Save Changes
+                </button>
+                <a asp-page="/Analytics/SurveyDemographics"
+                   asp-route-FilterTab="completed"
+                   asp-route-FilterBooth="@M.ReturnBooth"
+                   asp-route-FilterWard="@M.ReturnWard"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    // Concern chips: keep label style in sync with checkbox and enforce max 3
+    document.querySelectorAll('#concernChips input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const checked = document.querySelectorAll('#concernChips input[type=checkbox]:checked');
+            if (checked.length > 3) { cb.checked = false; return; }
+            const lbl = cb.nextElementSibling;
+            if (cb.checked) {
+                lbl.classList.replace('btn-outline-secondary', 'btn-primary');
+            } else {
+                lbl.classList.replace('btn-primary', 'btn-outline-secondary');
+            }
+        });
+    });
+</script>
+}

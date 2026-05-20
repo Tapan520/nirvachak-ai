@@ -5,17 +5,17 @@
     var activeTab = Model.FilterTab ?? "analytics";
 }
 
-<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h4 class="mb-0"><i class="bi bi-person-check-fill me-2 text-primary"></i>Voter Consent Analytics</h4>
         <p class="text-muted small mb-0">Survey Demographics &amp; Consent Analytics — completions, consents, demographics and outreach.</p>
     </div>
     @* Filter bar *@
-    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+    <form method="get" class="d-flex flex-nowrap gap-2 align-items-center">
         <input type="hidden" name="FilterTab" value="@activeTab" />
         @if (Model.AvailableWards.Any())
         {
-            <select name="FilterWard" class="form-select form-select-sm" style="max-width:160px" onchange="this.form.submit()">
+            <select name="FilterWard" class="form-select form-select-sm" style="min-width:130px;max-width:160px" onchange="this.form.submit()">
                 <option value="">All Wards</option>
                 @foreach (var w in Model.AvailableWards)
                 {
@@ -25,7 +25,7 @@
         }
         @if (Model.AvailableBooths.Any())
         {
-            <select name="FilterBooth" class="form-select form-select-sm" style="max-width:160px" onchange="this.form.submit()">
+            <select name="FilterBooth" class="form-select form-select-sm" style="min-width:130px;max-width:160px" onchange="this.form.submit()">
                 <option value="">All Booths</option>
                 @foreach (var b in Model.AvailableBooths)
                 {

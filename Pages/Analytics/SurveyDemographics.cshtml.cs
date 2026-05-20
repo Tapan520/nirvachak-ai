@@ -207,6 +207,58 @@ public class SurveyDemographicsModel : PageModel
             .OrderByDescending(g => g.Count())
             .ToDictionary(g => g.Key, g => g.Count());
 
+    public async Task<IActionResult> OnGetExportCompletedCsvAsync()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        var cId  = user?.ConstituencyId;
+
+        IQueryable<Voter> voterQuery = _db.Voters.Where(v => !v.IsDeleted);
+        if (cId.HasValue) voterQuery = voterQuery.Where(v => v.ConstituencyId == cId);
+        if (FilterBooth.HasValue) voterQuery = voterQuery.Where(v => v.BoothNumber == FilterBooth.Value);
+        if (!string.IsNullOrEmpty(FilterWard)) voterQuery = voterQuery.Where(v => v.WardNumber == FilterWard);
+
+        var voterIds = await voterQuery.Select(v => v.Id).ToListAsync();
+
+        var completions = await _db.SurveyCompletions
+            .Where(c => voterIds.Contains(c.VoterId))
+            .AsNoTracking().ToListAsync();
+
+        var completedIds = completions.Select(c => c.VoterId).ToHashSet();
+
+        var couponMap = await _db.CouponPools
+            .Where(cp => completions.Select(c => c.CouponId).Contains(cp.Id))
+            .ToDictionaryAsync(cp => cp.Id, cp => cp.CouponCode);
+
+        var completionMap = completions.ToDictionary(c => c.VoterId, c => c);
+
+        var completed = await voterQuery
+            .Where(v => completedIds.Contains(v.Id))
+            .OrderBy(v => v.BoothNumber).ThenBy(v => v.Name)
+            .Select(v => new { v.Name, v.VoterId, v.MobileNumber, v.BoothNumber, v.WardNumber, v.Id })
+            .ToListAsync();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Name,EPIC No.,Mobile,Booth,Ward,Completed On,Coupon Code");
+        foreach (var v in completed)
+        {
+            var comp      = completionMap.GetValueOrDefault(v.Id);
+            var couponId  = comp?.CouponId;
+            var coupon    = couponId.HasValue && couponMap.TryGetValue(couponId.Value, out var code) ? code : "";
+            var completedOn = comp?.CompletedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "";
+            sb.AppendLine(string.Join(",",
+                $"\"{ v.Name.Replace("\"", "\"\"")}\"",
+                v.VoterId,
+                v.MobileNumber ?? "",
+                v.BoothNumber.ToString(),
+                v.WardNumber ?? "",
+                completedOn,
+                coupon));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        return File(bytes, "text/csv", $"completed_survey_{DateTime.Today:yyyyMMdd}.csv");
+    }
+
     public async Task<IActionResult> OnGetExportPendingCsvAsync()
     {
         var user = await _userManager.GetUserAsync(User);

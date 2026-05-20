@@ -277,22 +277,35 @@
 @if (activeTab == "completed")
 {
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold small">
                 <i class="bi bi-check2-circle me-2 text-success"></i>
                 Voters Who Completed the Survey
                 <span class="badge bg-success ms-2">@Model.CompletedVoters.Count</span>
             </span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="text" id="completedSearch"
+                       class="form-control form-control-sm" style="max-width:220px"
+                       placeholder="Search name / EPIC / mobile…"
+                       oninput="filterCompletedTable(this.value)" />
+                <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportCompletedCsv"
+                   asp-route-FilterBooth="@Model.FilterBooth"
+                   asp-route-FilterWard="@Model.FilterWard"
+                   class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-download me-1"></i>Download CSV
+                </a>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
+                <table class="table table-sm table-hover mb-0" id="completedTable">
                     <thead class="table-light">
                         <tr>
                             <th>Voter Name</th>
                             <th>EPIC No.</th>
                             <th class="text-center">Booth</th>
                             <th class="text-center">Ward</th>
+                            <th>Mobile</th>
                             <th>Completed On</th>
                             <th>Coupon</th>
                         </tr>
@@ -300,16 +313,18 @@
                     <tbody>
                     @if (!Model.CompletedVoters.Any())
                     {
-                        <tr><td colspan="6" class="text-center text-muted py-4">No voters have completed the survey yet.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4">No voters have completed the survey yet.</td></tr>
                     }
                     @foreach (var v in Model.CompletedVoters)
                     {
-                        <tr>
+                        var searchData = $"{v.Name} {v.VoterEpic} {v.MobileNumber} {v.BoothNumber} {v.WardNumber}".ToLower();
+                        <tr data-searchable="@searchData">
                             <td class="fw-semibold small">@v.Name</td>
                             <td class="font-monospace small">@v.VoterEpic</td>
                             <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
                             <td class="text-center small">@(v.WardNumber ?? "—")</td>
-                            <td class="small text-muted">@v.CompletedAt.ToLocalTime().ToString("dd MMM yy, hh:mm tt")</td>
+                            <td class="small font-monospace">@(v.MobileNumber ?? "—")</td>
+                            <td class="small text-muted">@v.CompletedAt.ToLocalTime().ToString("dd MMM yy, h:mm tt")</td>
                             <td>
                                 @if (v.HasCoupon && !string.IsNullOrEmpty(v.CouponCode))
                                 {
@@ -328,9 +343,38 @@
                     }
                     </tbody>
                 </table>
+                <div id="completedNoResults" class="text-center text-muted py-3 small d-none">
+                    <i class="bi bi-search me-1"></i>No matching voters found.
+                </div>
             </div>
         </div>
+        @if (Model.CompletedVoters.Count > 0)
+        {
+            <div class="card-footer text-muted small">
+                Showing <span id="completedVisibleCount">@Model.CompletedVoters.Count</span>
+                of @Model.CompletedVoters.Count completed voter(s).
+            </div>
+        }
     </div>
+}
+
+@section Scripts {
+<script>
+    function filterCompletedTable(query) {
+        const q      = query.toLowerCase().trim();
+        const rows   = document.querySelectorAll('#completedTable tbody tr[data-searchable]');
+        let   visible = 0;
+        rows.forEach(row => {
+            const match = !q || row.dataset.searchable.includes(q);
+            row.classList.toggle('d-none', !match);
+            if (match) visible++;
+        });
+        const noRes = document.getElementById('completedNoResults');
+        const count = document.getElementById('completedVisibleCount');
+        if (noRes) noRes.classList.toggle('d-none', visible > 0 || rows.length === 0);
+        if (count) count.textContent = visible;
+    }
+</script>
 }
 
 @* ???????????????????????????????????????????????????????????????? *@

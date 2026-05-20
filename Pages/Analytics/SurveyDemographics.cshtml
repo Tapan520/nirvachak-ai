@@ -10,6 +10,13 @@
         <h4 class="mb-0"><i class="bi bi-person-check-fill me-2 text-primary"></i>Voter Consent Analytics</h4>
         <p class="text-muted small mb-0">Survey Demographics &amp; Consent Analytics — completions, consents, demographics and outreach.</p>
     </div>
+    @* Export survey profiles button *@
+    <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportProfilesCsv"
+       asp-route-FilterBooth="@Model.FilterBooth"
+       asp-route-FilterWard="@Model.FilterWard"
+       class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export Survey Data
+    </a>
     @* Filter bar *@
     <form method="get" class="d-flex flex-nowrap gap-2 align-items-center">
         <input type="hidden" name="FilterTab" value="@activeTab" />

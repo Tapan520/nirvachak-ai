@@ -259,6 +259,60 @@ public class SurveyDemographicsModel : PageModel
         return File(bytes, "text/csv", $"completed_survey_{DateTime.Today:yyyyMMdd}.csv");
     }
 
+    public async Task<IActionResult> OnGetExportProfilesCsvAsync()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        var cId  = user?.ConstituencyId;
+
+        IQueryable<Voter> voterQuery = _db.Voters.Where(v => !v.IsDeleted);
+        if (cId.HasValue) voterQuery = voterQuery.Where(v => v.ConstituencyId == cId);
+        if (FilterBooth.HasValue) voterQuery = voterQuery.Where(v => v.BoothNumber == FilterBooth.Value);
+        if (!string.IsNullOrEmpty(FilterWard)) voterQuery = voterQuery.Where(v => v.WardNumber == FilterWard);
+
+        var voterIds = await voterQuery.Select(v => v.Id).ToListAsync();
+
+        var profiles = await _db.VoterProfiles
+            .Where(p => voterIds.Contains(p.VoterId))
+            .AsNoTracking().ToListAsync();
+
+        var profileMap = profiles.ToDictionary(p => p.VoterId);
+
+        var voters = await voterQuery
+            .Where(v => voterIds.Contains(v.Id))
+            .OrderBy(v => v.BoothNumber).ThenBy(v => v.Name)
+            .Select(v => new { v.Id, v.Name, v.VoterId, v.MobileNumber, v.BoothNumber, v.WardNumber })
+            .ToListAsync();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Name,EPIC No.,Mobile,Booth,Ward,Age Bracket,Caste,Religion,Education,Occupation,Preferred Language,Top Concerns");
+        foreach (var v in voters)
+        {
+            profileMap.TryGetValue(v.Id, out var p);
+            var concerns = string.Empty;
+            if (p != null && !string.IsNullOrEmpty(p.PrimaryConcerns))
+            {
+                var list = JsonSerializer.Deserialize<List<string>>(p.PrimaryConcerns!) ?? new();
+                concerns = string.Join(" | ", list);
+            }
+            sb.AppendLine(string.Join(",",
+                $"\"{v.Name.Replace("\"", "\"\"")}\"",
+                v.VoterId,
+                v.MobileNumber ?? "",
+                v.BoothNumber.ToString(),
+                v.WardNumber ?? "",
+                p?.AgeBracket ?? "",
+                p?.CasteCategory ?? "",
+                p?.Religion ?? "",
+                p?.Education ?? "",
+                p?.Occupation ?? "",
+                p?.PreferredLanguage ?? "",
+                $"\"{concerns.Replace("\"", "\"\"")}\""));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        return File(bytes, "text/csv", $"voter_survey_profiles_{DateTime.Today:yyyyMMdd}.csv");
+    }
+
     public async Task<IActionResult> OnGetExportPendingCsvAsync()
     {
         var user = await _userManager.GetUserAsync(User);

@@ -208,4 +208,107 @@ public class VoterConsentController : ApiBaseController
             items, total, page, pageSize,
             (int)Math.Ceiling((double)total / pageSize)));
     }
+
+    /// <summary>
+    /// Get a voter's current survey profile + consent — pre-fills the edit form.
+    /// Accessible by Admin, CampaignManager, Candidate, FieldWorker, BoothAgent.
+    /// </summary>
+    [HttpGet("{voterId:int}/profile")]
+    [ProducesResponseType(typeof(VoterSurveyProfileResponse), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetProfile(int voterId)
+    {
+        var voter = await _db.Voters.FindAsync(voterId);
+        if (voter is null || voter.IsDeleted)
+            return NotFound(new ApiResult(false, "Voter not found."));
+
+        var profile = await _db.VoterProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.VoterId == voterId);
+
+        var consent = await _db.VoterConsents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.VoterId == voterId);
+
+        var concerns = new List<string>();
+        if (!string.IsNullOrEmpty(profile?.PrimaryConcerns))
+        {
+            try { concerns = System.Text.Json.JsonSerializer
+                    .Deserialize<List<string>>(profile.PrimaryConcerns) ?? new(); }
+            catch { /* ignore malformed JSON */ }
+        }
+
+        return Ok(new VoterSurveyProfileResponse(
+            VoterId:            voter.Id,
+            VoterName:          voter.Name,
+            VoterEpic:          voter.VoterId,
+            BoothNumber:        voter.BoothNumber,
+            WardNumber:         voter.WardNumber,
+            AgeBracket:         profile?.AgeBracket,
+            CasteCategory:      profile?.CasteCategory,
+            Religion:           profile?.Religion,
+            Education:          profile?.Education,
+            Occupation:         profile?.Occupation,
+            MonthlyIncomeBracket: profile?.MonthlyIncomeBracket,
+            PrimaryConcerns:    concerns,
+            PreferredLanguage:  profile?.PreferredLanguage,
+            ConsentThirdParty:  consent?.AllowThirdPartyAdvertising ?? false,
+            ConsentCampaign:    consent?.AllowCampaignOutreach      ?? false,
+            ConsentWhatsApp:    consent?.AllowWhatsAppMessages       ?? false,
+            ConsentScheme:      consent?.AllowSchemeNotifications    ?? false,
+            ConsentAnalytics:   consent?.AllowDataForAnalytics       ?? false,
+            ProfileUpdatedAt:   profile?.CompletedAt));
+    }
+
+    /// <summary>
+    /// Update a voter's survey profile + consents by authorised staff.
+    /// Does NOT remove the SurveyCompletion record — the voter keeps their coupon.
+    /// Tracks the update timestamp on VoterProfile.
+    /// </summary>
+    [HttpPut("{voterId:int}/profile")]
+    [ProducesResponseType(typeof(ApiResult), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateProfile(
+        int voterId, [FromBody] UpdateVoterSurveyRequest req)
+    {
+        var voter = await _db.Voters.FindAsync(voterId);
+        if (voter is null || voter.IsDeleted)
+            return NotFound(new ApiResult(false, "Voter not found."));
+
+        // ?? Upsert VoterProfile ???????????????????????????????????
+        var profile = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == voterId);
+        if (profile is null)
+        {
+            profile = new VoterProfile { VoterId = voterId };
+            _db.VoterProfiles.Add(profile);
+        }
+        profile.AgeBracket           = req.AgeBracket;
+        profile.CasteCategory        = req.CasteCategory;
+        profile.Religion             = req.Religion;
+        profile.Education            = req.Education;
+        profile.Occupation           = req.Occupation;
+        profile.MonthlyIncomeBracket = req.MonthlyIncomeBracket;
+        profile.PrimaryConcerns      = req.PrimaryConcerns.Count > 0
+            ? System.Text.Json.JsonSerializer.Serialize(req.PrimaryConcerns.Take(3).ToList())
+            : null;
+        profile.PreferredLanguage    = req.PreferredLanguage;
+        profile.CompletedAt          = DateTime.UtcNow;   // updated timestamp
+
+        // ?? Upsert VoterConsent ???????????????????????????????????
+        var consent = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == voterId);
+        if (consent is null)
+        {
+            consent = new VoterConsent { VoterId = voterId };
+            _db.VoterConsents.Add(consent);
+        }
+        consent.AllowThirdPartyAdvertising = req.ConsentThirdParty;
+        consent.AllowCampaignOutreach      = req.ConsentCampaign;
+        consent.AllowWhatsAppMessages      = req.ConsentWhatsApp;
+        consent.AllowSchemeNotifications   = req.ConsentScheme;
+        consent.AllowDataForAnalytics      = req.ConsentAnalytics;
+        consent.ConsentGivenAt             = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return Ok(new ApiResult(true, "Survey profile updated successfully."));
+    }
 }

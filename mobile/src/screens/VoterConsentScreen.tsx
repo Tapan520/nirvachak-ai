@@ -4,6 +4,7 @@ import {
   TouchableOpacity, ActivityIndicator, RefreshControl, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { API_BASE_URL } from '../api/client';
 import {
   getConsentStats, getCompletedVoters, getPendingVoters,
@@ -114,6 +115,7 @@ function StatsTab({ stats }: { stats: VoterConsentStats }) {
 
 // ?? Completed voters tab ??????????????????????????????????????????
 function CompletedTab({ filterBooth, filterWard }: { filterBooth?: number; filterWard?: string }) {
+  const nav = useNavigation<any>();
   const [items,      setItems]      = useState<SurveyCompletedVoter[]>([]);
   const [search,     setSearch]     = useState('');
   const [page,       setPage]       = useState(1);
@@ -202,6 +204,11 @@ function CompletedTab({ filterBooth, filterWard }: { filterBooth?: number; filte
                           <Text style={[s.couponTxt, { color: '#868e96' }]}>Issued</Text>
                         </View>
                       : null}
+                  <TouchableOpacity style={s.editBtn}
+                    onPress={() => nav.navigate('EditVoterSurvey', { voterId: v.id })}>
+                    <Ionicons name="create-outline" size={14} color="#3b5bdb" />
+                    <Text style={s.editBtnTxt}>Edit</Text>
+                  </TouchableOpacity>
                   {v.mobileNumber && (
                     <TouchableOpacity style={s.waBtn}
                       onPress={() => {
@@ -497,6 +504,9 @@ const s = StyleSheet.create({
   couponBadge:     { backgroundColor: '#d3f9d8', borderRadius: 6,
                      paddingHorizontal: 8, paddingVertical: 4 },
   couponTxt:       { fontSize: 11, fontWeight: '700', color: '#2f9e44' },
+  editBtn:         { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1,
+                     borderColor: '#3b5bdb', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 7 },
+  editBtnTxt:      { fontSize: 11, fontWeight: '700', color: '#3b5bdb' },
   waBtn:           { backgroundColor: '#25d366', borderRadius: 8, padding: 8 },
   callBtn:         { borderWidth: 1, borderColor: '#3b5bdb', borderRadius: 8, padding: 8 },
   linkBtn:         { borderWidth: 1, borderColor: '#dee2e6', borderRadius: 8, padding: 8 },

@@ -73,3 +73,59 @@ export const getPendingVoters = async (params: {
   );
   return data;
 };
+
+// ?? Edit survey profile ???????????????????????????????????????????
+
+export interface VoterSurveyProfile {
+  voterId:             number;
+  voterName:           string;
+  voterEpic:           string;
+  boothNumber:         number;
+  wardNumber?:         string;
+  ageBracket?:         string;
+  casteCategory?:      string;
+  religion?:           string;
+  education?:          string;
+  occupation?:         string;
+  monthlyIncomeBracket?: string;
+  primaryConcerns:     string[];
+  preferredLanguage?:  string;
+  consentThirdParty:   boolean;
+  consentCampaign:     boolean;
+  consentWhatsApp:     boolean;
+  consentScheme:       boolean;
+  consentAnalytics:    boolean;
+  profileUpdatedAt?:   string;
+}
+
+export interface UpdateVoterSurveyPayload {
+  ageBracket?:          string;
+  casteCategory?:       string;
+  religion?:            string;
+  education?:           string;
+  occupation?:          string;
+  monthlyIncomeBracket?: string;
+  primaryConcerns:      string[];
+  preferredLanguage?:   string;
+  consentThirdParty:    boolean;
+  consentCampaign:      boolean;
+  consentWhatsApp:      boolean;
+  consentScheme:        boolean;
+  consentAnalytics:     boolean;
+}
+
+export const getVoterSurveyProfile = async (
+  voterId: number,
+): Promise<VoterSurveyProfile> => {
+  const { data } = await apiClient.get<VoterSurveyProfile>(
+    `/voterConsent/${voterId}/profile`,
+  );
+  return data;
+};
+
+export const updateVoterSurveyProfile = async (
+  voterId: number,
+  payload: UpdateVoterSurveyPayload,
+): Promise<void> => {
+  await apiClient.put(`/voterConsent/${voterId}/profile`, payload);
+};

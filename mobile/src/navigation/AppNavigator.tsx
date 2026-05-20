@@ -22,6 +22,7 @@ import ExpensesScreen from '../screens/ExpensesScreen';
 import MoreScreen from '../screens/MoreScreen';
 import AnnouncementsScreen from '../screens/AnnouncementsScreen';
 import VoterConsentScreen from '../screens/VoterConsentScreen';
+import EditVoterSurveyScreen from '../screens/EditVoterSurveyScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -103,6 +104,8 @@ export default function AppNavigator() {
               options={{ headerShown: false }} />
             <Stack.Screen name="VoterConsent" component={VoterConsentScreen}
               options={{ headerShown: true, title: 'Voter Consent Analytics', headerTintColor: BRAND }} />
+            <Stack.Screen name="EditVoterSurvey" component={EditVoterSurveyScreen}
+              options={{ headerShown: true, title: 'Edit Survey Profile', headerTintColor: BRAND }} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

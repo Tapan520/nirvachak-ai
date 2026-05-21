@@ -77,11 +77,12 @@ export const getPendingVoters = async (params: {
 // ?? Edit survey profile ???????????????????????????????????????????
 
 export interface VoterSurveyProfile {
-  voterId:             number;
-  voterName:           string;
-  voterEpic:           string;
-  boothNumber:         number;
-  wardNumber?:         string;
+voterId:             number;
+voterName:           string;
+voterEpic:           string;
+mobileNumber?:       string;
+boothNumber:         number;
+wardNumber?:         string;
   ageBracket?:         string;
   casteCategory?:      string;
   religion?:           string;
@@ -99,7 +100,8 @@ export interface VoterSurveyProfile {
 }
 
 export interface UpdateVoterSurveyPayload {
-  ageBracket?:          string;
+mobileNumber?:        string;
+ageBracket?:          string;
   casteCategory?:       string;
   religion?:            string;
   education?:           string;

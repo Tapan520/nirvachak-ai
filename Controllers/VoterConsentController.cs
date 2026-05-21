@@ -242,6 +242,7 @@ public class VoterConsentController : ApiBaseController
             VoterId:            voter.Id,
             VoterName:          voter.Name,
             VoterEpic:          voter.VoterId,
+            MobileNumber:       voter.MobileNumber,
             BoothNumber:        voter.BoothNumber,
             WardNumber:         voter.WardNumber,
             AgeBracket:         profile?.AgeBracket,
@@ -274,6 +275,11 @@ public class VoterConsentController : ApiBaseController
         var voter = await _db.Voters.FindAsync(voterId);
         if (voter is null || voter.IsDeleted)
             return NotFound(new ApiResult(false, "Voter not found."));
+
+        // ?? Update MobileNumber on Voter record ???????????????????
+        voter.MobileNumber = string.IsNullOrWhiteSpace(req.MobileNumber)
+            ? null
+            : req.MobileNumber.Trim();
 
         // ?? Upsert VoterProfile ???????????????????????????????????
         var profile = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == voterId);

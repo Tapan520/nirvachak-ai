@@ -145,21 +145,23 @@ public record SurveyPendingVoter(
     int BoothNumber, string? WardNumber);
 
 public record VoterSurveyProfileResponse(
-    int VoterId, string VoterName, string VoterEpic,
-    int BoothNumber, string? WardNumber,
-    string? AgeBracket, string? CasteCategory, string? Religion,
-    string? Education, string? Occupation, string? MonthlyIncomeBracket,
-    List<string> PrimaryConcerns, string? PreferredLanguage,
-    bool ConsentThirdParty, bool ConsentCampaign, bool ConsentWhatsApp,
-    bool ConsentScheme, bool ConsentAnalytics,
-    DateTime? ProfileUpdatedAt);
+int VoterId, string VoterName, string VoterEpic,
+string? MobileNumber,
+int BoothNumber, string? WardNumber,
+string? AgeBracket, string? CasteCategory, string? Religion,
+string? Education, string? Occupation, string? MonthlyIncomeBracket,
+List<string> PrimaryConcerns, string? PreferredLanguage,
+bool ConsentThirdParty, bool ConsentCampaign, bool ConsentWhatsApp,
+bool ConsentScheme, bool ConsentAnalytics,
+DateTime? ProfileUpdatedAt);
 
 public record UpdateVoterSurveyRequest(
-    string? AgeBracket, string? CasteCategory, string? Religion,
-    string? Education, string? Occupation, string? MonthlyIncomeBracket,
-    List<string> PrimaryConcerns, string? PreferredLanguage,
-    bool ConsentThirdParty, bool ConsentCampaign, bool ConsentWhatsApp,
-    bool ConsentScheme, bool ConsentAnalytics);
+string? MobileNumber,
+string? AgeBracket, string? CasteCategory, string? Religion,
+string? Education, string? Occupation, string? MonthlyIncomeBracket,
+List<string> PrimaryConcerns, string? PreferredLanguage,
+bool ConsentThirdParty, bool ConsentCampaign, bool ConsentWhatsApp,
+bool ConsentScheme, bool ConsentAnalytics);
 
 // ── Generic ───────────────────────────────────────────────────────
 public record ApiResult(bool Success, string? Message = null);

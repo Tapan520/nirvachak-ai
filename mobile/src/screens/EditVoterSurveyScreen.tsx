@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Switch,
+  ActivityIndicator, Alert, Switch, TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -128,6 +128,7 @@ export default function EditVoterSurveyScreen() {
   const [saving,   setSaving]   = useState(false);
 
   // Form state
+  const [mobileNumber,        setMobileNumber]        = useState<string>('');
   const [ageBracket,          setAgeBracket]          = useState<string | undefined>();
   const [casteCategory,       setCasteCategory]       = useState<string | undefined>();
   const [religion,            setReligion]            = useState<string | undefined>();
@@ -147,6 +148,7 @@ export default function EditVoterSurveyScreen() {
       .then(p => {
         setProfile(p);
         // Pre-fill all fields from existing profile
+        setMobileNumber(p.mobileNumber ?? '');
         setAgeBracket(p.ageBracket);
         setCasteCategory(p.casteCategory);
         setReligion(p.religion);
@@ -169,6 +171,7 @@ export default function EditVoterSurveyScreen() {
     setSaving(true);
     try {
       await updateVoterSurveyProfile(voterId, {
+        mobileNumber: mobileNumber.trim() || undefined,
         ageBracket,
         casteCategory,
         religion,
@@ -241,6 +244,34 @@ export default function EditVoterSurveyScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
+
+        {/* ?? Mobile Number ?? */}
+        <Section icon="phone-portrait-outline" title="Contact Details" />
+        <View style={{ marginBottom: 18 }}>
+          <Text style={f.label}>
+            Mobile Number
+            <Text style={{ color: '#868e96', fontWeight: '400' }}> (for coupon delivery &amp; WhatsApp)</Text>
+          </Text>
+          <View style={f.mobileRow}>
+            <View style={f.mobilePrefix}>
+              <Ionicons name="phone-portrait-outline" size={15} color="#3b5bdb" />
+              <Text style={f.mobilePrefixTxt}>+91</Text>
+            </View>
+            <TextInput
+              style={f.mobileInput}
+              value={mobileNumber}
+              onChangeText={setMobileNumber}
+              placeholder="10-digit mobile number"
+              placeholderTextColor="#adb5bd"
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
+          </View>
+          <Text style={f.mobileHint}>
+            <Ionicons name="information-circle-outline" size={11} color="#868e96" />
+            {' '}Correcting this ensures the voter receives their reward coupon via WhatsApp.
+          </Text>
+        </View>
 
         {/* ?? About You ?? */}
         <Section icon="person-outline" title="About Voter" />
@@ -358,4 +389,14 @@ const f = StyleSheet.create({
                     paddingVertical: 14, marginTop: 8, marginBottom: 10 },
   saveTxt:        { color: '#fff', fontSize: 15, fontWeight: '700' },
   cancelBtn:      { paddingVertical: 12 },
+  mobileRow:      { flexDirection: 'row', alignItems: 'center', borderWidth: 1,
+                    borderColor: '#dee2e6', borderRadius: 10, overflow: 'hidden',
+                    backgroundColor: '#fff' },
+  mobilePrefix:   { flexDirection: 'row', alignItems: 'center', gap: 4,
+                    backgroundColor: '#f1f3f5', paddingHorizontal: 12, paddingVertical: 11,
+                    borderRightWidth: 1, borderRightColor: '#dee2e6' },
+  mobilePrefixTxt:{ fontSize: 13, fontWeight: '700', color: '#3b5bdb' },
+  mobileInput:    { flex: 1, fontSize: 14, color: '#212529',
+                    paddingHorizontal: 12, paddingVertical: 10 },
+  mobileHint:     { fontSize: 11, color: '#868e96', marginTop: 6, lineHeight: 16 },
 });

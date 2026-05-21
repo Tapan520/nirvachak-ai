@@ -115,7 +115,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") ? "active" : "")" asp-page="/Analytics/Index">
+                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/Index">
                             <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
                         </a>
                     </li>
@@ -141,7 +141,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage == "/Analytics/SurveyDemographics" ? "active" : "")" asp-page="/Analytics/SurveyDemographics">
+                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics/SurveyDemographics") || currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/SurveyDemographics">
                             <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
                         </a>
                     </li>

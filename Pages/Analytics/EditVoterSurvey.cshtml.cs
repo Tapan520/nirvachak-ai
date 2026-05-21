@@ -31,6 +31,7 @@ public class EditVoterSurveyModel : PageModel
     public DateTime? LastUpdatedAt { get; set; }
 
     // ?? Form fields ???????????????????????????????????????????????
+    [BindProperty] public string?       MobileNumber         { get; set; }
     [BindProperty] public string?       AgeBracket           { get; set; }
     [BindProperty] public string?       CasteCategory        { get; set; }
     [BindProperty] public string?       Religion             { get; set; }
@@ -67,7 +68,8 @@ public class EditVoterSurveyModel : PageModel
     {
         var voter = await _db.Voters.FindAsync(VoterId);
         if (voter is null || voter.IsDeleted) return NotFound();
-        FoundVoter = voter;
+        FoundVoter    = voter;
+        MobileNumber  = voter.MobileNumber;
 
         var profile = await _db.VoterProfiles
             .AsNoTracking()
@@ -113,6 +115,11 @@ public class EditVoterSurveyModel : PageModel
         var voter = await _db.Voters.FindAsync(VoterId);
         if (voter is null || voter.IsDeleted) return NotFound();
         FoundVoter = voter;
+
+        // ?? Update mobile number on the Voter record ??????????????
+        voter.MobileNumber = string.IsNullOrWhiteSpace(MobileNumber)
+            ? null
+            : MobileNumber.Trim();
 
         // ?? Upsert VoterProfile ???????????????????????????????????
         var profile = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == VoterId);

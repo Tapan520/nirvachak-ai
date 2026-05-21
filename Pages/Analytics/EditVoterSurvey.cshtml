@@ -53,6 +53,26 @@
                 <div class="card-body">
                     <div class="row g-3">
 
+                        @* Mobile Number *@
+                        <div class="col-12">
+                            <label asp-for="MobileNumber" class="form-label fw-semibold small">
+                                Mobile Number
+                                <span class="text-muted fw-normal">(used for coupon delivery &amp; WhatsApp)</span>
+                            </label>
+                            <div class="input-group input-group-sm" style="max-width:260px">
+                                <span class="input-group-text"><i class="bi bi-phone-fill text-primary"></i></span>
+                                <input asp-for="MobileNumber" class="form-control"
+                                       placeholder="e.g. 9876543210"
+                                       maxlength="10"
+                                       pattern="[6-9][0-9]{9}"
+                                       title="Enter a valid 10-digit Indian mobile number" />
+                            </div>
+                            <div class="form-text text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Correcting this ensures the voter can receive their reward coupon via WhatsApp.
+                            </div>
+                        </div>
+
                         @* Age Bracket *@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Age Bracket</label>

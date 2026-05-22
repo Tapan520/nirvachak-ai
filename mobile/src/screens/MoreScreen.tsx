@@ -78,6 +78,9 @@ export default function MoreScreen() {
         <MenuItem icon="clipboard-outline"     label="Surveys"          desc="Active surveys & responses"       color="#f59f00" screen="Surveys" />
         <MenuItem icon="wallet-outline"        label="Expenses"         desc="Campaign expense tracker"         color="#2f9e44" screen="Expenses" />
         <MenuItem icon="clipboard-check-outline" label="Voter Consent"   desc="Survey completions & pending outreach" color="#0c8599" screen="VoterConsent" />
+        {(user?.role === 'Admin' || user?.role === 'CampaignManager' || user?.role === 'Candidate') && (
+          <MenuItem icon="trending-up-outline" label="Predictive Analytics" desc="AI forecasts for turnout & support" color="#e67700" screen="PredictiveAnalytics" />
+        )}
       </View>
 
       <Text style={s.sectionTitle}>Account</Text>

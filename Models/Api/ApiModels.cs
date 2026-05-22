@@ -163,6 +163,23 @@ List<string> PrimaryConcerns, string? PreferredLanguage,
 bool ConsentThirdParty, bool ConsentCampaign, bool ConsentWhatsApp,
 bool ConsentScheme, bool ConsentAnalytics);
 
+// ── Predictive Analytics ─────────────────────────────────────────
+public record BoothPredictionResponse(
+    int BoothNumber, string BoothName,
+    int TotalVoters, int FavourVoters, int AgainstVoters, int FloatingVoters,
+    int ContactedVoters, int RecentVisits, double ContactRate,
+    double PredictedTurnoutPercent, double PredictedSupportPercent,
+    int EstimatedFavourVotes,
+    string TurnoutRisk, string SupportConfidence,
+    List<string> StrategyAlerts);
+
+public record PredictionSummaryResponse(
+    int TotalVoters, int TotalContacted, int TotalFavour, int TotalFloating,
+    double PredictedOverallTurnout, double PredictedOverallSupport,
+    int EstimatedTotalFavourVotes,
+    int AtRiskBoothCount, int WeakSupportBoothCount,
+    List<BoothPredictionResponse> BoothPredictions);
+
 // ── Generic ───────────────────────────────────────────────────────
 public record ApiResult(bool Success, string? Message = null);
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize, int TotalPages);

@@ -96,6 +96,7 @@ builder.Services.AddScoped<ElectionDayService>();
 builder.Services.AddScoped<VoterSlipService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<PredictiveAnalyticsService>();
 
 // Session (used for survey rate-limiting on public pages)
 builder.Services.AddDistributedMemoryCache();

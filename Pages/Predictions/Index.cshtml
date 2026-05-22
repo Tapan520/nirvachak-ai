@@ -1,0 +1,329 @@
+@page
+@model Nirvachak_AI.Pages.Predictions.IndexModel
+@{
+    ViewData["Title"] = "Predictive Analytics";
+}
+
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+        <h4 class="mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-primary"></i>
+            Predictive Analytics
+        </h4>
+        <p class="text-muted small mb-0 mt-1">
+            AI-powered forecasts for voter turnout &amp; candidate support — updated from live data.
+            <span class="text-muted" style="font-size:11px">
+                @if (!string.IsNullOrEmpty(Model.GeneratedAt))
+                {
+                    <i class="bi bi-clock me-1"></i>@("Generated: " + Model.GeneratedAt)
+                }
+            </span>
+        </p>
+    </div>
+
+    @if (Model.IsAdmin && Model.Constituencies.Any())
+    {
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="fw-semibold small mb-0 text-nowrap">Constituency:</label>
+            <select name="SelectedConstituencyId" class="form-select form-select-sm"
+                    onchange="this.form.submit()" style="max-width:260px">
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id || Model.SelectedConstituency?.Id == c.Id)">
+                        @c.Name
+                    </option>
+                }
+            </select>
+        </form>
+    }
+</div>
+
+@if (Model.SelectedConstituency == null)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-graph-up-arrow fs-1 d-block mb-3 opacity-25"></i>
+            <p class="mb-0">No constituency assigned. Please contact your administrator.</p>
+        </div>
+    </div>
+    return;
+}
+
+@if (!Model.Summary.BoothPredictions.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+            <p class="mb-0">No voter data found for <strong>@Model.SelectedConstituency.Name</strong>. Import voters to generate predictions.</p>
+        </div>
+    </div>
+    return;
+}
+
+@* ?? Constituency badge ???????????????????????????????????????????? *@
+<div class="mb-3">
+    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6">
+        <i class="bi bi-geo-alt-fill me-1"></i>@Model.SelectedConstituency.Name
+        @if (!string.IsNullOrEmpty(Model.SelectedConstituency.CandidateName))
+        {
+            <span class="ms-2 text-muted fw-normal">· @Model.SelectedConstituency.CandidateName</span>
+        }
+    </span>
+</div>
+
+@* ?? Summary KPI cards ????????????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    @{
+        var kpiCards = new[]
+        {
+            new { Label = "Predicted Turnout",    Value = Model.Summary.PredictedOverallTurnout + "%",  Icon = "bi-activity",               Color = "primary",  Sub = $"{Model.Summary.TotalVoters:N0} eligible voters" },
+            new { Label = "Predicted Support",    Value = Model.Summary.PredictedOverallSupport + "%",  Icon = "bi-hand-thumbs-up-fill",    Color = "success",  Sub = "of voters expected to favour" },
+            new { Label = "Est. Favour Votes",    Value = Model.Summary.EstimatedTotalFavourVotes.ToString("N0"), Icon = "bi-check2-circle", Color = "info",     Sub = "likely votes in your favour" },
+            new { Label = "At-Risk Booths",       Value = Model.Summary.AtRiskBoothCount.ToString(),    Icon = "bi-exclamation-triangle-fill", Color = "danger", Sub = "booths with high turnout risk" },
+            new { Label = "Weak Coverage Booths", Value = Model.Summary.WeakSupportBoothCount.ToString(), Icon = "bi-person-x-fill",        Color = "warning",  Sub = "booths with low contact rate" },
+            new { Label = "Total Contacted",      Value = Model.Summary.TotalContacted.ToString("N0"),  Icon = "bi-person-check-fill",      Color = "secondary",Sub = $"of {Model.Summary.TotalVoters:N0} voters reached" },
+        };
+    }
+    @foreach (var k in kpiCards)
+    {
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center py-3 px-2">
+                    <i class="bi @k.Icon fs-4 text-@k.Color d-block mb-1"></i>
+                    <div class="fs-4 fw-bold text-@k.Color">@k.Value</div>
+                    <div class="small fw-semibold text-dark">@k.Label</div>
+                    <div class="text-muted" style="font-size:10px">@k.Sub</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* ?? Model signals explainer ??????????????????????????????????????? *@
+<div class="alert alert-info border-0 shadow-sm d-flex gap-3 align-items-start mb-4 py-3">
+    <i class="bi bi-cpu-fill fs-4 text-info flex-shrink-0 mt-1"></i>
+    <div class="small">
+        <strong>How predictions are calculated:</strong>
+        The model uses <strong>voter contact rate</strong>, <strong>sentiment ratios</strong>
+        (Favour / Against / Floating), <strong>door-to-door visit momentum</strong> (last 7 days),
+        and a 60% Indian MLA baseline turnout. Floating voters are counted as 40% likely-favour.
+        Confidence shrinks toward 50% for booths with &lt;30% coverage.
+    </div>
+</div>
+
+@* ?? Booth-level prediction table ????????????????????????????????? *@
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span class="fw-semibold">
+            <i class="bi bi-building me-2 text-primary"></i>
+            Booth-wise Forecast &amp; Strategy Alerts
+        </span>
+        <div class="d-flex gap-2 small text-muted">
+            <span><span class="badge bg-danger">High</span> &lt;45% turnout</span>
+            <span><span class="badge bg-warning text-dark">Medium</span> 45–60%</span>
+            <span><span class="badge bg-success">Low</span> &gt;60%</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Booth</th>
+                        <th class="text-center">Voters</th>
+                        <th class="text-center">Contacted</th>
+                        <th class="text-center">Favour</th>
+                        <th class="text-center">Floating</th>
+                        <th class="text-center">Visits (7d)</th>
+                        <th class="text-center" style="min-width:130px">Predicted Turnout</th>
+                        <th class="text-center" style="min-width:130px">Predicted Support</th>
+                        <th class="text-center">Est. Favour Votes</th>
+                        <th class="text-center">Risk</th>
+                        <th style="min-width:220px">Strategy Alerts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var b in Model.Summary.BoothPredictions)
+                {
+                    var riskBadge = b.TurnoutRisk == "High"   ? "danger"
+                                  : b.TurnoutRisk == "Medium" ? "warning text-dark" : "success";
+                    var confColor = b.SupportConfidence == "Strong"   ? "success"
+                                  : b.SupportConfidence == "Moderate" ? "primary" : "secondary";
+                    var contactPct = b.TotalVoters > 0
+                        ? Math.Round((double)b.ContactedVoters / b.TotalVoters * 100, 0) : 0;
+
+                    <tr>
+                        <td class="ps-3 fw-semibold">
+                            <span class="badge bg-primary me-1">#@b.BoothNumber</span>
+                            <span class="text-muted fw-normal" style="font-size:11px">@b.BoothName</span>
+                        </td>
+                        <td class="text-center">@b.TotalVoters</td>
+                        <td class="text-center">
+                            @b.ContactedVoters
+                            <div class="text-muted" style="font-size:10px">@contactPct%</div>
+                            <div class="progress mt-1" style="height:3px">
+                                <div class="progress-bar bg-secondary" style="width:@contactPct%"></div>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold text-success">@b.FavourVoters</td>
+                        <td class="text-center fw-bold text-warning">@b.FloatingVoters</td>
+                        <td class="text-center">
+                            @if (b.RecentVisits > 0)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success">@b.RecentVisits</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">0</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="fw-bold fs-6">@b.PredictedTurnoutPercent%</div>
+                            <div class="progress mt-1" style="height:5px">
+                                <div class="progress-bar bg-@(b.TurnoutRisk == "High" ? "danger" : b.TurnoutRisk == "Medium" ? "warning" : "success")"
+                                     style="width:@b.PredictedTurnoutPercent%"></div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="fw-bold text-@confColor fs-6">@b.PredictedSupportPercent%</div>
+                            <div class="text-muted" style="font-size:10px">@b.SupportConfidence confidence</div>
+                        </td>
+                        <td class="text-center fw-bold text-info fs-6">@b.EstimatedFavourVotes</td>
+                        <td class="text-center">
+                            <span class="badge bg-@riskBadge">@b.TurnoutRisk</span>
+                        </td>
+                        <td>
+                            @if (b.StrategyAlerts.Any())
+                            {
+                                <ul class="mb-0 ps-3 text-danger" style="font-size:11px">
+                                    @foreach (var alert in b.StrategyAlerts)
+                                    {
+                                        <li>@alert</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-success" style="font-size:11px">
+                                    <i class="bi bi-check2-circle me-1"></i>On track — no alerts.
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* ?? Visual: Turnout + Support forecast bars ??????????????????????? *@
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header fw-semibold small">
+                <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Predicted Turnout per Booth
+            </div>
+            <div class="card-body py-3">
+                @foreach (var b in Model.Summary.BoothPredictions)
+                {
+                    var color = b.TurnoutRisk == "High" ? "danger"
+                              : b.TurnoutRisk == "Medium" ? "warning" : "success";
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold">#@b.BoothNumber <span class="text-muted fw-normal">@b.BoothName</span></span>
+                            <span class="fw-bold text-@color">@b.PredictedTurnoutPercent%</span>
+                        </div>
+                        <div class="progress" style="height:8px">
+                            <div class="progress-bar bg-@color" style="width:@b.PredictedTurnoutPercent%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header fw-semibold small">
+                <i class="bi bi-hand-thumbs-up-fill me-2 text-success"></i>Predicted Support per Booth
+            </div>
+            <div class="card-body py-3">
+                @foreach (var b in Model.Summary.BoothPredictions)
+                {
+                    var color = b.SupportConfidence == "Strong"   ? "success"
+                              : b.SupportConfidence == "Moderate" ? "primary" : "secondary";
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold">#@b.BoothNumber <span class="text-muted fw-normal">@b.BoothName</span></span>
+                            <span class="fw-bold text-@color">@b.PredictedSupportPercent% <span class="text-muted fw-normal">(est. @b.EstimatedFavourVotes votes)</span></span>
+                        </div>
+                        <div class="progress" style="height:8px">
+                            <div class="progress-bar bg-@color" style="width:@b.PredictedSupportPercent%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ?? Priority action list ?????????????????????????????????????????? *@
+@{
+    var actionBooths = Model.Summary.BoothPredictions
+        .Where(b => b.StrategyAlerts.Any())
+        .OrderByDescending(b => b.StrategyAlerts.Count)
+        .ThenBy(b => b.PredictedTurnoutPercent)
+        .ToList();
+}
+@if (actionBooths.Any())
+{
+    <div class="card border-0 shadow-sm border-start border-4 border-danger">
+        <div class="card-header fw-semibold small d-flex align-items-center gap-2">
+            <i class="bi bi-lightning-charge-fill text-danger"></i>
+            Priority Action List — Booths Requiring Immediate Attention
+            <span class="badge bg-danger ms-auto">@actionBooths.Count booths</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Booth</th>
+                            <th class="text-center">Turnout Risk</th>
+                            <th class="text-center">Support</th>
+                            <th class="text-center">Est. Votes</th>
+                            <th>Actions Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var b in actionBooths)
+                    {
+                        var riskBadge = b.TurnoutRisk == "High" ? "danger"
+                                      : b.TurnoutRisk == "Medium" ? "warning text-dark" : "success";
+                        <tr>
+                            <td class="ps-3 fw-semibold">
+                                <span class="badge bg-primary me-1">#@b.BoothNumber</span>
+                                @b.BoothName
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-@riskBadge">@b.TurnoutRisk</span>
+                                <div class="text-muted" style="font-size:10px">@b.PredictedTurnoutPercent%</div>
+                            </td>
+                            <td class="text-center fw-bold" style="font-size:13px">@b.PredictedSupportPercent%</td>
+                            <td class="text-center fw-bold text-info">@b.EstimatedFavourVotes</td>
+                            <td>
+                                <ul class="mb-0 ps-3 text-danger" style="font-size:11px">
+                                    @foreach (var a in b.StrategyAlerts)
+                                    {
+                                        <li>@a</li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

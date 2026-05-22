@@ -1,0 +1,1 @@
+print(chr(10).join([chr(78)+chr(73)+chr(82)+chr(86)]))

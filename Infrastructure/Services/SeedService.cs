@@ -444,6 +444,133 @@ public static class SeedService
             await db.SaveChangesAsync();
         }
 
+        // ── Competitor Intelligence ──────────────────────────────────────────────
+        if (!db.CompetitorActivities.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var now = DateTime.UtcNow;
+            db.CompetitorActivities.AddRange(
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Grand Rally at Nehru Vihar Ground",              ActivityType = CompetitorActivityType.Rally,        Location = "Nehru Vihar Ground, Ward 2",         Ward = "2", BoothNumber = 2,  ActivityDate = now.AddDays(-18), EstimatedCrowd = 800,  ThreatLevel = CompetitorThreatLevel.High,     Notes = "Well-organised rally with senior party leaders present. Crowd mostly from Wards 2 & 3.",                               ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-18) },
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Door-to-Door Campaign — Patel Wadi",             ActivityType = CompetitorActivityType.DoorToDoor,   Location = "Patel Wadi, Ward 7",                 Ward = "7", BoothNumber = 7,  ActivityDate = now.AddDays(-15), EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.Medium,   Notes = "Team of ~25 volunteers covered approx 150 households. Focussing on anti-incumbency sentiment.",                        ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-15) },
+                new CompetitorActivity { CompetitorName = "Meera Khandare",    PartyName = "Jan Shakti Front", ActivityTitle = "Road Show — Shivaji Park to Tilak Nagar",        ActivityType = CompetitorActivityType.RoadShow,     Location = "Shivaji Park to Tilak Nagar, Ward 3-5", Ward = "3", BoothNumber = 3, ActivityDate = now.AddDays(-13), EstimatedCrowd = 350,  ThreatLevel = CompetitorThreatLevel.Medium,   Notes = "Procession of ~15 vehicles with loudspeakers. Covered three wards. Moderate crowd participation.",                    ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-13) },
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Press Conference on Water Supply Issue",         ActivityType = CompetitorActivityType.MediaCoverage, Location = "Press Club, Pune",                  Ward = null, BoothNumber = null, ActivityDate = now.AddDays(-11), EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.High,   Notes = "Competitor gave media byte on water crisis in Ward 3 — getting local news coverage. Could sway floating voters.",     ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-11) },
+                new CompetitorActivity { CompetitorName = "Meera Khandare",    PartyName = "Jan Shakti Front", ActivityTitle = "Women Voters Meeting — Laxmi Nagar",             ActivityType = CompetitorActivityType.SmallMeeting, Location = "Laxmi Nagar Community Hall, Ward 8",Ward = "8", BoothNumber = 8,  ActivityDate = now.AddDays(-9),  EstimatedCrowd = 90,   ThreatLevel = CompetitorThreatLevel.Medium,   Notes = "Targeted women voters with promises around safety and housing schemes. Attendance was decent.",                        ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-9)  },
+                new CompetitorActivity { CompetitorName = "Deepak Sarpotdar",  PartyName = "Rashtra Sena",     ActivityTitle = "Youth Rally — Gandhi Nagar",                     ActivityType = CompetitorActivityType.Rally,        Location = "Gandhi Nagar Ground, Ward 1",        Ward = "1", BoothNumber = 1,  ActivityDate = now.AddDays(-8),  EstimatedCrowd = 220,  ThreatLevel = CompetitorThreatLevel.Low,      Notes = "Third candidate, smaller following. Rally targeted college students. Limited political influence expected.",            ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-8)  },
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Social Media Campaign — #WardsBroken",          ActivityType = CompetitorActivityType.SocialMedia,  Location = "Online / Twitter & Facebook",        Ward = null, BoothNumber = null, ActivityDate = now.AddDays(-7), EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.High,   Notes = "Viral posts blaming incumbent for road & drainage neglect. Hashtag trending locally. Counter-messaging required.",    ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-7)  },
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Ambedkar Colony Large Meeting",                  ActivityType = CompetitorActivityType.SmallMeeting, Location = "Ambedkar Colony Chowk, Ward 4",     Ward = "4", BoothNumber = 4,  ActivityDate = now.AddDays(-5),  EstimatedCrowd = 310,  ThreatLevel = CompetitorThreatLevel.Critical, Notes = "Surprise high-attendance meeting in a key ward. Senior leader in attendance. URGENT — assign extra volunteers to Ward 4.", ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-5) },
+                new CompetitorActivity { CompetitorName = "Meera Khandare",    PartyName = "Jan Shakti Front", ActivityTitle = "Announcement — Free Cycle Scheme Promise",       ActivityType = CompetitorActivityType.Announcement, Location = "Subhash Chowk, Ward 6",             Ward = "6", BoothNumber = 6,  ActivityDate = now.AddDays(-4),  EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.Medium,   Notes = "Announced a free cycle scheme for girls. Could attract youth and women voters in Wards 5-7.",                         ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-4)  },
+                new CompetitorActivity { CompetitorName = "Deepak Sarpotdar",  PartyName = "Rashtra Sena",     ActivityTitle = "Small Meeting — Booth 5 Voters",                 ActivityType = CompetitorActivityType.Other,        Location = "Tilak Nagar, Ward 5",               Ward = "5", BoothNumber = 5,  ActivityDate = now.AddDays(-3),  EstimatedCrowd = 55,   ThreatLevel = CompetitorThreatLevel.Low,      Notes = "Informal gathering with local contractor network. Low threat but monitor if aligns with Ward 7 contractor community.", ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-3)  },
+                new CompetitorActivity { CompetitorName = "Suresh Waghmare",   PartyName = "Vikas Party",      ActivityTitle = "Mega Road Show Announced for This Weekend",      ActivityType = CompetitorActivityType.Announcement, Location = "Entire Constituency",               Ward = null, BoothNumber = null, ActivityDate = now.AddDays(-1), EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.Critical, Notes = "Full-constituency road show planned. Senior national leader likely to attend. Must intensify our ward coverage immediately.", ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-1) },
+                new CompetitorActivity { CompetitorName = "Meera Khandare",    PartyName = "Jan Shakti Front", ActivityTitle = "Social Media Post — Drainage Problem Video",     ActivityType = CompetitorActivityType.SocialMedia,  Location = "Online / Instagram & YouTube",      Ward = "7", BoothNumber = 7,  ActivityDate = now,              EstimatedCrowd = null, ThreatLevel = CompetitorThreatLevel.Medium,   Notes = "Video of flooded lane in Ward 7 shared with 2k+ views. Need rapid response content from our side.",                   ConstituencyId = constituency.Id, CreatedAt = now              }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Influencer / Community Leader Network ─────────────────────────────
+        if (!db.Influencers.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var now = DateTime.UtcNow;
+            db.Influencers.AddRange(
+                new Influencer { Name = "Pandit Ramesh Shastri",   MobileNumber = "9823400001", Category = "Religious",  Community = "Hindu – Brahmin",        EstimatedFollowers = 600,  Ward = "1", BoothNumber = 1, Alignment = InfluencerAlignment.Favour,   LastMetAt = now.AddDays(-10), LastMeetingOutcome = "Agreed to address voters at our rally. Strong supporter.",                      Notes = "Highly respected temple priest in Gandhi Nagar. Commands loyalty of approx 600 families.",          ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-30) },
+                new Influencer { Name = "Maulana Iqbal Siddiqui",  MobileNumber = "9823400002", Category = "Religious",  Community = "Muslim",                 EstimatedFollowers = 450,  Ward = "2", BoothNumber = 2, Alignment = InfluencerAlignment.Floating, LastMetAt = now.AddDays(-7),  LastMeetingOutcome = "Open to supporting but wants sewage issue resolved. Follow-up scheduled.",         Notes = "Imam of main mosque in Nehru Vihar. Influential with ~450 voters. Needs grievance attention.",       ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-28) },
+                new Influencer { Name = "Sarpanch Vitthal Kamble", MobileNumber = "9823400003", Category = "Caste",      Community = "Dalit – Mahar",          EstimatedFollowers = 700,  Ward = "4", BoothNumber = 4, Alignment = InfluencerAlignment.Favour,   LastMetAt = now.AddDays(-5),  LastMeetingOutcome = "Confirmed support. Will mobilise booth 4 voters on election day.",                   Notes = "Former sarpanch. Very influential in Ambedkar Colony. Controls ~700 Dalit votes in Ward 4.",         ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-25) },
+                new Influencer { Name = "Bhai Gurpreet Singh",     MobileNumber = "9823400004", Category = "Religious",  Community = "Sikh",                   EstimatedFollowers = 120,  Ward = "3", BoothNumber = 3, Alignment = InfluencerAlignment.Neutral,  LastMetAt = now.AddDays(-12), LastMeetingOutcome = "Polite but non-committal. Wants to know candidate's stance on farmers.",            Notes = "Head of the Gurudwara in Ward 3. Small but cohesive community of ~120 voters.",                      ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-22) },
+                new Influencer { Name = "Asha Tai Bharatkar",      MobileNumber = "9823400005", Category = "Women",      Community = "Women's SHG Network",    EstimatedFollowers = 950,  Ward = "5", BoothNumber = 5, Alignment = InfluencerAlignment.Favour,   LastMetAt = now.AddDays(-3),  LastMeetingOutcome = "Enthusiastic supporter. Has agreed to host voter awareness meetings in her network.", Notes = "Leader of 45 self-help groups across Wards 5 & 6. Extremely influential with women voters.",        ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-20) },
+                new Influencer { Name = "Coach Dilip Shirke",      MobileNumber = "9823400006", Category = "Youth",      Community = "Sports / Youth",         EstimatedFollowers = 380,  Ward = "6", BoothNumber = 6, Alignment = InfluencerAlignment.Floating, LastMetAt = now.AddDays(-8),  LastMeetingOutcome = "Interested but wants a sports complex promise in writing. Escalated to candidate.",  Notes = "Football & cricket coach running free coaching for youth. Popular in Wards 6 & 7.",                 ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-18) },
+                new Influencer { Name = "Kisan Neta Bharat Jagtap",MobileNumber = "9823400007", Category = "Farmer",     Community = "OBC – Kunbi",            EstimatedFollowers = 520,  Ward = "7", BoothNumber = 7, Alignment = InfluencerAlignment.Against,  LastMetAt = now.AddDays(-14), LastMeetingOutcome = "Unhappy with lack of irrigation support. Leaning toward competitor. Urgent re-engagement needed.", Notes = "President of local farmers' union. Significant sway over OBC agri-community in Ward 7.",    ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-16) },
+                new Influencer { Name = "Fr. Anthony Pereira",     MobileNumber = "9823400008", Category = "Religious",  Community = "Christian",              EstimatedFollowers = 200,  Ward = "8", BoothNumber = 8, Alignment = InfluencerAlignment.Neutral,  LastMetAt = now.AddDays(-6),  LastMeetingOutcome = "Appreciated candidate's visit. Wants school repair in Ward 8. No commitment yet.",  Notes = "Parish priest of the Catholic church in Laxmi Nagar. Trusted by ~200 families.",                    ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-15) },
+                new Influencer { Name = "Trade Leader Mohan Gupte",MobileNumber = "9823400009", Category = "Trader",     Community = "Vaishya – Marwari",      EstimatedFollowers = 310,  Ward = "1", BoothNumber = 1, Alignment = InfluencerAlignment.Favour,   LastMetAt = now.AddDays(-9),  LastMeetingOutcome = "Pledged support. Has agreed to display banners at all shops in the market.",         Notes = "President of the Gandhi Nagar traders' association. Influences ~310 business-community voters.",    ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-14) },
+                new Influencer { Name = "Retired Colonel R.K. Nair",MobileNumber = "9823400010", Category = "Veterans",  Community = "Ex-Servicemen",          EstimatedFollowers = 240,  Ward = "3", BoothNumber = 3, Alignment = InfluencerAlignment.Floating, LastMetAt = now.AddDays(-11), LastMeetingOutcome = "Appreciated focus on law and order but wants clarification on defence pension policy.", Notes = "Ex-servicemen's association head. Respected across all wards. Bloc of ~240 votes.",                 ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-12) },
+                new Influencer { Name = "Sunita Tambe",            MobileNumber = "9823400011", Category = "Caste",      Community = "Maratha",                EstimatedFollowers = 830,  Ward = "2", BoothNumber = 2, Alignment = InfluencerAlignment.Unknown,  LastMetAt = null,             LastMeetingOutcome = null,                                                                                   Notes = "Emerging Maratha community leader in Ward 2. Not yet met — outreach priority.",                      ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-10) },
+                new Influencer { Name = "Prof. Nalini Godse",      MobileNumber = "9823400012", Category = "Education",  Community = "Academic / Teachers",    EstimatedFollowers = 160,  Ward = "5", BoothNumber = 5, Alignment = InfluencerAlignment.Favour,   LastMetAt = now.AddDays(-4),  LastMeetingOutcome = "Will encourage students and parents to vote. Offered to speak at our event.",         Notes = "Principal of the local college. Respected by educated middle-class voters in Ward 5.",               ConstituencyId = constituency.Id, IsActive = true, CreatedAt = now.AddDays(-9)  }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Phone Banking & Call Logs ─────────────────────────────────────────
+        if (!db.PhoneCallLogs.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var workerUser   = await userManager.FindByEmailAsync("worker@election.com");
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+            var now          = DateTime.UtcNow;
+
+            var voters = await db.Voters
+                .Where(v => v.ConstituencyId == constituency.Id && v.MobileNumber != null)
+                .Take(20).ToListAsync();
+
+            if (!voters.Any())
+            {
+                // Assign mobile numbers to first 20 voters so call logs have valid links
+                var allVoters = await db.Voters
+                    .Where(v => v.ConstituencyId == constituency.Id)
+                    .Take(20).ToListAsync();
+                for (int i = 0; i < allVoters.Count; i++)
+                    allVoters[i].MobileNumber = $"98765{(i + 1):D5}";
+                await db.SaveChangesAsync();
+                voters = allVoters;
+            }
+
+            var rnd = new Random(99);
+            var outcomes  = new[] { CallOutcome.Talked, CallOutcome.NoAnswer, CallOutcome.CallBack, CallOutcome.Talked, CallOutcome.Talked, CallOutcome.Refused, CallOutcome.NoAnswer, CallOutcome.Talked };
+            var sentiments = new VoterSentiment?[] { VoterSentiment.Favour, null, null, VoterSentiment.Floating, VoterSentiment.Favour, VoterSentiment.Against, null, VoterSentiment.Neutral };
+            var notePool  = new[]
+            {
+                "Voter confirmed support. Will vote and bring family members.",
+                "No answer on first attempt. Will retry in the evening.",
+                "Requested callback after 6 PM — said they are at work.",
+                "Interested but has concerns about road repair. Noted for follow-up.",
+                "Strongly in favour. Shared with neighbours.",
+                "Not interested in speaking. Disconnected.",
+                "Phone was busy. Will try again tomorrow.",
+                "Discussed water supply issue. Agreed to vote if candidate addresses it.",
+                "Elderly voter, needed more time to explain. Very warm response.",
+                "Asked about youth employment scheme. Shared details — seemed convinced.",
+                "Said they have already decided to vote for our candidate.",
+                "Concerned about pension delays. Raised grievance — logged separately.",
+                "Very enthusiastic. Volunteered to help on election day.",
+                "Mentioned competitor's rally. Engaged with counter-messaging.",
+                "Floating voter — needs one more call. Marked for priority follow-up.",
+            };
+
+            var logs = new List<PhoneCallLog>();
+            for (int i = 0; i < voters.Count && i < 30; i++)
+            {
+                var voter   = voters[i % voters.Count];
+                var caller  = i % 3 == 0 ? managerUser : workerUser;
+                var outcome = outcomes[i % outcomes.Length];
+                var sentiment = sentiments[i % sentiments.Length];
+                var daysAgo   = i / 5;          // spread over ~6 days
+                var hoursAgo  = rnd.Next(0, 10);
+
+                logs.Add(new PhoneCallLog
+                {
+                    VoterId            = voter.Id,
+                    CalledByUserId     = caller?.Id ?? "system",
+                    CalledByName       = caller?.FullName ?? "System",
+                    CalledAt           = now.AddDays(-daysAgo).AddHours(-hoursAgo),
+                    Outcome            = outcome,
+                    DurationSeconds    = outcome == CallOutcome.Talked ? rnd.Next(60, 420)
+                                       : outcome == CallOutcome.CallBack ? rnd.Next(15, 45) : 0,
+                    Notes              = notePool[i % notePool.Length],
+                    SentimentAfterCall = outcome == CallOutcome.Talked ? sentiment : null,
+                    ConstituencyId     = constituency.Id
+                });
+
+                // Also update voter LastContactedAt and sentiment if Talked
+                if (outcome == CallOutcome.Talked)
+                {
+                    voter.LastContactedAt = now.AddDays(-daysAgo).AddHours(-hoursAgo);
+                    if (sentiment.HasValue)
+                        voter.Sentiment = sentiment.Value;
+                }
+            }
+
+            db.PhoneCallLogs.AddRange(logs);
+            await db.SaveChangesAsync();
+        }
+
         // ?? Audit Logs (seed representative history) ????????????????????????????????????
         if (!db.AuditLogs.Any())
         {

@@ -12,3 +12,7 @@ public enum CampaignEventType { Rally, DoorToDoor, SmallMeeting, LargeMeeting, P
 public enum VolunteerTask { BoothManagement, VoterOutreach, DataEntry, Transport, Communication, Other }
 public enum SurveyCategory { CandidateAwareness, LocalIssues, PartySupport, DevelopmentFeedback, GeneralOpinion }
 public enum AnnouncementCategory { CampaignAnnouncement, CriticalAlert, ECComplianceNotice, DailyBriefing, Motivation, LiveDataNudge }
+public enum CompetitorActivityType { Rally, RoadShow, DoorToDoor, SmallMeeting, Announcement, MediaCoverage, SocialMedia, Other }
+public enum CompetitorThreatLevel { Low, Medium, High, Critical }
+public enum InfluencerAlignment { Unknown, Favour, Against, Neutral, Floating }
+public enum CallOutcome { NoAnswer, Talked, CallBack, Wrong, Refused }

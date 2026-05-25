@@ -23,6 +23,15 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementAcknowledgement> AnnouncementAcknowledgements => Set<AnnouncementAcknowledgement>();
 
+    // ── Competitor Intelligence ──────────────────────────────────
+    public DbSet<CompetitorActivity> CompetitorActivities => Set<CompetitorActivity>();
+
+    // ── Influencer Network ───────────────────────────────────────
+    public DbSet<Influencer> Influencers => Set<Influencer>();
+
+    // ── Phone Banking ────────────────────────────────────────────
+    public DbSet<PhoneCallLog> PhoneCallLogs => Set<PhoneCallLog>();
+
     // ── Voter Self-Survey Module ──────────────────────────────────
     public DbSet<VoterProfile> VoterProfiles => Set<VoterProfile>();
     public DbSet<VoterConsent> VoterConsents => Set<VoterConsent>();

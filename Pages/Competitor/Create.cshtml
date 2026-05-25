@@ -1,0 +1,72 @@
+@page
+@model Nirvachak_AI.Pages.Competitor.CreateModel
+@{
+    ViewData["Title"] = "Log Competitor Activity";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Log Competitor Activity</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Competitor Name *</label>
+                            <input asp-for="Activity.CompetitorName" class="form-control" />
+                            <span asp-validation-for="Activity.CompetitorName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Party Name</label>
+                            <input asp-for="Activity.PartyName" class="form-control" />
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Activity Title *</label>
+                            <input asp-for="Activity.ActivityTitle" class="form-control" />
+                            <span asp-validation-for="Activity.ActivityTitle" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Activity Type</label>
+                            <select asp-for="Activity.ActivityType" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.CompetitorActivityType>()" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location</label>
+                            <input asp-for="Activity.Location" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Ward</label>
+                            <input asp-for="Activity.Ward" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Booth No.</label>
+                            <input asp-for="Activity.BoothNumber" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Activity Date *</label>
+                            <input asp-for="Activity.ActivityDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estimated Crowd</label>
+                            <input asp-for="Activity.EstimatedCrowd" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Threat Level</label>
+                            <select asp-for="Activity.ThreatLevel" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.CompetitorThreatLevel>()" class="form-select"></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes / Observations</label>
+                            <textarea asp-for="Activity.Notes" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Save Activity</button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

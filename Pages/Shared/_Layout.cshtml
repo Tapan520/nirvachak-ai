@@ -84,6 +84,27 @@
                         </a>
                     </li>
                     <li class="sidebar-section-label px-2 mt-3 mb-1">CAMPAIGN</li>
+                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate") || User.IsInRole("FieldWorker") || User.IsInRole("BoothAgent"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/PhoneBanking") ? "active" : "")" asp-page="/PhoneBanking/Index">
+                                <i class="bi bi-telephone-fill me-2"></i> Phone Banking
+                            </a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Influencers") ? "active" : "")" asp-page="/Influencers/Index">
+                                <i class="bi bi-people-fill me-2"></i> Influencer Network
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Competitor") ? "active" : "")" asp-page="/Competitor/Index">
+                                <i class="bi bi-eye-fill me-2"></i> Competitor Intel
+                            </a>
+                        </li>
+                    }
                     <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage.StartsWith("/Booths") ? "active" : "")" asp-page="/Booths/Index">
                             <i class="bi bi-geo-alt-fill me-2"></i> Booths

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using Nirvachak_AI.Infrastructure.Services;
 using Nirvachak_AI.Pages.Announcements;
 
 namespace Nirvachak_AI.Pages.Dashboard;
@@ -13,11 +14,13 @@ public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
+    private readonly WinProbabilityService _winProbability;
 
-    public IndexModel(AppDbContext db, UserManager<AppUser> userManager)
+    public IndexModel(AppDbContext db, UserManager<AppUser> userManager, WinProbabilityService winProbability)
     {
-        _db = db;
-        _userManager = userManager;
+        _db             = db;
+        _userManager    = userManager;
+        _winProbability = winProbability;
     }
 
     // ── Drill-down filters ───────────────────────────────────────
@@ -81,6 +84,9 @@ public class IndexModel : PageModel
     public List<Voter>         MyNextVoters         { get; set; } = new();  // up to 10 uncontacted Favour voters
     public List<DoorToDoorVisit> MyTodayVisits      { get; set; } = new();
     public List<CampaignEvent>   MyUpcomingEvents   { get; set; } = new();
+
+    // ── Win Probability (Admin/Manager/Candidate) ───────────────
+    public WinProbabilityResult? WinProbability { get; set; }
 
     // ── Announcements (all roles) ────────────────────────────────
     public List<AnnouncementViewModel> CriticalAlerts       { get; set; } = new();
@@ -216,6 +222,10 @@ public class IndexModel : PageModel
             .Where(p => !string.IsNullOrEmpty(p.CasteCategory))
             .GroupBy(p => p.CasteCategory!).OrderByDescending(g => g.Count())
             .ToDictionary(g => g.Key, g => g.Count());
+
+        // ── Win Probability ──────────────────────────────────────
+        if (cId.HasValue)
+            WinProbability = await _winProbability.ComputeAsync(cId.Value);
     }
 
     // ────────────────────────────────────────────────────────────

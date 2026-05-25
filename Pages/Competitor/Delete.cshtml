@@ -1,0 +1,20 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.Competitor.DeleteModel
+@{
+    ViewData["Title"] = "Delete Competitor Activity";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white">Confirm Delete</div>
+            <div class="card-body">
+                <p>Are you sure you want to delete <strong>@Model.Activity.ActivityTitle</strong> by <strong>@Model.Activity.CompetitorName</strong>?</p>
+                <form method="post">
+                    <input asp-for="Activity.Id" type="hidden" />
+                    <button type="submit" class="btn btn-danger me-2">Yes, Delete</button>
+                    <a asp-page="./Index" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

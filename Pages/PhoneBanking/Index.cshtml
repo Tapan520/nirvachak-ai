@@ -1,0 +1,120 @@
+@page
+@model Nirvachak_AI.Pages.PhoneBanking.IndexModel
+@{
+    ViewData["Title"] = "Phone Banking";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-telephone-fill text-success me-2"></i>Phone Banking</h3>
+    <a asp-page="./LogCall" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>Log a Call</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-primary">@Model.TotalCallsToday</div>
+                <div class="text-muted small">Calls Today</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-success">@Model.TalkedCount</div>
+                <div class="text-muted small">Connected</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-warning">@Model.NoAnswerCount</div>
+                <div class="text-muted small">No Answer</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-info">@Model.CallBackCount</div>
+                <div class="text-muted small">Call Back Later</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Pending calls -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-semibold">
+                <i class="bi bi-list-check me-1"></i>Pending — Floating / Unknown Voters
+            </div>
+            <div class="list-group list-group-flush" style="max-height:460px;overflow-y:auto">
+                @foreach (var v in Model.PendingCallVoters)
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@v.Name</strong>
+                            <span class="badge bg-secondary ms-1">B-@v.BoothNumber</span><br/>
+                            <small class="text-muted">@v.MobileNumber</small>
+                        </div>
+                        <a asp-page="./LogCall" asp-route-voterId="@v.Id" class="btn btn-sm btn-success">
+                            <i class="bi bi-telephone"></i>
+                        </a>
+                    </div>
+                }
+                @if (!Model.PendingCallVoters.Any())
+                {
+                    <div class="list-group-item text-muted text-center py-3">No pending voters. Great job!</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's call log -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-semibold">
+                <i class="bi bi-clock-history me-1"></i>Today's Call Log
+            </div>
+            <div class="table-responsive" style="max-height:460px;overflow-y:auto">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th>Time</th>
+                            <th>Voter</th>
+                            <th>Outcome</th>
+                            <th>Sentiment</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.TodaysCalls)
+                        {
+                            var ob = c.Outcome switch {
+                                Nirvachak_AI.Domain.Enums.CallOutcome.Talked    => "success",
+                                Nirvachak_AI.Domain.Enums.CallOutcome.CallBack  => "info text-dark",
+                                Nirvachak_AI.Domain.Enums.CallOutcome.NoAnswer  => "warning text-dark",
+                                Nirvachak_AI.Domain.Enums.CallOutcome.Refused   => "danger",
+                                _                                                => "secondary"
+                            };
+                            <tr>
+                                <td>@c.CalledAt.ToLocalTime().ToString("HH:mm")</td>
+                                <td>@c.Voter?.Name</td>
+                                <td><span class="badge bg-@ob">@c.Outcome</span></td>
+                                <td>@(c.SentimentAfterCall.HasValue ? c.SentimentAfterCall.ToString() : "—")</td>
+                                <td class="text-muted small">@c.Notes</td>
+                            </tr>
+                        }
+                        @if (!Model.TodaysCalls.Any())
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-3">No calls logged today.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

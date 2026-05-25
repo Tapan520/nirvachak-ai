@@ -1,0 +1,98 @@
+@page
+@model Nirvachak_AI.Pages.Influencers.IndexModel
+@{
+    ViewData["Title"] = "Influencer Network";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-people-fill text-purple me-2" style="color:#6f42c1"></i>Influencer Network</h3>
+    <a asp-page="./Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Add Influencer</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-primary">@Model.Influencers.Count</div>
+                <div class="text-muted small">Total Influencers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-success">@Model.FavourCount</div>
+                <div class="text-muted small">In Favour</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-2 fw-bold" style="color:#6f42c1">@Model.TotalEstimatedReach.ToString("N0")</div>
+                <div class="text-muted small">Est. Voter Reach</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="mb-3 d-flex gap-2 align-items-center">
+    <select name="FilterAlignment" class="form-select form-select-sm" style="max-width:180px">
+        <option value="">All Alignments</option>
+        @foreach (var a in Enum.GetValues<Nirvachak_AI.Domain.Enums.InfluencerAlignment>())
+        {
+            <option value="@a" selected="@(Model.FilterAlignment == a)">@a</option>
+        }
+    </select>
+    <button class="btn btn-sm btn-outline-secondary">Filter</button>
+    <a asp-page="./Index" class="btn btn-sm btn-link">Clear</a>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Community</th>
+                    <th>Est. Followers</th>
+                    <th>Ward</th>
+                    <th>Alignment</th>
+                    <th>Last Met</th>
+                    <th>Outcome</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inf in Model.Influencers)
+                {
+                    var badge = inf.Alignment switch {
+                        Nirvachak_AI.Domain.Enums.InfluencerAlignment.Favour   => "success",
+                        Nirvachak_AI.Domain.Enums.InfluencerAlignment.Against  => "danger",
+                        Nirvachak_AI.Domain.Enums.InfluencerAlignment.Floating => "warning text-dark",
+                        Nirvachak_AI.Domain.Enums.InfluencerAlignment.Neutral  => "secondary",
+                        _                                                        => "light text-dark border"
+                    };
+                    <tr>
+                        <td><strong>@inf.Name</strong><br/><small class="text-muted">@inf.MobileNumber</small></td>
+                        <td>@inf.Category</td>
+                        <td>@inf.Community</td>
+                        <td>@(inf.EstimatedFollowers.HasValue ? inf.EstimatedFollowers.Value.ToString("N0") : "—")</td>
+                        <td>@inf.Ward</td>
+                        <td><span class="badge bg-@badge">@inf.Alignment</span></td>
+                        <td>@(inf.LastMetAt.HasValue ? inf.LastMetAt.Value.ToString("dd MMM yyyy") : "—")</td>
+                        <td><span class="text-muted small">@inf.LastMeetingOutcome</span></td>
+                        <td>
+                            <a asp-page="./Edit" asp-route-id="@inf.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Influencers.Any())
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">No influencers added yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.Influencers.EditModel
+@{
+    ViewData["Title"] = "Edit Influencer";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Influencer</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <input asp-for="Influencer.Id" type="hidden" />
+                    <input asp-for="Influencer.ConstituencyId" type="hidden" />
+                    <input asp-for="Influencer.CreatedAt" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name *</label>
+                            <input asp-for="Influencer.Name" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Mobile Number</label>
+                            <input asp-for="Influencer.MobileNumber" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Category</label>
+                            <input asp-for="Influencer.Category" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Community</label>
+                            <input asp-for="Influencer.Community" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Est. Followers</label>
+                            <input asp-for="Influencer.EstimatedFollowers" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ward</label>
+                            <input asp-for="Influencer.Ward" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Booth No.</label>
+                            <input asp-for="Influencer.BoothNumber" class="form-control" type="number" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Alignment</label>
+                            <select asp-for="Influencer.Alignment" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.InfluencerAlignment>()" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Met On</label>
+                            <input asp-for="Influencer.LastMetAt" class="form-control" type="date" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Meeting Outcome</label>
+                            <input asp-for="Influencer.LastMeetingOutcome" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea asp-for="Influencer.Notes" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-2">
+                                <input asp-for="Influencer.IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="Influencer.IsActive" class="form-check-label">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-warning">Update</button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

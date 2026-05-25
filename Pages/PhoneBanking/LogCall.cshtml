@@ -1,0 +1,84 @@
+@page
+@model Nirvachak_AI.Pages.PhoneBanking.LogCallModel
+@{
+    ViewData["Title"] = "Log a Call";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <!-- Voter search (when no voter pre-selected) -->
+        @if (Model.SelectedVoter == null && Model.VoterId == null)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light fw-semibold">Search Voter</div>
+                <div class="card-body">
+                    <form method="get" class="d-flex gap-2">
+                        <input name="SearchName" value="@Model.SearchName" class="form-control" placeholder="Name or mobile number" />
+                        <button class="btn btn-outline-primary">Search</button>
+                    </form>
+                    @if (Model.SearchResults.Any())
+                    {
+                        <ul class="list-group mt-3">
+                            @foreach (var v in Model.SearchResults)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><strong>@v.Name</strong> — @v.MobileNumber <span class="badge bg-secondary">B-@v.BoothNumber</span></span>
+                                    <a asp-page="./LogCall" asp-route-voterId="@v.Id" class="btn btn-sm btn-success">Select</a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-telephone-plus me-2"></i>Log Call
+                    @if (Model.SelectedVoter != null)
+                    {
+                        <span>— @Model.SelectedVoter.Name (@Model.SelectedVoter.MobileNumber)</span>
+                    }
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <input asp-for="Call.VoterId" type="hidden" value="@(Model.VoterId ?? 0)" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="row g-3">
+                        @if (Model.SelectedVoter == null)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">Voter ID *</label>
+                                <input asp-for="Call.VoterId" class="form-control" type="number" placeholder="Enter Voter DB Id" />
+                            </div>
+                        }
+                        <div class="col-md-6">
+                            <label class="form-label">Call Outcome *</label>
+                            <select asp-for="Call.Outcome" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.CallOutcome>()" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Duration (seconds)</label>
+                            <input asp-for="Call.DurationSeconds" class="form-control" type="number" min="0" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sentiment After Call</label>
+                            <select asp-for="Call.SentimentAfterCall" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.VoterSentiment>()" class="form-select">
+                                <option value="">— No change —</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea asp-for="Call.Notes" class="form-control" rows="3" placeholder="Talking points, concerns raised..."></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Save Call</button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

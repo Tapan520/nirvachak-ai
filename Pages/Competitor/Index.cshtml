@@ -1,0 +1,122 @@
+@page
+@model Nirvachak_AI.Pages.Competitor.IndexModel
+@{
+    ViewData["Title"] = "Competitor Intelligence";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><i class="bi bi-eye-fill text-danger me-2"></i>Competitor Intelligence</h3>
+    <a asp-page="./Create" class="btn btn-danger"><i class="bi bi-plus-circle me-1"></i>Log Activity</a>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-danger">@Model.Activities.Count</div>
+                <div class="text-muted small">Total Activities Logged</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-warning">@(Model.ThreatSummary.GetValueOrDefault("High", 0) + Model.ThreatSummary.GetValueOrDefault("Critical", 0))</div>
+                <div class="text-muted small">High / Critical Threats</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-primary">@Model.KnownCompetitors.Count</div>
+                <div class="text-muted small">Tracked Competitors</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold text-secondary">@Model.Activities.Where(a => a.EstimatedCrowd.HasValue).Sum(a => a.EstimatedCrowd)</div>
+                <div class="text-muted small">Total Crowd Observed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="FilterCompetitor" class="form-select form-select-sm">
+            <option value="">All Competitors</option>
+            @foreach (var c in Model.KnownCompetitors)
+            {
+                <option value="@c" selected="@(Model.FilterCompetitor == c)">@c</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="FilterThreat" class="form-select form-select-sm">
+            <option value="">All Threat Levels</option>
+            @foreach (var t in Enum.GetValues<Nirvachak_AI.Domain.Enums.CompetitorThreatLevel>())
+            {
+                <option value="@t" selected="@(Model.FilterThreat == t)">@t</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-outline-secondary">Filter</button>
+        <a asp-page="./Index" class="btn btn-sm btn-link">Clear</a>
+    </div>
+</form>
+
+<!-- Activity table -->
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Competitor</th>
+                    <th>Party</th>
+                    <th>Activity</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Crowd</th>
+                    <th>Threat</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Activities)
+                {
+                    var badge = a.ThreatLevel switch {
+                        Nirvachak_AI.Domain.Enums.CompetitorThreatLevel.Critical => "danger",
+                        Nirvachak_AI.Domain.Enums.CompetitorThreatLevel.High     => "warning text-dark",
+                        Nirvachak_AI.Domain.Enums.CompetitorThreatLevel.Medium   => "info text-dark",
+                        _                                                          => "secondary"
+                    };
+                    <tr>
+                        <td>@a.ActivityDate.ToString("dd MMM yyyy")</td>
+                        <td><strong>@a.CompetitorName</strong></td>
+                        <td>@a.PartyName</td>
+                        <td>@a.ActivityTitle</td>
+                        <td><span class="badge bg-light text-dark border">@a.ActivityType</span></td>
+                        <td>@a.Location</td>
+                        <td>@(a.EstimatedCrowd.HasValue ? a.EstimatedCrowd.Value.ToString("N0") : "—")</td>
+                        <td><span class="badge bg-@badge">@a.ThreatLevel</span></td>
+                        <td>
+                            <a asp-page="./Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-page="./Delete" asp-route-id="@a.Id" class="btn btn-sm btn-outline-danger">Del</a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Activities.Any())
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">No competitor activities logged yet.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

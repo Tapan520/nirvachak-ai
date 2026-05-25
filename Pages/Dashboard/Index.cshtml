@@ -340,6 +340,41 @@ else
 @*  ADMIN / MANAGER / CANDIDATE  —  Full campaign dashboard        *@
 @* ═══════════════════════════════════════════════════════════════ *@
 
+    @* ── Win Probability Banner ──────────────────────────────── *@
+    @if (Model.WinProbability != null)
+    {
+        var wp = Model.WinProbability;
+        <div class="card mb-4 border-@wp.TierColor border-2">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="position-relative flex-shrink-0" style="width:70px;height:70px;">
+                            <canvas id="dashGauge" width="70" height="70"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                <div class="fw-bold text-@wp.TierColor" style="font-size:1.1rem">@wp.Score%</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <i class="bi bi-trophy-fill text-warning fs-5"></i>
+                                <span class="fw-bold">Win Probability</span>
+                                <span class="badge bg-@wp.TierColor">@wp.Tier</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <span class="me-3"><i class="bi bi-hand-thumbs-up-fill text-success me-1"></i>@wp.FavourVoters.ToString("N0") favour</span>
+                                <span class="me-3"><i class="bi bi-arrow-left-right text-warning me-1"></i>@wp.FloatingVoters floating</span>
+                                <span><i class="bi bi-person-check-fill text-info me-1"></i>@wp.ContactCoverage% covered</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a asp-page="/WinProbability/Index" class="btn btn-sm btn-outline-@wp.TierColor">
+                        <i class="bi bi-graph-up-arrow me-1"></i>Full Analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
     @* Stat cards *@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-2">
@@ -715,6 +750,34 @@ else
         },
         options: chartOpts
     });
+    </script>
+}
+
+@if (Model.WinProbability != null)
+{
+    <script>
+    (function() {
+        const tierColors = { Strong: '#2f9e44', Moderate: '#f59f00', Weak: '#e03131', Critical: '#e03131' };
+        const c = tierColors['@Model.WinProbability.Tier'] ?? '#868e96';
+        const score = @Model.WinProbability.Score;
+        new Chart(document.getElementById('dashGauge'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [c, '#e9ecef'],
+                    borderWidth: 0,
+                    circumference: 270,
+                    rotation: 225
+                }]
+            },
+            options: {
+                responsive: false,
+                cutout: '72%',
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    })();
     </script>
 }
 }

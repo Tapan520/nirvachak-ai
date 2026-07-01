@@ -174,10 +174,10 @@
                             <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
                         </a>
                     </li>
-                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager"))
+                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("SuperAdmin"))
                     {
                         <li class="sidebar-section-label px-2 mt-3 mb-1">MANAGEMENT</li>
-                        @if (User.IsInRole("Admin"))
+                        @if (User.IsInRole("SuperAdmin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Constituencies") ? "active" : "")" asp-page="/Admin/Constituencies/Index">
@@ -185,21 +185,27 @@
                                 </a>
                             </li>
                         }
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Wards") ? "active" : "")" asp-page="/Admin/Wards/Index">
-                                <i class="bi bi-map me-2"></i> Wards
-                            </a>
-                        </li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Wards") ? "active" : "")" asp-page="/Admin/Wards/Index">
+                                    <i class="bi bi-map me-2"></i> Wards
+                                </a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Index">
                                 <i class="bi bi-people me-2"></i> Users
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Rewards/Index">
-                                <i class="bi bi-gift-fill me-2"></i> Rewards
-                            </a>
-                        </li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Rewards/Index">
+                                    <i class="bi bi-gift-fill me-2"></i> Rewards
+                                </a>
+                            </li>
+                        }
                     }
                 </ul>
             </div>

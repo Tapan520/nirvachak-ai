@@ -12,7 +12,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Admin;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class EditUserModel : PageModel
 {
     private readonly UserManager<AppUser> _userManager;
@@ -81,15 +81,30 @@ public class EditUserModel : PageModel
         if (targetUser == null) return NotFound();
 
         var currentUser = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
 
-        // Manager can only edit FieldWorker or BoothAgent in their constituency
-        if (!isAdmin)
+        if (!isSuperAdmin)
         {
-            if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
-                return Forbid();
-            if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
-                return Forbid();
+            // No-one below SuperAdmin can edit a SuperAdmin account
+            if (targetUser.Role == UserRole.SuperAdmin) return Forbid();
+
+            if (!isAdmin)
+            {
+                // CampaignManager: only FieldWorker/BoothAgent in own constituency
+                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
+                    return Forbid();
+                if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
+                    return Forbid();
+            }
+            else
+            {
+                // Admin: only users in own constituency, cannot touch Admin or SuperAdmin
+                if (targetUser.Role == UserRole.Admin && targetUser.Id != currentUser?.Id)
+                    return Forbid();
+                if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
+                    return Forbid();
+            }
         }
 
         UserId = id;
@@ -105,7 +120,7 @@ public class EditUserModel : PageModel
             IsActive             = targetUser.IsActive
         };
 
-        await LoadFormDataAsync(isAdmin, currentUser);
+        await LoadFormDataAsync(isSuperAdmin, isAdmin, currentUser);
         return Page();
     }
 
@@ -115,17 +130,30 @@ public class EditUserModel : PageModel
         if (targetUser == null) return NotFound();
 
         var currentUser = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
 
-        if (!isAdmin)
+        if (!isSuperAdmin)
         {
-            if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
-                return Forbid();
-            if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
-                return Forbid();
+            if (targetUser.Role == UserRole.SuperAdmin) return Forbid();
+
+            if (!isAdmin)
+            {
+                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
+                    return Forbid();
+                if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
+                    return Forbid();
+            }
+            else
+            {
+                if (targetUser.Role == UserRole.Admin && targetUser.Id != currentUser?.Id)
+                    return Forbid();
+                if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
+                    return Forbid();
+            }
         }
 
-        await LoadFormDataAsync(isAdmin, currentUser);
+        await LoadFormDataAsync(isSuperAdmin, isAdmin, currentUser);
 
         // Password fields are optional — remove validation errors when left blank
         if (string.IsNullOrWhiteSpace(Input.NewPassword))
@@ -196,17 +224,25 @@ public class EditUserModel : PageModel
             targetUser.IsActive = Input.IsActive;
         }
 
-        if (isAdmin)
+        if (isSuperAdmin || isAdmin)
         {
-            if (targetUser.Role != Input.Role)
+            // Admin cannot elevate a role to Admin or SuperAdmin
+            var targetRole = Input.Role;
+            if (isAdmin && !isSuperAdmin &&
+                (targetRole == UserRole.Admin || targetRole == UserRole.SuperAdmin))
             {
-                changes.Add($"Role: '{targetUser.Role}' → '{Input.Role}'");
+                targetRole = targetUser.Role; // silently keep existing role
+            }
+
+            if (targetUser.Role != targetRole)
+            {
+                changes.Add($"Role: '{targetUser.Role}' → '{targetRole}'");
                 var existingRoles = await _userManager.GetRolesAsync(targetUser);
                 await _userManager.RemoveFromRolesAsync(targetUser, existingRoles);
-                await _userManager.AddToRoleAsync(targetUser, Input.Role.ToString());
-                targetUser.Role = Input.Role;
+                await _userManager.AddToRoleAsync(targetUser, targetRole.ToString());
+                targetUser.Role = targetRole;
             }
-            if (targetUser.ConstituencyId != Input.ConstituencyId)
+            if (isSuperAdmin && targetUser.ConstituencyId != Input.ConstituencyId)
             {
                 changes.Add("Constituency updated");
                 targetUser.ConstituencyId = Input.ConstituencyId;
@@ -233,20 +269,24 @@ public class EditUserModel : PageModel
         return RedirectToPage("/Admin/Index");
     }
 
-    private async Task LoadFormDataAsync(bool isAdmin, AppUser? currentUser)
+    private async Task LoadFormDataAsync(bool isSuperAdmin, bool isAdmin, AppUser? currentUser)
     {
         IQueryable<Constituency> constQuery = _db.Constituencies.OrderBy(c => c.Name);
-        if (!isAdmin && currentUser?.ConstituencyId != null)
+        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
             constQuery = constQuery.Where(c => c.Id == currentUser.ConstituencyId);
 
         ConstituencyItems = await constQuery
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = $"{c.Name} ({c.Code})" })
             .ToListAsync();
 
-        var allowedRoles = isAdmin
+        UserRole[] allowedRoles = isSuperAdmin
             ? Enum.GetValues<UserRole>()
-            : new[] { UserRole.FieldWorker, UserRole.BoothAgent };
+            : isAdmin
+                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent }
+                : new[] { UserRole.FieldWorker, UserRole.BoothAgent };
 
-        RoleItems = allowedRoles.Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() }).ToList();
+        RoleItems = allowedRoles
+            .Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() })
+            .ToList();
     }
 }

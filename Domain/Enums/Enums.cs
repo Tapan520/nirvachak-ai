@@ -2,7 +2,7 @@
 
 public enum ElectionType { MLA, Ward }
 public enum VoterSentiment { Unknown, Favour, Against, Neutral, Floating }
-public enum UserRole { Admin, CampaignManager, Candidate, FieldWorker, BoothAgent }
+public enum UserRole { Admin = 0, CampaignManager = 1, Candidate = 2, FieldWorker = 3, BoothAgent = 4, SuperAdmin = 5 }
 public enum GrievanceStatus { Open, InProgress, Resolved, Closed }
 public enum GrievancePriority { Low, Medium, High, Critical }
 public enum ExpenseCategory { Publicity, Transport, Food, Communication, Printing, Miscellaneous }

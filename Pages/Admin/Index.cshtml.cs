@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Admin;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -37,13 +37,25 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var currentUser = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
 
         IQueryable<AppUser> query = _db.Users.Include(u => u.Constituency).OrderBy(u => u.FullName);
 
-        if (!isAdmin)
+        if (isSuperAdmin)
         {
-            // Manager sees only FieldWorker and BoothAgent in their constituency
+            // SuperAdmin sees every user across all constituencies
+        }
+        else if (isAdmin)
+        {
+            // Admin sees all roles in their own constituency except SuperAdmin
+            query = query.Where(u =>
+                u.ConstituencyId == currentUser!.ConstituencyId &&
+                u.Role != UserRole.SuperAdmin);
+        }
+        else
+        {
+            // CampaignManager sees only FieldWorker and BoothAgent in their constituency
             query = query.Where(u =>
                 u.ConstituencyId == currentUser!.ConstituencyId &&
                 (u.Role == UserRole.FieldWorker || u.Role == UserRole.BoothAgent));
@@ -51,14 +63,17 @@ public class IndexModel : PageModel
 
         Users = await query.ToListAsync();
 
+        // Gap fix: scope audit logs to own constituency for non-SuperAdmin
         IQueryable<AuditLog> auditQ = _db.AuditLogs.OrderByDescending(a => a.CreatedAt);
+        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
+            auditQ = auditQ.Where(a => a.ConstituencyId == currentUser.ConstituencyId);
         if (!string.IsNullOrEmpty(AuditUserFilter))   auditQ = auditQ.Where(a => a.UserName == AuditUserFilter);
         if (!string.IsNullOrEmpty(AuditActionFilter)) auditQ = auditQ.Where(a => a.Action == AuditActionFilter);
         if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());
         if (AuditDateTo.HasValue)   auditQ = auditQ.Where(a => a.CreatedAt <= AuditDateTo.Value.ToUniversalTime().AddDays(1));
 
-        AuditLogs   = await auditQ.Take(50).ToListAsync();
-        AuditUsers  = await _db.AuditLogs.Select(a => a.UserName).Distinct().OrderBy(x => x).ToListAsync();
+        AuditLogs    = await auditQ.Take(50).ToListAsync();
+        AuditUsers   = await _db.AuditLogs.Select(a => a.UserName).Distinct().OrderBy(x => x).ToListAsync();
         AuditActions = await _db.AuditLogs.Select(a => a.Action).Distinct().OrderBy(x => x).ToListAsync();
     }
 
@@ -67,12 +82,16 @@ public class IndexModel : PageModel
         var currentUser = await _userManager.GetUserAsync(User);
         bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
 
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+
         var user = await _userManager.FindByIdAsync(userId);
         if (user != null)
         {
-            if (!isAdmin && (user.Role != UserRole.FieldWorker && user.Role != UserRole.BoothAgent))
+            // No-one can toggle a SuperAdmin account
+            if (user.Role == UserRole.SuperAdmin) return Forbid();
+            if (!isSuperAdmin && !isAdmin && (user.Role != UserRole.FieldWorker && user.Role != UserRole.BoothAgent))
                 return Forbid();
-            if (!isAdmin && user.ConstituencyId != currentUser?.ConstituencyId)
+            if (!isSuperAdmin && user.ConstituencyId != currentUser?.ConstituencyId)
                 return Forbid();
 
             user.IsActive = !user.IsActive;

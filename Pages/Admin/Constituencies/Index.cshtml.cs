@@ -7,7 +7,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Constituencies;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "SuperAdmin")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;

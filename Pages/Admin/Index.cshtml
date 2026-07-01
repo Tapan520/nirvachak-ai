@@ -34,7 +34,8 @@
                         <td class="fw-semibold">@u.FullName</td>
                         <td class="small">@u.Email</td>
                         <td>
-                            <span class="badge @(u.Role == UserRole.Admin ? "bg-danger" :
+                            <span class="badge @(u.Role == UserRole.SuperAdmin ? "bg-dark" :
+                                u.Role == UserRole.Admin ? "bg-danger" :
                                 u.Role == UserRole.CampaignManager ? "bg-primary" :
                                 u.Role == UserRole.Candidate ? "bg-warning text-dark" :
                                 u.Role == UserRole.BoothAgent ? "bg-info text-dark" : "bg-secondary")">
@@ -62,7 +63,7 @@
                                         <i class="bi bi-@(u.IsActive ? "pause" : "play")"></i>
                                     </button>
                                 </form>
-                                @if (User.IsInRole("Admin"))
+                                @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                                 {
                                     <a asp-page="/Admin/DeleteUser" asp-route-id="@u.Id"
                                        class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">

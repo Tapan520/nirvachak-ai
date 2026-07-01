@@ -25,6 +25,23 @@ public static class SeedService
                 await roleManager.CreateAsync(new IdentityRole(role));
         }
 
+        // ── Seed SuperAdmin (platform-level, no constituency) ─────────────────
+        if (!await userManager.Users.AnyAsync(u => u.Role == UserRole.SuperAdmin))
+        {
+            var superAdmin = new AppUser
+            {
+                UserName       = "superadmin@nirvachak.ai",
+                Email          = "superadmin@nirvachak.ai",
+                FullName       = "Platform Super Admin",
+                Role           = UserRole.SuperAdmin,
+                ConstituencyId = null,
+                EmailConfirmed = true,
+                IsActive       = true
+            };
+            var r = await userManager.CreateAsync(superAdmin, "SuperAdmin@123");
+            if (r.Succeeded) await userManager.AddToRoleAsync(superAdmin, nameof(UserRole.SuperAdmin));
+        }
+
         if (!db.Constituencies.Any())
         {
             var constituency = new Constituency

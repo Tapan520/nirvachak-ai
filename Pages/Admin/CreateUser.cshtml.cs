@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class CreateUserModel : PageModel
 {
     private readonly UserManager<AppUser> _userManager;
@@ -59,15 +59,30 @@ public class CreateUserModel : PageModel
         await LoadFormDataAsync();
         if (!ModelState.IsValid) return Page();
 
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
-        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
+        var currentUser   = await _userManager.GetUserAsync(User);
 
-        // Manager can only create FieldWorker or BoothAgent in their constituency
-        if (!isAdmin)
+        if (isSuperAdmin)
         {
+            // SuperAdmin can create any role; ConstituencyId comes from form
+        }
+        else if (isAdmin)
+        {
+            // Admin cannot create SuperAdmin or another Admin
+            if (Input.Role == UserRole.SuperAdmin || Input.Role == UserRole.Admin)
+            {
+                ModelState.AddModelError("", "Admins can only create CampaignManager, Candidate, FieldWorker or BoothAgent users.");
+                return Page();
+            }
+            Input.ConstituencyId = currentUser?.ConstituencyId;
+        }
+        else
+        {
+            // CampaignManager can only create FieldWorker or BoothAgent
             if (Input.Role != UserRole.FieldWorker && Input.Role != UserRole.BoothAgent)
             {
-                ModelState.AddModelError("", "You can only create Worker or BoothAgent users.");
+                ModelState.AddModelError("", "You can only create FieldWorker or BoothAgent users.");
                 return Page();
             }
             Input.ConstituencyId = currentUser?.ConstituencyId;
@@ -102,20 +117,25 @@ public class CreateUserModel : PageModel
 
     private async Task LoadFormDataAsync()
     {
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
-        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
+        var currentUser   = await _userManager.GetUserAsync(User);
 
         IQueryable<Constituency> constQuery = _db.Constituencies.OrderBy(c => c.Name);
-        if (!isAdmin && currentUser?.ConstituencyId != null)
+        if (!isSuperAdmin && !isAdmin && currentUser?.ConstituencyId != null)
+            constQuery = constQuery.Where(c => c.Id == currentUser.ConstituencyId);
+        else if (isAdmin && currentUser?.ConstituencyId != null)
             constQuery = constQuery.Where(c => c.Id == currentUser.ConstituencyId);
 
         ConstituencyItems = constQuery
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = $"{c.Name} ({c.Code})" })
             .ToList();
 
-        var allowedRoles = isAdmin
-            ? Enum.GetValues<UserRole>()
-            : new[] { UserRole.FieldWorker, UserRole.BoothAgent };
+        UserRole[] allowedRoles = isSuperAdmin
+            ? Enum.GetValues<UserRole>()                                                               // SuperAdmin: all roles
+            : isAdmin
+                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent } // Admin: no Admin/SuperAdmin
+                : new[] { UserRole.FieldWorker, UserRole.BoothAgent };                                 // Manager: ground level only
 
         RoleItems = allowedRoles.Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() }).ToList();
     }

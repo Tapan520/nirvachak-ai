@@ -1,58 +1,146 @@
-ï»¿@page
+@page
 @model Nirvachak_AI.Pages.Admin.EditUserModel
 @{
     ViewData["Title"] = "Edit User";
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header"><i class="bi bi-pencil me-2"></i>Edit User</div>
+    <div class="col-lg-7 col-md-9">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <i class="bi bi-pencil-square me-2"></i>Edit User
+                <span class="text-muted ms-1 small">— @Model.Input.FullName</span>
+            </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" autocomplete="off">
                     <input type="hidden" asp-for="UserId" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label asp-for="Input.FullName" class="form-label fw-semibold">Full Name *</label>
-                            <input asp-for="Input.FullName" class="form-control" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+                    @* Section 1 — Basic Information *@
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-person me-1"></i>Basic Information
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Input.FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.FullName" class="form-control" placeholder="Full name" />
                             <span asp-validation-for="Input.FullName" class="text-danger small"></span>
                         </div>
-                        <div class="col-12">
-                            <label asp-for="Input.PhoneNumber" class="form-label fw-semibold">Phone</label>
-                            <input asp-for="Input.PhoneNumber" class="form-control" />
+                        <div class="col-md-6">
+                            <label asp-for="Input.PhoneNumber" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="e.g. 9876543210" />
+                            </div>
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
                         </div>
-                        @if (User.IsInRole("Admin"))
-                        {
+                        <div class="col-12">
+                            <label asp-for="Input.Email" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Input.Email" class="form-control" placeholder="e.g. user@example.com" />
+                            </div>
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>This email is also used to log in.
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Section 2 — Change Password (optional) *@
+                    <hr class="my-3" />
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-1">
+                        <i class="bi bi-shield-lock me-1"></i>Change Password
+                        <span class="badge bg-secondary ms-1 fw-normal" style="font-size:0.65rem">Optional</span>
+                    </h6>
+                    <p class="text-muted small mb-3">Leave blank to keep the existing password unchanged.</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Input.NewPassword" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input asp-for="Input.NewPassword" class="form-control" id="newPwd"
+                                       placeholder="Min. 6 characters" autocomplete="new-password" />
+                                <button class="btn btn-outline-secondary" type="button"
+                                        onclick="togglePwd('newPwd',this)" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Input.NewPassword" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Input.ConfirmPassword" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                                <input asp-for="Input.ConfirmPassword" class="form-control" id="confirmPwd"
+                                       placeholder="Re-enter new password" autocomplete="new-password" />
+                                <button class="btn btn-outline-secondary" type="button"
+                                        onclick="togglePwd('confirmPwd',this)" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    @* Section 3 — Role & Constituency (Admin only) *@
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <hr class="my-3" />
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                            <i class="bi bi-shield-check me-1"></i>Role &amp; Constituency
+                            <span class="badge bg-danger ms-1 fw-normal" style="font-size:0.65rem">Admin Only</span>
+                        </h6>
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label asp-for="Input.Role" class="form-label fw-semibold">Role *</label>
                                 <select asp-for="Input.Role" asp-items="Model.RoleItems" class="form-select"></select>
+                                <span asp-validation-for="Input.Role" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Input.ConstituencyId" class="form-label fw-semibold">Constituency</label>
                                 <select asp-for="Input.ConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
-                                    <option value="">-- All --</option>
+                                    <option value="">— None —</option>
                                 </select>
                             </div>
-                        }
+                        </div>
+                    }
+
+                    @* Section 4 — Assignment & Status *@
+                    <hr class="my-3" />
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-3">
+                        <i class="bi bi-pin-map me-1"></i>Assignment &amp; Status
+                    </h6>
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="Input.AssignedBoothNumbers" class="form-label fw-semibold">Assigned Booths</label>
+                            <label asp-for="Input.AssignedBoothNumbers" class="form-label fw-semibold"></label>
                             <input asp-for="Input.AssignedBoothNumbers" class="form-control" placeholder="e.g. 1,2,3" />
+                            <div class="form-text">Comma-separated booth numbers.</div>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Input.AssignedWard" class="form-label fw-semibold">Assigned Ward</label>
+                            <label asp-for="Input.AssignedWard" class="form-label fw-semibold"></label>
                             <input asp-for="Input.AssignedWard" class="form-control" placeholder="Ward number" />
                         </div>
                         <div class="col-12">
-                            <div class="form-check">
-                                <input asp-for="Input.IsActive" class="form-check-input" type="checkbox" />
-                                <label asp-for="Input.IsActive" class="form-check-label">Active</label>
+                            <div class="form-check form-switch">
+                                <input asp-for="Input.IsActive" class="form-check-input" type="checkbox" role="switch" />
+                                <label asp-for="Input.IsActive" class="form-check-label fw-semibold">Account Active</label>
+                            </div>
+                            <div class="form-text text-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Deactivating will prevent this user from logging in.
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Update</button>
-                        <a asp-page="/Admin/Index" class="btn btn-outline-secondary">Cancel</a>
+
+                    <hr class="mt-2 mb-3" />
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Update User
+                        </button>
+                        <a asp-page="/Admin/Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel
+                        </a>
                     </div>
                 </form>
             </div>
@@ -62,4 +150,12 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePwd(fieldId, btn) {
+            const f = document.getElementById(fieldId);
+            const hidden = f.type === 'password';
+            f.type = hidden ? 'text' : 'password';
+            btn.innerHTML = hidden ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        }
+    </script>
 }

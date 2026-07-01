@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Admin;
 
@@ -16,11 +17,13 @@ public class EditUserModel : PageModel
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly AppDbContext _db;
+    private readonly AuditService _audit;
 
-    public EditUserModel(UserManager<AppUser> userManager, AppDbContext db)
+    public EditUserModel(UserManager<AppUser> userManager, AppDbContext db, AuditService audit)
     {
         _userManager = userManager;
-        _db = db;
+        _db          = db;
+        _audit       = audit;
     }
 
     [BindProperty]
@@ -34,17 +37,41 @@ public class EditUserModel : PageModel
 
     public class InputModel
     {
-        [Required]
+        [Required, MaxLength(100)]
+        [Display(Name = "Full Name")]
         public string FullName { get; set; } = string.Empty;
 
+        [Required, EmailAddress, MaxLength(200)]
+        [Display(Name = "Email Address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone, MaxLength(15)]
+        [Display(Name = "Phone Number")]
         public string? PhoneNumber { get; set; }
+
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "New Password")]
+        public string? NewPassword { get; set; }
+
+        [DataType(DataType.Password)]
+        [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match.")]
+        [Display(Name = "Confirm New Password")]
+        public string? ConfirmPassword { get; set; }
 
         [Required]
         public UserRole Role { get; set; }
 
+        [Display(Name = "Constituency")]
         public int? ConstituencyId { get; set; }
+
+        [Display(Name = "Assigned Booth Numbers")]
         public string? AssignedBoothNumbers { get; set; }
+
+        [Display(Name = "Assigned Ward")]
         public string? AssignedWard { get; set; }
+
+        [Display(Name = "Account Active")]
         public bool IsActive { get; set; } = true;
     }
 
@@ -68,13 +95,14 @@ public class EditUserModel : PageModel
         UserId = id;
         Input = new InputModel
         {
-            FullName = targetUser.FullName,
-            PhoneNumber = targetUser.PhoneNumber,
-            Role = targetUser.Role,
-            ConstituencyId = targetUser.ConstituencyId,
+            FullName             = targetUser.FullName,
+            Email                = targetUser.Email ?? string.Empty,
+            PhoneNumber          = targetUser.PhoneNumber,
+            Role                 = targetUser.Role,
+            ConstituencyId       = targetUser.ConstituencyId,
             AssignedBoothNumbers = targetUser.AssignedBoothNumbers,
-            AssignedWard = targetUser.AssignedWard,
-            IsActive = targetUser.IsActive
+            AssignedWard         = targetUser.AssignedWard,
+            IsActive             = targetUser.IsActive
         };
 
         await LoadFormDataAsync(isAdmin, currentUser);
@@ -98,24 +126,109 @@ public class EditUserModel : PageModel
         }
 
         await LoadFormDataAsync(isAdmin, currentUser);
+
+        // Password fields are optional — remove validation errors when left blank
+        if (string.IsNullOrWhiteSpace(Input.NewPassword))
+        {
+            ModelState.Remove("Input.NewPassword");
+            ModelState.Remove("Input.ConfirmPassword");
+        }
+
         if (!ModelState.IsValid) return Page();
 
-        targetUser.FullName = Input.FullName.Trim();
-        targetUser.PhoneNumber = Input.PhoneNumber;
+        // ── Email uniqueness check ────────────────────────────────────────
+        var trimmedEmail    = Input.Email.Trim();
+        var normalizedEmail = trimmedEmail.ToUpperInvariant();
+        if (!string.Equals(targetUser.NormalizedEmail, normalizedEmail, StringComparison.Ordinal))
+        {
+            var existing = await _userManager.FindByEmailAsync(trimmedEmail);
+            if (existing != null && existing.Id != targetUser.Id)
+            {
+                ModelState.AddModelError("Input.Email", "This email address is already in use by another account.");
+                return Page();
+            }
+        }
+
+        // ── Track changes for audit ───────────────────────────────────────
+        var changes = new List<string>();
+
+        if (targetUser.FullName != Input.FullName.Trim())
+        {
+            changes.Add($"Name: '{targetUser.FullName}' → '{Input.FullName.Trim()}'");
+            targetUser.FullName = Input.FullName.Trim();
+        }
+
+        if (!string.Equals(targetUser.NormalizedEmail, normalizedEmail, StringComparison.Ordinal))
+        {
+            changes.Add($"Email: '{targetUser.Email}' → '{trimmedEmail}'");
+            targetUser.Email              = trimmedEmail;
+            targetUser.NormalizedEmail    = normalizedEmail;
+            targetUser.UserName           = trimmedEmail;
+            targetUser.NormalizedUserName = normalizedEmail;
+        }
+
+        if (targetUser.PhoneNumber != Input.PhoneNumber)
+        {
+            changes.Add("Phone updated");
+            targetUser.PhoneNumber = Input.PhoneNumber;
+        }
+
+        // ── Password change (optional) ────────────────────────────────────
+        if (!string.IsNullOrWhiteSpace(Input.NewPassword))
+        {
+            var token  = await _userManager.GeneratePasswordResetTokenAsync(targetUser);
+            var result = await _userManager.ResetPasswordAsync(targetUser, token, Input.NewPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var err in result.Errors)
+                    ModelState.AddModelError(string.Empty, err.Description);
+                return Page();
+            }
+            changes.Add("Password changed");
+        }
+
         targetUser.AssignedBoothNumbers = Input.AssignedBoothNumbers;
-        targetUser.AssignedWard = Input.AssignedWard;
-        targetUser.IsActive = Input.IsActive;
+        targetUser.AssignedWard         = Input.AssignedWard;
+
+        if (targetUser.IsActive != Input.IsActive)
+        {
+            changes.Add(Input.IsActive ? "Account re-activated" : "Account deactivated");
+            targetUser.IsActive = Input.IsActive;
+        }
 
         if (isAdmin)
         {
-            targetUser.Role = Input.Role;
-            targetUser.ConstituencyId = Input.ConstituencyId;
-            var existingRoles = await _userManager.GetRolesAsync(targetUser);
-            await _userManager.RemoveFromRolesAsync(targetUser, existingRoles);
-            await _userManager.AddToRoleAsync(targetUser, Input.Role.ToString());
+            if (targetUser.Role != Input.Role)
+            {
+                changes.Add($"Role: '{targetUser.Role}' → '{Input.Role}'");
+                var existingRoles = await _userManager.GetRolesAsync(targetUser);
+                await _userManager.RemoveFromRolesAsync(targetUser, existingRoles);
+                await _userManager.AddToRoleAsync(targetUser, Input.Role.ToString());
+                targetUser.Role = Input.Role;
+            }
+            if (targetUser.ConstituencyId != Input.ConstituencyId)
+            {
+                changes.Add("Constituency updated");
+                targetUser.ConstituencyId = Input.ConstituencyId;
+            }
         }
 
-        await _userManager.UpdateAsync(targetUser);
+        var updateResult = await _userManager.UpdateAsync(targetUser);
+        if (!updateResult.Succeeded)
+        {
+            foreach (var err in updateResult.Errors)
+                ModelState.AddModelError(string.Empty, err.Description);
+            return Page();
+        }
+
+        // ── Audit log ─────────────────────────────────────────────────────
+        var summary = changes.Any() ? string.Join("; ", changes) : "No changes made";
+        await _audit.LogAsync(
+            currentUser!.Id, currentUser.FullName,
+            "UpdateUser", "AppUser", targetUser.Id,
+            $"Edited '{targetUser.FullName}' ({targetUser.Email}) — {summary}",
+            currentUser.ConstituencyId);
+
         TempData["Message"] = $"User '{targetUser.FullName}' updated successfully.";
         return RedirectToPage("/Admin/Index");
     }

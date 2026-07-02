@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
@@ -21,11 +23,17 @@ public class EditModel : PageModel
     [BindProperty]
     public Booth? Booth { get; set; }
 
+    public List<Constituency> Constituencies { get; set; } = new();
+    public bool IsAdmin { get; set; }
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         Booth = await _db.Booths.FindAsync(id);
         if (Booth == null) return NotFound();
         return Page();
@@ -36,6 +44,9 @@ public class EditModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         if (!ModelState.IsValid) return Page();
         var existing = await _db.Booths.FindAsync(Booth!.Id);
         if (existing == null) return NotFound();
@@ -46,6 +57,8 @@ public class EditModel : PageModel
         existing.WardNumber = Booth.WardNumber;
         existing.AssignedAgentName = Booth.AssignedAgentName;
         existing.AssignedAgentPhone = Booth.AssignedAgentPhone;
+        if (IsAdmin)
+            existing.ConstituencyId = Booth.ConstituencyId;
 
         await _db.SaveChangesAsync();
         TempData["Message"] = "Booth updated successfully.";

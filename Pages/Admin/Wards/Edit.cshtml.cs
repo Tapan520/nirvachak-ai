@@ -11,7 +11,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Wards;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class EditModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -52,7 +52,7 @@ public class EditModel : PageModel
         if (ward == null) return NotFound();
 
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
         if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
 
         WardId = id;
@@ -76,7 +76,7 @@ public class EditModel : PageModel
         if (ward == null) return NotFound();
 
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
         if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
 
         ward.WardNumber = Input.WardNumber.Trim();
@@ -92,7 +92,7 @@ public class EditModel : PageModel
     private async Task LoadConstituenciesAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
 
         IQueryable<Constituency> query = _db.Constituencies.OrderBy(c => c.Name);
         if (!isAdmin && user?.ConstituencyId != null)

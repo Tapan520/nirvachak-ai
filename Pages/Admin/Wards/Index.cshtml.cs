@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Wards;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -32,7 +32,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
 
         if (!isAdmin && user?.ConstituencyId != null)
             ConstituencyId = user.ConstituencyId;
@@ -64,7 +64,7 @@ public class IndexModel : PageModel
         if (ward != null)
         {
             var user = await _userManager.GetUserAsync(User);
-            bool isAdmin = User.IsInRole(nameof(UserRole.Admin));
+            bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
             if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId)
                 return Forbid();
 

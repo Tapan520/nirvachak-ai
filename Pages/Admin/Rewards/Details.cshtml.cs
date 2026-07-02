@@ -7,7 +7,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Rewards;
 
-[Authorize(Roles = "Admin,CampaignManager")]
+[Authorize(Roles = "Admin,CampaignManager,SuperAdmin")]
 public class DetailsModel : PageModel
 {
     private readonly AppDbContext _db;

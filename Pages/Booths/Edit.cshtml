@@ -10,8 +10,24 @@
             <div class="card-body">
                 <form method="post">
                     <input asp-for="Booth!.Id" type="hidden" />
-                    <input asp-for="Booth!.ConstituencyId" type="hidden" />
                     <div class="row g-3">
+                        @if (Model.IsAdmin)
+                        {
+                            <div class="col-12">
+                                <label asp-for="Booth!.ConstituencyId" class="form-label fw-semibold">Constituency *</label>
+                                <select asp-for="Booth!.ConstituencyId" class="form-select">
+                                    <option value="">-- Select Constituency --</option>
+                                    @foreach (var c in Model.Constituencies)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <input asp-for="Booth!.ConstituencyId" type="hidden" />
+                        }
                         <div class="col-6">
                             <label asp-for="Booth!.BoothNumber" class="form-label fw-semibold">Booth Number</label>
                             <input asp-for="Booth!.BoothNumber" class="form-control" />

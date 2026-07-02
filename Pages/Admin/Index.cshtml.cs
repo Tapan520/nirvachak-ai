@@ -77,6 +77,58 @@ public class IndexModel : PageModel
         AuditActions = await _db.AuditLogs.Select(a => a.Action).Distinct().OrderBy(x => x).ToListAsync();
     }
 
+    public async Task<IActionResult> OnPostDeleteLogAsync(int logId)
+    {
+        if (!User.IsInRole(nameof(UserRole.SuperAdmin))) return Forbid();
+
+        var log = await _db.AuditLogs.FindAsync(logId);
+        if (log != null)
+        {
+            _db.AuditLogs.Remove(log);
+            await _db.SaveChangesAsync();
+            var currentUser = await _userManager.GetUserAsync(User);
+            await _audit.LogAsync(
+                currentUser!.Id, currentUser.FullName,
+                "DeleteAuditLog", "AuditLog", logId.ToString(),
+                $"Deleted audit log entry #{logId}",
+                currentUser.ConstituencyId);
+            TempData["Message"] = "Audit log entry deleted.";
+        }
+        return RedirectToPage(new
+        {
+            AuditUserFilter,
+            AuditActionFilter,
+            AuditDateFrom = AuditDateFrom?.ToString("yyyy-MM-dd"),
+            AuditDateTo   = AuditDateTo?.ToString("yyyy-MM-dd")
+        });
+    }
+
+    public async Task<IActionResult> OnPostDeleteAllLogsAsync()
+    {
+        if (!User.IsInRole(nameof(UserRole.SuperAdmin))) return Forbid();
+
+        IQueryable<AuditLog> auditQ = _db.AuditLogs;
+        if (!string.IsNullOrEmpty(AuditUserFilter))   auditQ = auditQ.Where(a => a.UserName == AuditUserFilter);
+        if (!string.IsNullOrEmpty(AuditActionFilter)) auditQ = auditQ.Where(a => a.Action == AuditActionFilter);
+        if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());
+        if (AuditDateTo.HasValue)   auditQ = auditQ.Where(a => a.CreatedAt <= AuditDateTo.Value.ToUniversalTime().AddDays(1));
+
+        var logsToDelete = await auditQ.ToListAsync();
+        int count = logsToDelete.Count;
+        _db.AuditLogs.RemoveRange(logsToDelete);
+        await _db.SaveChangesAsync();
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        await _audit.LogAsync(
+            currentUser!.Id, currentUser.FullName,
+            "DeleteAuditLogs", "AuditLog", null,
+            $"Bulk deleted {count} audit log entries",
+            currentUser.ConstituencyId);
+
+        TempData["Message"] = $"{count} audit log record(s) deleted.";
+        return RedirectToPage();
+    }
+
     public async Task<IActionResult> OnPostToggleAsync(string userId)
     {
         var currentUser = await _userManager.GetUserAsync(User);

@@ -6,7 +6,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Competitor;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class EditModel : PageModel
 {
     private readonly AppDbContext _db;

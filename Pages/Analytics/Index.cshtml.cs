@@ -69,7 +69,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        var isAdmin = user?.Role == UserRole.Admin;
+        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
         var isRestricted = user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent;
 
         if (isAdmin)

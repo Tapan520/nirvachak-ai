@@ -9,7 +9,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Influencers;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -27,10 +27,11 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
+        var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
         int? cId = user?.ConstituencyId;
 
         IQueryable<Influencer> q = _db.Influencers.Where(i => i.IsActive).AsNoTracking();
-        if (cId.HasValue) q = q.Where(i => i.ConstituencyId == cId.Value);
+        if (!isSuperAdmin && cId.HasValue) q = q.Where(i => i.ConstituencyId == cId.Value);
         if (FilterAlignment.HasValue) q = q.Where(i => i.Alignment == FilterAlignment.Value);
 
         Influencers = await q.OrderByDescending(i => i.EstimatedFollowers).ToListAsync();

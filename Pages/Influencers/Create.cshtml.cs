@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Nirvachak_AI.Domain.Entities;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Influencers;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -23,7 +24,8 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        Influencer.ConstituencyId = user?.ConstituencyId ?? Influencer.ConstituencyId;
+        if (user?.Role != UserRole.SuperAdmin)
+            Influencer.ConstituencyId = user?.ConstituencyId ?? Influencer.ConstituencyId;
         Influencer.CreatedAt = DateTime.UtcNow;
         _db.Influencers.Add(Influencer);
         await _db.SaveChangesAsync();

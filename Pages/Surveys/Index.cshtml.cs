@@ -11,7 +11,7 @@ namespace Nirvachak_AI.Pages.Surveys;
 
 public class IndexModel : PageModel
 {
-    private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.CampaignManager, UserRole.Candidate];
+    private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.SuperAdmin, UserRole.CampaignManager, UserRole.Candidate];
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
 
@@ -43,7 +43,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
         CanManage = user != null && ManageRoles.Contains(user.Role);
         var isRestricted = user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent;
 
@@ -124,8 +124,8 @@ public class IndexModel : PageModel
         var survey = await _db.Surveys.FindAsync(id);
         if (survey != null)
         {
-            if (user.Role != UserRole.Admin && survey.ConstituencyId != user.ConstituencyId)
-                return Forbid();
+        if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin && survey.ConstituencyId != user.ConstituencyId)
+            return Forbid();
             survey.IsActive = !survey.IsActive;
             await _db.SaveChangesAsync();
             TempData["Message"] = $"Survey '{survey.Title}' {(survey.IsActive ? "activated" : "deactivated")}.";
@@ -142,8 +142,8 @@ public class IndexModel : PageModel
             .FirstOrDefaultAsync(s => s.Id == id);
         if (survey != null)
         {
-            if (user.Role != UserRole.Admin && survey.ConstituencyId != user.ConstituencyId)
-                return Forbid();
+        if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin && survey.ConstituencyId != user.ConstituencyId)
+            return Forbid();
             _db.SurveyResponses.RemoveRange(survey.Responses);
             _db.Surveys.Remove(survey);
             await _db.SaveChangesAsync();

@@ -10,7 +10,7 @@ using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class EditModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -34,7 +34,7 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         var survey = await _db.Surveys.FindAsync(id);
         if (survey == null) return NotFound();
@@ -56,7 +56,7 @@ public class EditModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         var existing = await _db.Surveys.FindAsync(Survey.Id);
         if (existing == null) return NotFound();

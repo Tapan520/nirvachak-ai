@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Reports;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class ElectionDayModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -42,7 +42,7 @@ public class ElectionDayModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();

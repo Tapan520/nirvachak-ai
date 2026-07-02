@@ -9,7 +9,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Volunteers;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class EditModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -30,7 +30,7 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         var volunteer = await _db.Volunteers.FindAsync(id);
         if (volunteer == null) return NotFound();
@@ -50,7 +50,7 @@ public class EditModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         var existing = await _db.Volunteers.FindAsync(Volunteer.Id);
         if (existing == null) return NotFound();

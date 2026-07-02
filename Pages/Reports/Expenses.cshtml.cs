@@ -9,7 +9,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Reports;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class ExpensesModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -41,7 +41,7 @@ public class ExpensesModel : PageModel
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
 
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
         GeneratedAt = DateTime.Now;
 
         if (IsAdmin)

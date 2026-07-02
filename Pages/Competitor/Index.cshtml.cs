@@ -9,7 +9,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Competitor;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -37,10 +37,11 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
+        var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
         int? cId = user?.ConstituencyId;
 
         IQueryable<CompetitorActivity> q = _db.CompetitorActivities.AsNoTracking();
-        if (cId.HasValue)
+        if (!isSuperAdmin && cId.HasValue)
             q = q.Where(a => a.ConstituencyId == cId.Value);
         if (!string.IsNullOrEmpty(FilterCompetitor))
             q = q.Where(a => a.CompetitorName == FilterCompetitor);

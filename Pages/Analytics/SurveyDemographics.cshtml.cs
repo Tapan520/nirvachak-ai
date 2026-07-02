@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace Nirvachak_AI.Pages.Analytics;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
 public class SurveyDemographicsModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -74,8 +74,8 @@ public class SurveyDemographicsModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin      = user?.Role == UserRole.Admin;
-        CanViewStats = user?.Role is UserRole.Admin or UserRole.CampaignManager or UserRole.Candidate;
+        IsAdmin      = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        CanViewStats = user?.Role is UserRole.Admin or UserRole.SuperAdmin or UserRole.CampaignManager or UserRole.Candidate;
 
         var cId = user?.ConstituencyId;
 

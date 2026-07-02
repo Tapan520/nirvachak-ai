@@ -59,7 +59,7 @@ public class ImportModel : PageModel
     {
         var user = await _userManager.GetUserAsync(User);
         var query = _db.Constituencies.AsQueryable();
-        if (user?.Role != UserRole.Admin && user?.ConstituencyId.HasValue == true)
+        if (user?.Role != UserRole.Admin && user?.Role != UserRole.SuperAdmin && user?.ConstituencyId.HasValue == true)
             query = query.Where(c => c.Id == user.ConstituencyId);
         ConstituencyItems = query
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = $"{c.Name} ({c.Code})" })

@@ -34,7 +34,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
         if (IsAdmin)
         {
             var constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
@@ -49,7 +49,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        var isAdmin = user?.Role == UserRole.Admin;
+        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
 
         if (isAdmin && SelectedConstituencyId.HasValue)
             Grievance.ConstituencyId = SelectedConstituencyId.Value;

@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.PhoneBanking;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
 public class LogCallModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -38,10 +39,11 @@ public class LogCallModel : PageModel
         {
             var user = await _userManager.GetUserAsync(User);
             int? cId = user?.ConstituencyId;
+            var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
             SearchResults = await _db.Voters
                 .Where(v => !v.IsDeleted && v.MobileNumber != null &&
                     (v.Name.Contains(SearchName) || (v.MobileNumber != null && v.MobileNumber.Contains(SearchName))))
-                .Where(v => !cId.HasValue || v.ConstituencyId == cId.Value)
+                .Where(v => isSuperAdmin || !cId.HasValue || v.ConstituencyId == cId.Value)
                 .Take(10).ToListAsync();
         }
     }

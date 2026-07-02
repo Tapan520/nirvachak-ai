@@ -54,7 +54,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Forbid();
 
-        IsAdmin = user.Role == UserRole.Admin;
+        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
         AllowedTargetRoles = GetAllowedTargetRoles(user.Role);
 
         if (IsAdmin)
@@ -68,7 +68,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Forbid();
 
-        IsAdmin = user.Role == UserRole.Admin;
+        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
         AllowedTargetRoles = GetAllowedTargetRoles(user.Role);
 
         if (IsAdmin)
@@ -114,6 +114,7 @@ public class CreateModel : PageModel
 
     public static List<UserRole> GetAllowedTargetRoles(UserRole posterRole) => posterRole switch
     {
+        UserRole.SuperAdmin      => Enum.GetValues<UserRole>().ToList(),
         UserRole.Admin           => Enum.GetValues<UserRole>().ToList(),
         UserRole.Candidate       => new() { UserRole.CampaignManager, UserRole.FieldWorker, UserRole.BoothAgent },
         UserRole.CampaignManager => new() { UserRole.FieldWorker, UserRole.BoothAgent },

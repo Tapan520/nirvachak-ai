@@ -10,7 +10,7 @@ namespace Nirvachak_AI.Pages.Volunteers;
 
 public class IndexModel : PageModel
 {
-    private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.CampaignManager, UserRole.Candidate];
+    private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.SuperAdmin, UserRole.CampaignManager, UserRole.Candidate];
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
 
@@ -32,7 +32,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin;
+        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
         CanManage = user != null && ManageRoles.Contains(user.Role);
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
@@ -72,7 +72,7 @@ public class IndexModel : PageModel
         var v = await _db.Volunteers.FindAsync(id);
         if (v != null)
         {
-            if (user.Role != UserRole.Admin && v.ConstituencyId != user.ConstituencyId)
+            if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin && v.ConstituencyId != user.ConstituencyId)
                 return Forbid();
             _db.Volunteers.Remove(v);
             await _db.SaveChangesAsync();

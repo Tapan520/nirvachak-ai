@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Predictions;
 
-[Authorize(Roles = "Admin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class IndexModel : PageModel
 {
     private readonly PredictiveAnalyticsService _svc;
@@ -43,7 +43,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToPage("/Account/Login");
 
-        IsAdmin = user.Role == UserRole.Admin;
+        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
 
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();

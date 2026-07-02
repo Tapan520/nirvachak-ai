@@ -54,7 +54,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Forbid();
 
-        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
+        IsAdmin = user.Role == UserRole.SuperAdmin;
         AllowedTargetRoles = GetAllowedTargetRoles(user.Role);
 
         if (IsAdmin)
@@ -68,7 +68,7 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Forbid();
 
-        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
+        IsAdmin = user.Role == UserRole.SuperAdmin;
         AllowedTargetRoles = GetAllowedTargetRoles(user.Role);
 
         if (IsAdmin)

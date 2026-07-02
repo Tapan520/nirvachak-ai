@@ -43,6 +43,8 @@ public class IndexModel : PageModel
         IQueryable<CompetitorActivity> q = _db.CompetitorActivities.AsNoTracking();
         if (!isSuperAdmin && cId.HasValue)
             q = q.Where(a => a.ConstituencyId == cId.Value);
+        else if (!isSuperAdmin && !cId.HasValue)
+            q = q.Where(a => false);
         if (!string.IsNullOrEmpty(FilterCompetitor))
             q = q.Where(a => a.CompetitorName == FilterCompetitor);
         if (FilterThreat.HasValue)

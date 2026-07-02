@@ -40,7 +40,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
 
         if (isAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
@@ -79,7 +79,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
 
         IQueryable<Expense> query = _db.Expenses
             .Include(e => e.Constituency)

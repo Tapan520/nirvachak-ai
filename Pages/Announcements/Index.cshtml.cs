@@ -51,7 +51,7 @@ public class IndexModel : PageModel
             .Where(a => a.IsActive && (a.ExpiresAt == null || a.ExpiresAt > now));
 
         // Non-admin sees only their constituency
-        if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin)
+        if (user.Role != UserRole.SuperAdmin)
             query = query.Where(a => a.ConstituencyId == null || a.ConstituencyId == user.ConstituencyId);
 
         // Must target this role OR be authored by this user
@@ -113,7 +113,7 @@ public class IndexModel : PageModel
         var announcement = await _db.Announcements.FindAsync(id);
         if (announcement == null) return NotFound();
 
-        if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin && announcement.CreatedByUserId != user.Id)
+        if (user.Role != UserRole.SuperAdmin && announcement.CreatedByUserId != user.Id)
             return Forbid();
 
         announcement.IsActive = false;

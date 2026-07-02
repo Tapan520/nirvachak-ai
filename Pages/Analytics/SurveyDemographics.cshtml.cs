@@ -74,7 +74,7 @@ public class SurveyDemographicsModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin      = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin      = user?.Role == UserRole.SuperAdmin;
         CanViewStats = user?.Role is UserRole.Admin or UserRole.SuperAdmin or UserRole.CampaignManager or UserRole.Candidate;
 
         var cId = user?.ConstituencyId;

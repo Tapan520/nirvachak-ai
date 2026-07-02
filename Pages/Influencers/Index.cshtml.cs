@@ -31,7 +31,10 @@ public class IndexModel : PageModel
         int? cId = user?.ConstituencyId;
 
         IQueryable<Influencer> q = _db.Influencers.Where(i => i.IsActive).AsNoTracking();
-        if (!isSuperAdmin && cId.HasValue) q = q.Where(i => i.ConstituencyId == cId.Value);
+        if (!isSuperAdmin && cId.HasValue)
+            q = q.Where(i => i.ConstituencyId == cId.Value);
+        else if (!isSuperAdmin && !cId.HasValue)
+            q = q.Where(i => false);
         if (FilterAlignment.HasValue) q = q.Where(i => i.Alignment == FilterAlignment.Value);
 
         Influencers = await q.OrderByDescending(i => i.EstimatedFollowers).ToListAsync();

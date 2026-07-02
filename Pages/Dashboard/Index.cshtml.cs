@@ -96,7 +96,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin       = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin       = user?.Role == UserRole.SuperAdmin;
         IsFieldWorker = user?.Role is UserRole.FieldWorker or UserRole.BoothAgent;
         CurrentRole   = user?.Role ?? UserRole.FieldWorker;
         CurrentUserName = user?.FullName;
@@ -281,7 +281,7 @@ public class IndexModel : PageModel
         var annList = await _db.Announcements
             .Include(a => a.Acknowledgements)
             .Where(a => a.IsActive && (a.ExpiresAt == null || a.ExpiresAt > now)
-                && (a.ConstituencyId == null || a.ConstituencyId == user.ConstituencyId || IsAdmin || user.Role == UserRole.SuperAdmin)
+                && (a.ConstituencyId == null || a.ConstituencyId == user.ConstituencyId || IsAdmin)
                 && (a.TargetRoles == "All" || a.TargetRoles.Contains(roleStr) || a.CreatedByUserId == user.Id))
             .OrderByDescending(a => a.IsPinned).ThenByDescending(a => a.CreatedAt)
             .Take(20).ToListAsync();

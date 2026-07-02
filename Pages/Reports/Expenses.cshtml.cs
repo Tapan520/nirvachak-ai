@@ -41,7 +41,7 @@ public class ExpensesModel : PageModel
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
 
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         GeneratedAt = DateTime.Now;
 
         if (IsAdmin)

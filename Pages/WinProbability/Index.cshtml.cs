@@ -38,7 +38,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToPage("/Account/Login");
 
-        IsAdmin = user.Role == UserRole.Admin || user.Role == UserRole.SuperAdmin;
+        IsAdmin = user.Role == UserRole.SuperAdmin;
 
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();

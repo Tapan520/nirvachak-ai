@@ -28,6 +28,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
         int? cId = user?.ConstituencyId;
+        // Non-SuperAdmin users are always scoped to their own constituency
         var todayStart = DateTime.UtcNow.Date;
 
         IQueryable<PhoneCallLog> callQ = _db.PhoneCallLogs.Include(c => c.Voter).AsNoTracking();

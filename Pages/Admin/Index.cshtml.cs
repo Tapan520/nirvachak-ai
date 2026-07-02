@@ -73,8 +73,12 @@ public class IndexModel : PageModel
         if (AuditDateTo.HasValue)   auditQ = auditQ.Where(a => a.CreatedAt <= AuditDateTo.Value.ToUniversalTime().AddDays(1));
 
         AuditLogs    = await auditQ.Take(50).ToListAsync();
-        AuditUsers   = await _db.AuditLogs.Select(a => a.UserName).Distinct().OrderBy(x => x).ToListAsync();
-        AuditActions = await _db.AuditLogs.Select(a => a.Action).Distinct().OrderBy(x => x).ToListAsync();
+
+        IQueryable<AuditLog> scopedAudit = _db.AuditLogs;
+        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
+            scopedAudit = scopedAudit.Where(a => a.ConstituencyId == currentUser.ConstituencyId);
+        AuditUsers   = await scopedAudit.Select(a => a.UserName).Distinct().OrderBy(x => x).ToListAsync();
+        AuditActions = await scopedAudit.Select(a => a.Action).Distinct().OrderBy(x => x).ToListAsync();
     }
 
     public async Task<IActionResult> OnPostDeleteLogAsync(int logId)

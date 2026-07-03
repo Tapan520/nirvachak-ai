@@ -30,7 +30,7 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
 
         var ev = await _db.CampaignEvents.FindAsync(id);
         if (ev == null) return NotFound();
@@ -50,7 +50,7 @@ public class EditModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
 
         var existing = await _db.CampaignEvents.FindAsync(Event.Id);
         if (existing == null) return NotFound();

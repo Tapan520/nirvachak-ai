@@ -31,7 +31,7 @@ public class EditModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         Booth = await _db.Booths.FindAsync(id);
@@ -44,7 +44,7 @@ public class EditModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         if (!ModelState.IsValid) return Page();

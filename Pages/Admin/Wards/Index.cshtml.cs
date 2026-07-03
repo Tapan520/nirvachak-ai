@@ -32,13 +32,13 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
 
-        if (!isAdmin && user?.ConstituencyId != null)
+        if (!isSuperAdmin && user?.ConstituencyId != null)
             ConstituencyId = user.ConstituencyId;
 
         IQueryable<Constituency> constQuery = _db.Constituencies.OrderBy(c => c.Name);
-        if (!isAdmin && user?.ConstituencyId != null)
+        if (!isSuperAdmin && user?.ConstituencyId != null)
             constQuery = constQuery.Where(c => c.Id == user.ConstituencyId);
 
         ConstituencyItems = await constQuery
@@ -47,7 +47,7 @@ public class IndexModel : PageModel
 
         IQueryable<Ward> wardQuery = _db.Wards.Include(w => w.Constituency).OrderBy(w => w.ConstituencyId).ThenBy(w => w.WardNumber);
 
-        if (!isAdmin && user?.ConstituencyId != null)
+        if (!isSuperAdmin && user?.ConstituencyId != null)
             wardQuery = wardQuery.Where(w => w.ConstituencyId == user.ConstituencyId);
         else if (ConstituencyId.HasValue)
             wardQuery = wardQuery.Where(w => w.ConstituencyId == ConstituencyId);
@@ -64,8 +64,8 @@ public class IndexModel : PageModel
         if (ward != null)
         {
             var user = await _userManager.GetUserAsync(User);
-            bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
-            if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId)
+            bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+            if (!isSuperAdmin && user?.ConstituencyId != ward.ConstituencyId)
                 return Forbid();
 
             _db.Wards.Remove(ward);

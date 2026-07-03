@@ -81,7 +81,7 @@ public class DetailsModel : PageModel
         var response = await _db.SurveyResponses.Include(r => r.Survey).FirstOrDefaultAsync(r => r.Id == responseId);
         if (response != null)
         {
-            if (user.Role != UserRole.Admin && response.Survey?.ConstituencyId != user.ConstituencyId)
+            if (user.Role != UserRole.SuperAdmin && response.Survey?.ConstituencyId != user.ConstituencyId)
                 return Forbid();
             _db.SurveyResponses.Remove(response);
             await _db.SaveChangesAsync();

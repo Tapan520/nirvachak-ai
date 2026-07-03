@@ -49,9 +49,13 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostCompleteAsync(int id)
     {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null || !ManageRoles.Contains(user.Role)) return Forbid();
         var ev = await _db.CampaignEvents.FindAsync(id);
         if (ev != null)
         {
+            if (user.Role != UserRole.SuperAdmin && ev.ConstituencyId != user.ConstituencyId)
+                return Forbid();
             ev.IsCompleted = true;
             await _db.SaveChangesAsync();
             TempData["Message"] = "Event marked as completed.";
@@ -82,6 +86,8 @@ public class IndexModel : PageModel
         var ev = await _db.CampaignEvents.FindAsync(id);
         if (ev != null)
         {
+            if (user.Role != UserRole.SuperAdmin && ev.ConstituencyId != user.ConstituencyId)
+                return Forbid();
             ev.ActualAttendance = actualAttendance;
             await _db.SaveChangesAsync();
             TempData["Message"] = $"Attendance updated for '{ev.Title}'.";

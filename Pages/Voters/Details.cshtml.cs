@@ -28,9 +28,13 @@ public class DetailsModel : PageModel
     public VoterConsent? ConsentRecord { get; set; }
     public bool SurveyCompleted { get; set; }
 
-    public async Task OnGetAsync(int id)
+    public async Task<IActionResult> OnGetAsync(int id)
     {
+        var currentUser = await _userManager.GetUserAsync(User);
         Voter = await _db.Voters.FindAsync(id);
+        if (Voter == null) return NotFound();
+        if (currentUser?.Role != UserRole.SuperAdmin && Voter.ConstituencyId != currentUser?.ConstituencyId)
+            return Forbid();
         Visits = await _db.DoorToDoorVisits
             .Where(v => v.VoterId == id)
             .OrderByDescending(v => v.VisitedAt)
@@ -38,6 +42,7 @@ public class DetailsModel : PageModel
         SurveyProfile  = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == id);
         ConsentRecord  = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == id);
         SurveyCompleted = await _db.SurveyCompletions.AnyAsync(s => s.VoterId == id);
+        return Page();
     }
 
     private bool IsRestrictedRole(AppUser? user)
@@ -51,6 +56,8 @@ public class DetailsModel : PageModel
         var voter = await _db.Voters.FindAsync(id);
         if (voter != null)
         {
+            if (currentUser.Role != UserRole.SuperAdmin && voter.ConstituencyId != currentUser.ConstituencyId)
+                return Forbid();
             var previous = voter.Sentiment;
             voter.Sentiment = sentiment;
             _audit.Track(
@@ -70,6 +77,8 @@ public class DetailsModel : PageModel
         var voter = await _db.Voters.FindAsync(id);
         if (voter != null && user != null)
         {
+            if (user.Role != UserRole.SuperAdmin && voter.ConstituencyId != user.ConstituencyId)
+                return Forbid();
             var visit = new DoorToDoorVisit
             {
                 VoterId = id,

@@ -29,18 +29,24 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        if (await IsRestrictedRoleAsync()) return Forbid();
+        var user = await _userManager.GetUserAsync(User);
+        if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent) return Forbid();
         Voter = await _db.Voters.FindAsync(id);
         if (Voter == null) return NotFound();
+        if (user?.Role != UserRole.SuperAdmin && Voter.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (await IsRestrictedRoleAsync()) return Forbid();
+        var user = await _userManager.GetUserAsync(User);
+        if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent) return Forbid();
         if (!ModelState.IsValid) return Page();
         var existing = await _db.Voters.FindAsync(Voter!.Id);
         if (existing == null) return NotFound();
+        if (user?.Role != UserRole.SuperAdmin && existing.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
 
         existing.Name = Voter.Name;
         existing.NameLocal = Voter.NameLocal;

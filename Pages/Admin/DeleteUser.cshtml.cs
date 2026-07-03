@@ -7,7 +7,7 @@ using Nirvachak_AI.Domain.Enums;
 
 namespace Nirvachak_AI.Pages.Admin;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SuperAdmin")]
 public class DeleteUserModel : PageModel
 {
     private readonly UserManager<AppUser> _userManager;
@@ -17,17 +17,23 @@ public class DeleteUserModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(string id)
     {
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
         TargetUser = await _userManager.FindByIdAsync(id);
         if (TargetUser == null) return NotFound();
+        if (TargetUser.Role == UserRole.SuperAdmin) return Forbid();
+        if (!isSuperAdmin && TargetUser.ConstituencyId != currentUser?.ConstituencyId) return Forbid();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(string id)
     {
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
-
-        var currentUser = await _userManager.GetUserAsync(User);
+        if (user.Role == UserRole.SuperAdmin) return Forbid();
+        if (!isSuperAdmin && user.ConstituencyId != currentUser?.ConstituencyId) return Forbid();
         if (user.Id == currentUser?.Id)
         {
             TempData["Error"] = "You cannot delete your own account.";

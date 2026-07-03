@@ -28,15 +28,22 @@ public class DetailsModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
-        if (await IsRestrictedRoleAsync()) return Forbid();
+        var user = await _userManager.GetUserAsync(User);
+        if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent) return Forbid();
         Grievance = await _db.Grievances.FindAsync(id);
+        if (Grievance == null) return NotFound();
+        if (user?.Role != UserRole.SuperAdmin && Grievance.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(int id, GrievanceStatus status, string? notes)
     {
-        if (await IsRestrictedRoleAsync()) return Forbid();
+        var user = await _userManager.GetUserAsync(User);
+        if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent) return Forbid();
         var g = await _db.Grievances.FindAsync(id);
+        if (g != null && user?.Role != UserRole.SuperAdmin && g.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
         if (g != null)
         {
             g.Status = status;

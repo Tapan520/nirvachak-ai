@@ -30,12 +30,19 @@
                             <label asp-for="Input.Role" class="form-label fw-semibold">Role *</label>
                             <select asp-for="Input.Role" asp-items="Model.RoleItems" class="form-select"></select>
                         </div>
+                        @if (Model.IsSuperAdmin)
+                        {
                         <div class="col-md-6">
                             <label asp-for="Input.ConstituencyId" class="form-label fw-semibold">Constituency</label>
                             <select asp-for="Input.ConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
                                 <option value="">-- All --</option>
                             </select>
                         </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" asp-for="Input.ConstituencyId" />
+                        }
                         <div class="col-md-6">
                             <label asp-for="Input.AssignedBoothNumbers" class="form-label fw-semibold">Assigned Booths</label>
                             <input asp-for="Input.AssignedBoothNumbers" class="form-control" placeholder="e.g. 1,2,3 (leave blank for all)" />

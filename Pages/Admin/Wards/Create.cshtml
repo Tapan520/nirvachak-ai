@@ -12,6 +12,8 @@
                 <form method="post">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
                     <div class="row g-3">
+                        @if (Model.IsSuperAdmin)
+                        {
                         <div class="col-12">
                             <label asp-for="Input.ConstituencyId" class="form-label fw-semibold">Constituency *</label>
                             <select asp-for="Input.ConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
@@ -19,6 +21,11 @@
                             </select>
                             <span asp-validation-for="Input.ConstituencyId" class="text-danger small"></span>
                         </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" asp-for="Input.ConstituencyId" />
+                        }
                         <div class="col-md-4">
                             <label asp-for="Input.WardNumber" class="form-label fw-semibold">Ward Number *</label>
                             <input asp-for="Input.WardNumber" class="form-control" placeholder="e.g. 5" />

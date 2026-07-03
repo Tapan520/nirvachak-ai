@@ -26,6 +26,7 @@ public class ImportModel : PageModel
     public int SelectedConstituencyId { get; set; }
     public List<SelectListItem> ConstituencyItems { get; set; } = new();
     public ImportResult? Result { get; set; }
+    public bool IsSuperAdmin { get; set; }
 
 
     private async Task<bool> IsRestrictedRoleAsync()
@@ -58,9 +59,13 @@ public class ImportModel : PageModel
     private async Task LoadConstituenciesAsync()
     {
         var user = await _userManager.GetUserAsync(User);
+        IsSuperAdmin = user?.Role == UserRole.SuperAdmin;
         var query = _db.Constituencies.AsQueryable();
-        if (user?.Role != UserRole.SuperAdmin && user?.ConstituencyId.HasValue == true)
+        if (!IsSuperAdmin && user?.ConstituencyId.HasValue == true)
+        {
             query = query.Where(c => c.Id == user.ConstituencyId);
+            SelectedConstituencyId = user.ConstituencyId.Value;
+        }
         ConstituencyItems = query
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = $"{c.Name} ({c.Code})" })
             .ToList();

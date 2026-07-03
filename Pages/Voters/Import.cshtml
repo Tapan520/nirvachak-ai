@@ -30,12 +30,19 @@
             <div class="card-header"><i class="bi bi-upload me-2"></i>Upload Voter CSV File</div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Constituency</label>
-                        <select asp-for="SelectedConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
-                            <option value="">-- Select Constituency --</option>
-                        </select>
-                    </div>
+                    @if (Model.IsSuperAdmin)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Constituency</label>
+                            <select asp-for="SelectedConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
+                                <option value="">-- Select Constituency --</option>
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="SelectedConstituencyId" />
+                    }
                     <div class="mb-3">
                         <label class="form-label fw-semibold">CSV File</label>
                         <input type="file" name="csvFile" accept=".csv" class="form-control" required />

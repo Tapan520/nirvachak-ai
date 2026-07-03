@@ -115,7 +115,7 @@ public class CreateModel : PageModel
     public static List<UserRole> GetAllowedTargetRoles(UserRole posterRole) => posterRole switch
     {
         UserRole.SuperAdmin      => Enum.GetValues<UserRole>().ToList(),
-        UserRole.Admin           => Enum.GetValues<UserRole>().ToList(),
+        UserRole.Admin           => Enum.GetValues<UserRole>().Where(r => r != UserRole.SuperAdmin).ToList(),
         UserRole.Candidate       => new() { UserRole.CampaignManager, UserRole.FieldWorker, UserRole.BoothAgent },
         UserRole.CampaignManager => new() { UserRole.FieldWorker, UserRole.BoothAgent },
         UserRole.FieldWorker     => new() { UserRole.CampaignManager },

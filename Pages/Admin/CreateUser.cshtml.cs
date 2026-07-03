@@ -26,6 +26,7 @@ public class CreateUserModel : PageModel
     public InputModel Input { get; set; } = new();
     public List<SelectListItem> ConstituencyItems { get; set; } = new();
     public List<SelectListItem> RoleItems { get; set; } = new();
+    public bool IsSuperAdmin { get; set; }
 
     public class InputModel
     {
@@ -118,6 +119,7 @@ public class CreateUserModel : PageModel
     private async Task LoadFormDataAsync()
     {
         bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        IsSuperAdmin = isSuperAdmin;
         bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
         var currentUser   = await _userManager.GetUserAsync(User);
 

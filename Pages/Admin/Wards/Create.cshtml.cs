@@ -30,6 +30,7 @@ public class CreateModel : PageModel
     public int? ConstituencyId { get; set; }
 
     public List<SelectListItem> ConstituencyItems { get; set; } = new();
+    public bool IsSuperAdmin { get; set; }
 
     public class InputModel
     {
@@ -49,7 +50,8 @@ public class CreateModel : PageModel
     public async Task OnGetAsync()
     {
         await LoadConstituenciesAsync();
-        if (ConstituencyId.HasValue)
+        // Only allow route-param constituency override for SuperAdmin
+        if (IsSuperAdmin && ConstituencyId.HasValue)
             Input.ConstituencyId = ConstituencyId.Value;
     }
 
@@ -83,11 +85,14 @@ public class CreateModel : PageModel
     private async Task LoadConstituenciesAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        IsSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
 
         IQueryable<Constituency> query = _db.Constituencies.OrderBy(c => c.Name);
-        if (!isSuperAdmin && user?.ConstituencyId != null)
+        if (!IsSuperAdmin && user?.ConstituencyId != null)
+        {
             query = query.Where(c => c.Id == user.ConstituencyId);
+            Input.ConstituencyId = user.ConstituencyId.Value;
+        }
 
         ConstituencyItems = await query
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = $"{c.Name} ({c.Code})" })

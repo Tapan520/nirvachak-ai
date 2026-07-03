@@ -34,7 +34,7 @@ public class CreateModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
     }
@@ -43,9 +43,9 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
 
-        Survey.ConstituencyId = isAdmin && SelectedConstituencyId.HasValue
+        Survey.ConstituencyId = isSuperAdmin && SelectedConstituencyId.HasValue
             ? SelectedConstituencyId.Value
             : user?.ConstituencyId ?? 1;
 

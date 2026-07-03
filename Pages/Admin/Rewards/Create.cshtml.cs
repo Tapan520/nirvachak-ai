@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Rewards;
@@ -12,8 +14,13 @@ namespace Nirvachak_AI.Pages.Admin.Rewards;
 public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
+    private readonly UserManager<AppUser> _userManager;
 
-    public CreateModel(AppDbContext db) => _db = db;
+    public CreateModel(AppDbContext db, UserManager<AppUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     [BindProperty, Required, MaxLength(200)]
     public string Title { get; set; } = string.Empty;
@@ -42,25 +49,27 @@ public class CreateModel : PageModel
 
     public async Task OnGetAsync()
     {
-        IsAdmin = User.IsInRole("Admin");
+        IsAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        IsAdmin = User.IsInRole("Admin");
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        IsAdmin = isSuperAdmin;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
         if (!ModelState.IsValid) return Page();
 
-        // Resolve constituency
+        // Resolve constituency: SuperAdmin picks from dropdown, everyone else uses their own
         int cId;
-        if (IsAdmin && SelectedConstituencyId.HasValue)
+        if (isSuperAdmin && SelectedConstituencyId.HasValue)
             cId = SelectedConstituencyId.Value;
         else
-            cId = (await _db.Constituencies.Select(c => c.Id).FirstAsync());
+            cId = currentUser?.ConstituencyId ?? (await _db.Constituencies.Select(c => c.Id).FirstAsync());
 
         var prefix = CouponCodePrefix.ToUpper().Trim();
         var config = new RewardConfig

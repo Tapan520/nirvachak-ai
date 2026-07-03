@@ -36,6 +36,8 @@ public class EditModel : PageModel
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         Booth = await _db.Booths.FindAsync(id);
         if (Booth == null) return NotFound();
+        if (!IsAdmin && Booth.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
         return Page();
     }
 
@@ -50,6 +52,8 @@ public class EditModel : PageModel
         if (!ModelState.IsValid) return Page();
         var existing = await _db.Booths.FindAsync(Booth!.Id);
         if (existing == null) return NotFound();
+        if (!IsAdmin && existing.ConstituencyId != user?.ConstituencyId)
+            return Forbid();
 
         existing.BoothNumber = Booth.BoothNumber;
         existing.BoothName = Booth.BoothName;

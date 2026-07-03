@@ -34,12 +34,12 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
 
         var survey = await _db.Surveys.FindAsync(id);
         if (survey == null) return NotFound();
 
-        if (!IsAdmin && survey.ConstituencyId != user?.ConstituencyId)
+        if (user?.Role != UserRole.SuperAdmin && survey.ConstituencyId != user?.ConstituencyId)
             return Forbid();
 
         Survey = survey;
@@ -56,12 +56,12 @@ public class EditModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
 
         var existing = await _db.Surveys.FindAsync(Survey.Id);
         if (existing == null) return NotFound();
 
-        if (!IsAdmin && existing.ConstituencyId != user?.ConstituencyId)
+        if (user?.Role != UserRole.SuperAdmin && existing.ConstituencyId != user?.ConstituencyId)
             return Forbid();
 
         existing.Title       = Survey.Title;

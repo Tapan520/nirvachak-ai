@@ -52,8 +52,8 @@ public class EditModel : PageModel
         if (ward == null) return NotFound();
 
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
-        if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        if (!isSuperAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
 
         WardId = id;
         Input = new InputModel
@@ -76,13 +76,13 @@ public class EditModel : PageModel
         if (ward == null) return NotFound();
 
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
-        if (!isAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        if (!isSuperAdmin && user?.ConstituencyId != ward.ConstituencyId) return Forbid();
 
         ward.WardNumber = Input.WardNumber.Trim();
         ward.WardName = Input.WardName.Trim();
         ward.Description = Input.Description?.Trim();
-        ward.ConstituencyId = Input.ConstituencyId;
+        ward.ConstituencyId = isSuperAdmin ? Input.ConstituencyId : ward.ConstituencyId;
 
         await _db.SaveChangesAsync();
         TempData["Message"] = $"Ward '{ward.WardName}' updated.";
@@ -92,10 +92,10 @@ public class EditModel : PageModel
     private async Task LoadConstituenciesAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isAdmin = User.IsInRole(nameof(UserRole.Admin)) || User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
 
         IQueryable<Constituency> query = _db.Constituencies.OrderBy(c => c.Name);
-        if (!isAdmin && user?.ConstituencyId != null)
+        if (!isSuperAdmin && user?.ConstituencyId != null)
             query = query.Where(c => c.Id == user.ConstituencyId);
 
         ConstituencyItems = await query

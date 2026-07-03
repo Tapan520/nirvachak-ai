@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Rewards;
@@ -11,8 +13,13 @@ namespace Nirvachak_AI.Pages.Admin.Rewards;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
+    private readonly UserManager<AppUser> _userManager;
 
-    public IndexModel(AppDbContext db) => _db = db;
+    public IndexModel(AppDbContext db, UserManager<AppUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     public List<RewardSummary> Rewards { get; set; } = new();
 
@@ -22,9 +29,17 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        Rewards = await _db.RewardConfigs
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+
+        IQueryable<RewardConfig> query = _db.RewardConfigs
             .Include(r => r.Coupons)
-            .OrderByDescending(r => r.CreatedAt)
+            .OrderByDescending(r => r.CreatedAt);
+
+        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
+            query = query.Where(r => r.ConstituencyId == currentUser.ConstituencyId);
+
+        Rewards = await query
             .Select(r => new RewardSummary(
                 r.Id, r.Title, r.PartnerBrand, r.ExpiryDate, r.IsActive,
                 r.Coupons.Count,
@@ -35,9 +50,13 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostToggleAsync(int id)
     {
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
         var config = await _db.RewardConfigs.FindAsync(id);
         if (config is not null)
         {
+            if (!isSuperAdmin && config.ConstituencyId != currentUser?.ConstituencyId)
+                return Forbid();
             config.IsActive = !config.IsActive;
             await _db.SaveChangesAsync();
             TempData["Message"] = $"Reward '{config.Title}' has been {(config.IsActive ? "activated" : "deactivated")}.";

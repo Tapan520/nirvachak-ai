@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Admin.Rewards;
@@ -11,8 +13,13 @@ namespace Nirvachak_AI.Pages.Admin.Rewards;
 public class DetailsModel : PageModel
 {
     private readonly AppDbContext _db;
+    private readonly UserManager<AppUser> _userManager;
 
-    public DetailsModel(AppDbContext db) => _db = db;
+    public DetailsModel(AppDbContext db, UserManager<AppUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     public RewardConfig? Reward { get; set; }
     public List<CouponPool> Coupons { get; set; } = new();
@@ -34,6 +41,11 @@ public class DetailsModel : PageModel
 
         if (Reward is null) return NotFound();
 
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        if (!isSuperAdmin && Reward.ConstituencyId != currentUser?.ConstituencyId)
+            return Forbid();
+
         TotalCoupons   = await _db.CouponPools.CountAsync(c => c.RewardConfigId == id);
         IssuedCount    = await _db.CouponPools.CountAsync(c => c.RewardConfigId == id && c.IsIssued);
         RedeemedCount  = await _db.CouponPools.CountAsync(c => c.RewardConfigId == id && c.IsRedeemed);
@@ -53,9 +65,15 @@ public class DetailsModel : PageModel
 
     public async Task<IActionResult> OnPostMarkRedeemedAsync(int couponId, int rewardId)
     {
-        var coupon = await _db.CouponPools.FindAsync(couponId);
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        var coupon = await _db.CouponPools
+            .Include(c => c.RewardConfig)
+            .FirstOrDefaultAsync(c => c.Id == couponId);
         if (coupon is not null && coupon.IsIssued && !coupon.IsRedeemed)
         {
+            if (!isSuperAdmin && coupon.RewardConfig?.ConstituencyId != currentUser?.ConstituencyId)
+                return Forbid();
             coupon.IsRedeemed  = true;
             coupon.RedeemedAt  = DateTime.UtcNow;
             await _db.SaveChangesAsync();

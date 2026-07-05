@@ -41,7 +41,7 @@ public class IndexModel : PageModel
         if (user == null) return;
 
         CurrentUserRole = user.Role;
-        CanCreate = true; // all roles can post (to permitted targets)
+        CanCreate = user.Role != UserRole.BoothAgent;
 
         var now = DateTime.UtcNow;
         var roleStr = user.Role.ToString();

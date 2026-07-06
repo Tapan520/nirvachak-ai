@@ -38,9 +38,15 @@ public class IndexModel : PageModel
         int? cId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
 
         var plans = await _db.BudgetPlans.Where(b => !cId.HasValue || b.ConstituencyId == cId).ToListAsync();
-        var actuals = await _db.Expenses.Where(e => !cId.HasValue || e.ConstituencyId == cId)
-            .GroupBy(e => e.Category).Select(g => new { Cat = g.Key, Total = g.Sum(e => e.Amount) }).ToListAsync();
-        var actualMap = actuals.ToDictionary(a => a.Cat, a => a.Total);
+
+        // Load expenses client-side before grouping to avoid SQLite GroupBy+Sum decimal translation issues
+        var allExpenses = await _db.Expenses
+            .Where(e => !cId.HasValue || e.ConstituencyId == cId)
+            .Select(e => new { e.Category, e.Amount })
+            .ToListAsync();
+        var actualMap = allExpenses
+            .GroupBy(e => e.Category)
+            .ToDictionary(g => g.Key, g => g.Sum(e => e.Amount));
 
         foreach (ExpenseCategory cat in Enum.GetValues<ExpenseCategory>())
         {
@@ -58,11 +64,22 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostSaveAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        int cId = (user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin) && ConstituencyFilter.HasValue
-            ? ConstituencyFilter.Value : user?.ConstituencyId ?? 1;
+        bool isAdminRole = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+
+        int cId;
+        if (isAdminRole && ConstituencyFilter.HasValue)
+            cId = ConstituencyFilter.Value;
+        else if (user?.ConstituencyId.HasValue == true)
+            cId = user.ConstituencyId.Value;
+        else
+            cId = 1;
 
         var existing = await _db.BudgetPlans.FirstOrDefaultAsync(b => b.ConstituencyId == cId && b.Category == NewPlan.Category);
-        if (existing != null) existing.PlannedAmount = NewPlan.PlannedAmount;
+        if (existing != null)
+        {
+            existing.PlannedAmount = NewPlan.PlannedAmount;
+            existing.Notes = NewPlan.Notes;
+        }
         else
         {
             NewPlan.ConstituencyId = cId;
@@ -71,6 +88,6 @@ public class IndexModel : PageModel
         }
         await _db.SaveChangesAsync();
         TempData["Message"] = $"Budget for {NewPlan.Category} saved.";
-        return RedirectToPage();
+        return RedirectToPage(new { ConstituencyFilter = isAdminRole ? cId : (int?)null });
     }
 }

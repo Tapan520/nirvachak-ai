@@ -1,0 +1,160 @@
+@page
+@model Nirvachak_AI.Pages.Voters.CreateModel
+@{
+    ViewData["Title"] = "Add Voter";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person-plus-fill me-2"></i>Add New Voter Manually</div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                    @if (Model.IsAdmin && Model.Constituencies.Any())
+                    {
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Constituency *</label>
+                                <select asp-for="SelectedConstituencyId" class="form-select"
+                                        onchange="this.form.submit()">
+                                    <option value="">-- Select Constituency --</option>
+                                    @foreach (var c in Model.Constituencies)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SelectedConstituencyId" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row g-3">
+                        @* ?? Identity ?? *@
+                        <div class="col-md-6">
+                            <label asp-for="Voter.VoterId" class="form-label fw-semibold">EPIC / Voter ID *</label>
+                            <input asp-for="Voter.VoterId" class="form-control font-monospace text-uppercase"
+                                   placeholder="e.g. MH01234567" />
+                            <span asp-validation-for="Voter.VoterId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Voter.SerialNumber" class="form-label fw-semibold">Serial No. *</label>
+                            <input asp-for="Voter.SerialNumber" type="number" class="form-control"
+                                   placeholder="Voter list serial number" />
+                            <span asp-validation-for="Voter.SerialNumber" class="text-danger small"></span>
+                        </div>
+
+                        @* ?? Name ?? *@
+                        <div class="col-md-6">
+                            <label asp-for="Voter.Name" class="form-label fw-semibold">Full Name *</label>
+                            <input asp-for="Voter.Name" class="form-control" placeholder="As on voter card" />
+                            <span asp-validation-for="Voter.Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Voter.NameLocal" class="form-label fw-semibold">Name (Local Language)</label>
+                            <input asp-for="Voter.NameLocal" class="form-control" placeholder="Optional" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Voter.FatherHusbandName" class="form-label fw-semibold">Father / Husband Name</label>
+                            <input asp-for="Voter.FatherHusbandName" class="form-control" />
+                        </div>
+
+                        @* ?? Demographics ?? *@
+                        <div class="col-md-3">
+                            <label asp-for="Voter.Age" class="form-label fw-semibold">Age *</label>
+                            <input asp-for="Voter.Age" type="number" min="18" max="120" class="form-control" />
+                            <span asp-validation-for="Voter.Age" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Voter.Gender" class="form-label fw-semibold">Gender *</label>
+                            <select asp-for="Voter.Gender" class="form-select">
+                                <option value="">-- Select --</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                                <option value="O">Other</option>
+                            </select>
+                            <span asp-validation-for="Voter.Gender" class="text-danger small"></span>
+                        </div>
+
+                        @* ?? Contact ?? *@
+                        <div class="col-md-6">
+                            <label asp-for="Voter.MobileNumber" class="form-label fw-semibold">Mobile Number</label>
+                            <input asp-for="Voter.MobileNumber" class="form-control"
+                                   placeholder="10-digit mobile (optional)" />
+                        </div>
+
+                        @* ?? Address ?? *@
+                        <div class="col-12">
+                            <label asp-for="Voter.Address" class="form-label fw-semibold">Address *</label>
+                            <input asp-for="Voter.Address" class="form-control" placeholder="Full residential address" />
+                            <span asp-validation-for="Voter.Address" class="text-danger small"></span>
+                        </div>
+
+                        @* ?? Electoral geography ?? *@
+                        <div class="col-md-4">
+                            <label asp-for="Voter.BoothNumber" class="form-label fw-semibold">Booth *</label>
+                            @if (Model.Booths.Any())
+                            {
+                                <select asp-for="Voter.BoothNumber" class="form-select">
+                                    <option value="">-- Select Booth --</option>
+                                    @foreach (var b in Model.Booths)
+                                    {
+                                        <option value="@b.BoothNumber">@b.BoothNumber – @b.BoothName</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input asp-for="Voter.BoothNumber" type="number" class="form-control"
+                                       placeholder="Booth number" />
+                            }
+                            <span asp-validation-for="Voter.BoothNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Voter.WardNumber" class="form-label fw-semibold">Ward No.</label>
+                            @if (Model.Wards.Any())
+                            {
+                                <select asp-for="Voter.WardNumber" class="form-select">
+                                    <option value="">-- Select Ward --</option>
+                                    @foreach (var w in Model.Wards)
+                                    {
+                                        <option value="@w.WardNumber">@w.WardNumber – @w.WardName</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input asp-for="Voter.WardNumber" class="form-control"
+                                       placeholder="Ward number" />
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Voter.PannaNumber" class="form-label fw-semibold">Panna No.</label>
+                            <input asp-for="Voter.PannaNumber" class="form-control" placeholder="Panna / page number" />
+                        </div>
+
+                        @* ?? Campaign fields ?? *@
+                        <div class="col-md-6">
+                            <label asp-for="Voter.Sentiment" class="form-label fw-semibold">Initial Sentiment</label>
+                            <select asp-for="Voter.Sentiment" class="form-select"
+                                    asp-items="Html.GetEnumSelectList<VoterSentiment>()"></select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Voter.Notes" class="form-label fw-semibold">Notes</label>
+                            <textarea asp-for="Voter.Notes" class="form-control" rows="2"
+                                      placeholder="Any additional notes about this voter"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus-fill me-1"></i>Add Voter
+                        </button>
+                        <a asp-page="/Voters/Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

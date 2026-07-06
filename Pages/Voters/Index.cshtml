@@ -14,6 +14,9 @@
             <a asp-page="/Voters/Import" class="btn btn-success btn-sm">
                 <i class="bi bi-upload me-1"></i>Import CSV
             </a>
+            <a asp-page="/Voters/Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus-fill me-1"></i>Add Voter
+            </a>
         }
         <a asp-page="/VoterSlips/Index" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-printer me-1"></i>Print Slips
@@ -180,7 +183,7 @@
                 }
                 @if (!Model.Voters.Any())
                 {
-                    <tr><td colspan="10" class="text-center text-muted py-4">No voters found. <a asp-page="/Voters/Import">Import voters</a></td></tr>
+                    <tr><td colspan="10" class="text-center text-muted py-4">No voters found. <a asp-page="/Voters/Create">Add a voter</a> or <a asp-page="/Voters/Import">import from CSV</a>.</td></tr>
                 }
                 </tbody>
             </table>

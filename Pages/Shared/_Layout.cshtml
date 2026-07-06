@@ -77,6 +77,11 @@
                     @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
                     {
                     <li class="nav-item">
+                        <a class="nav-link sidebar-link @(currentPage == "/Voters/Create" ? "active" : "")" asp-page="/Voters/Create">
+                            <i class="bi bi-person-plus-fill me-2"></i> Add Voter
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage == "/Voters/Import" ? "active" : "")" asp-page="/Voters/Import">
                             <i class="bi bi-upload me-2"></i> Import Voters
                         </a>

@@ -83,8 +83,8 @@
                         </div>
                     </div>
 
-                    @* Section 3 — Role & Constituency (Admin only) *@
-                    @if (User.IsInRole("Admin"))
+                    @* Section 3 — Role & Constituency (Admin / SuperAdmin only) *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                     {
                         <hr class="my-3" />
                         <h6 class="text-muted text-uppercase small fw-semibold mb-3">

@@ -58,7 +58,7 @@ public class IndexModel : PageModel
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
-        IQueryable<Voter> query = _db.Voters.Where(v => !v.IsDeleted);
+        IQueryable<Voter> query = _db.Voters;
 
         if (IsAdmin)
         {
@@ -100,7 +100,7 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         // Booth numbers for filter dropdown � scoped to selected constituency for Admin
-        IQueryable<Voter> allVoters = _db.Voters.Where(v => !v.IsDeleted);
+        IQueryable<Voter> allVoters = _db.Voters;
         if (IsAdmin)
         {
             if (ConstituencyFilter.HasValue)

@@ -94,7 +94,7 @@ public class IndexModel : PageModel
             Booths = await boothQuery.OrderBy(b => b.BoothNumber).ToListAsync();
         }
 
-        IQueryable<Voter> query = _db.Voters.Where(v => !v.IsDeleted);
+        IQueryable<Voter> query = _db.Voters;
         if (cId.HasValue)
             query = query.Where(v => v.ConstituencyId == cId);
 

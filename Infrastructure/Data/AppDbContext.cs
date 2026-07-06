@@ -56,9 +56,24 @@ public class AppDbContext : IdentityDbContext<AppUser>
     {
         base.OnModelCreating(builder);
 
+        // Global soft-delete filter — all queries on Voter automatically exclude deleted records.
+        // Use IgnoreQueryFilters() on a query to bypass this when needed (e.g. admin restore).
+        builder.Entity<Voter>().HasQueryFilter(v => !v.IsDeleted);
+
         builder.Entity<Voter>().HasIndex(v => v.VoterId);
         builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.BoothNumber });
         builder.Entity<Voter>().HasIndex(v => v.Name);
+
+        // Frequently filtered columns on supporting entities
+        builder.Entity<Grievance>().HasIndex(g => g.ConstituencyId);
+        builder.Entity<Grievance>().HasIndex(g => g.Status);
+        builder.Entity<Grievance>().HasIndex(g => new { g.ConstituencyId, g.Status });
+
+        builder.Entity<Expense>().HasIndex(e => e.ConstituencyId);
+        builder.Entity<Expense>().HasIndex(e => e.ExpenseDate);
+
+        builder.Entity<Volunteer>().HasIndex(v => v.ConstituencyId);
+        builder.Entity<Volunteer>().HasIndex(v => v.IsActive);
 
         builder.Entity<AnnouncementAcknowledgement>()
             .HasIndex(a => new { a.AnnouncementId, a.UserId })

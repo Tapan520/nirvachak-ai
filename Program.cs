@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Nirvachak_AI.Domain.Entities;
-using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Hubs;
+using Nirvachak_AI.Infrastructure;
 using Nirvachak_AI.Infrastructure.Data;
 using Nirvachak_AI.Infrastructure.Services;
 
@@ -26,7 +26,15 @@ if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
     Directory.CreateDirectory(dbDir);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(dbPath.StartsWith("Data Source=") ? dbPath : $"Data Source={dbPath}"));
+{
+    options.UseSqlite(dbPath.StartsWith("Data Source=") ? dbPath : $"Data Source={dbPath}");
+    // Child entities (DoorToDoorVisit, PhoneCallLog, etc.) have non-nullable VoterId FKs.
+    // The global Voter query filter is intentional — child rows of a soft-deleted voter
+    // are unreachable by design. Suppress the EF model-validation warning.
+    options.ConfigureWarnings(w =>
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId
+            .PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
+});
 
 // ?? Identity ??????????????????????????????????????????????????
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
@@ -43,14 +51,14 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 // ?? Cookie Auth (Web) ?????????????????????????????????????????
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.LoginPath = Constants.Routes.LoginPath;
+    options.LogoutPath = Constants.Routes.LogoutPath;
+    options.AccessDeniedPath = Constants.Routes.AccessDeniedPath;
     options.ExpireTimeSpan = TimeSpan.FromHours(12);
     options.SlidingExpiration = true;
     options.Events.OnRedirectToLogin = ctx =>
     {
-        if (ctx.Request.Path.StartsWithSegments("/api"))
+        if (ctx.Request.Path.StartsWithSegments(Constants.Routes.ApiPrefix))
             ctx.Response.StatusCode = 401;
         else
             ctx.Response.Redirect(ctx.RedirectUri);
@@ -58,7 +66,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
     options.Events.OnRedirectToAccessDenied = ctx =>
     {
-        if (ctx.Request.Path.StartsWithSegments("/api"))
+        if (ctx.Request.Path.StartsWithSegments(Constants.Routes.ApiPrefix))
             ctx.Response.StatusCode = 403;
         else
             ctx.Response.Redirect(ctx.RedirectUri);
@@ -67,7 +75,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // ?? JWT Auth (Mobile API) ?????????????????????????????????????
-var jwtKey = builder.Configuration["Jwt:Key"]
+var jwtKey = builder.Configuration[Constants.Jwt.ConfigKey]
     ?? throw new InvalidOperationException("Jwt:Key is not configured. Set it via environment variable or user secrets.");
 builder.Services.AddAuthentication()
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -78,16 +86,24 @@ builder.Services.AddAuthentication()
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration[Constants.Jwt.IssuerKey],
+            ValidAudience = builder.Configuration[Constants.Jwt.AudienceKey],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.Zero
         };
     });
 
 // ?? CORS (React Native / Expo) ????????????????????????????????
-builder.Services.AddCors(o => o.AddPolicy("AllowAll",
-    p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+// Restrict to configured origins in production; fall back to AllowAnyOrigin in dev.
+builder.Services.AddCors(o => o.AddPolicy(Constants.Policy.CorsAllowAll, p =>
+{
+    var allowedOrigins = builder.Configuration.GetSection(Constants.Cors.AllowedOriginsKey)
+        .Get<string[]>();
+    if (allowedOrigins is { Length: > 0 })
+        p.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod();
+    else
+        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+}));
 
 // ?? Application Services ??????????????????????????????????????
 builder.Services.AddHttpContextAccessor();
@@ -157,9 +173,13 @@ var app = builder.Build();
 
 // ?? Middleware Pipeline ???????????????????????????????????????
 // Always expose Swagger (useful for Railway health-check & mobile API docs)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Election Campaign Tool API v1"));
+// Only expose Swagger in Development — do not expose API docs in production.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Election Campaign Tool API v1"));
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -171,7 +191,7 @@ if (!app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseCors("AllowAll");
+app.UseCors(Constants.Policy.CorsAllowAll);
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
@@ -180,15 +200,6 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<ElectionDayHub>("/hubs/electionday");
-
-app.MapGet("/api/ElectionDayStats", async (int constituencyId, AppDbContext db) =>
-{
-    var total = await db.Voters.CountAsync(v => v.ConstituencyId == constituencyId);
-    var voted = await db.Voters.CountAsync(v => v.ConstituencyId == constituencyId
-        && v.ElectionDayStatus == ElectionDayStatus.Voted);
-    var percent = total > 0 ? Math.Round((double)voted / total * 100, 1) : 0;
-    return Results.Ok(new { total, voted, percent });
-});
 
 // ?? Seed Data ?????????????????????????????????????????????????
 await SeedService.SeedAsync(app.Services);

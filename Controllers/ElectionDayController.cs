@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Hubs;
 using Nirvachak_AI.Infrastructure.Data;
 using Nirvachak_AI.Infrastructure.Services;
@@ -76,5 +78,18 @@ public class ElectionDayController : ApiBaseController
         if (voter is null) return NotFound(new ApiResult(false, "Voter not found."));
         await _service.MarkAbsentAsync(req.VoterId);
         return Ok(new ApiResult(true, $"{voter.Name} marked as absent."));
+    }
+
+    /// <summary>Get live turnout stats for a constituency (public quick-access endpoint)</summary>
+    [HttpGet("stats")]
+    [AllowAnonymous]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetStats([FromQuery] int constituencyId)
+    {
+        var total   = await _db.Voters.CountAsync(v => v.ConstituencyId == constituencyId);
+        var voted   = await _db.Voters.CountAsync(v => v.ConstituencyId == constituencyId
+            && v.ElectionDayStatus == ElectionDayStatus.Voted);
+        var percent = total > 0 ? Math.Round((double)voted / total * 100, 1) : 0;
+        return Ok(new { total, voted, percent });
     }
 }

@@ -14,6 +14,9 @@
             <a asp-page="/Voters/Import" class="btn btn-success btn-sm">
                 <i class="bi bi-upload me-1"></i>Import CSV
             </a>
+        }
+        @if (Model.CanAddVoter)
+        {
             <a asp-page="/Voters/Create" class="btn btn-primary btn-sm">
                 <i class="bi bi-person-plus-fill me-1"></i>Add Voter
             </a>
@@ -183,7 +186,16 @@
                 }
                 @if (!Model.Voters.Any())
                 {
-                    <tr><td colspan="10" class="text-center text-muted py-4">No voters found. <a asp-page="/Voters/Create">Add a voter</a> or <a asp-page="/Voters/Import">import from CSV</a>.</td></tr>
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            No voters found.
+                            <a asp-page="/Voters/Create">Add a voter</a>
+                            @if (Model.CanImportCsv)
+                            {
+                                <span>or <a asp-page="/Voters/Import">import from CSV</a>.</span>
+                            }
+                        </td>
+                    </tr>
                 }
                 </tbody>
             </table>

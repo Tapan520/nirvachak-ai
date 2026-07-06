@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Voters;
 
-[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
 public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -34,6 +34,7 @@ public class CreateModel : PageModel
     public List<Booth> Booths { get; set; } = new();
     public List<Ward> Wards { get; set; } = new();
     public bool IsAdmin { get; set; }
+    public bool IsRestrictedRole { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -41,10 +42,11 @@ public class CreateModel : PageModel
         if (user == null) return Forbid();
 
         IsAdmin = user.Role == UserRole.SuperAdmin;
+        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
-        await LoadDropdownsAsync(IsAdmin ? null : user.ConstituencyId);
+        await LoadDropdownsAsync(IsAdmin ? null : user.ConstituencyId, user);
         return Page();
     }
 
@@ -54,11 +56,12 @@ public class CreateModel : PageModel
         if (user == null) return Forbid();
 
         IsAdmin = user.Role == UserRole.SuperAdmin;
+        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
         int? cId = IsAdmin ? SelectedConstituencyId : user.ConstituencyId;
-        await LoadDropdownsAsync(cId);
+        await LoadDropdownsAsync(cId, user);
 
         // Manual validation for required string fields
         if (string.IsNullOrWhiteSpace(Voter.VoterId))
@@ -75,6 +78,14 @@ public class CreateModel : PageModel
             ModelState.AddModelError("Voter.BoothNumber", "Please select a valid booth.");
         if (IsAdmin && !cId.HasValue)
             ModelState.AddModelError("SelectedConstituencyId", "Constituency is required.");
+
+        // Restricted roles can only add voters to their assigned booths
+        if (IsRestrictedRole)
+        {
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any() && !assignedBooths.Contains(Voter.BoothNumber))
+                ModelState.AddModelError("Voter.BoothNumber", "You can only add voters to your assigned booths.");
+        }
 
         if (!ModelState.IsValid) return Page();
 
@@ -102,16 +113,29 @@ public class CreateModel : PageModel
         return RedirectToPage("/Voters/Details", new { id = Voter.Id });
     }
 
-    private async Task LoadDropdownsAsync(int? cId)
+    private async Task LoadDropdownsAsync(int? cId, AppUser user)
     {
-        if (cId.HasValue)
+        if (!cId.HasValue) return;
+
+        var boothQuery = _db.Booths.Where(b => b.ConstituencyId == cId.Value);
+
+        // Restricted roles only see their assigned booths
+        if (user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent)
         {
-            Booths = await _db.Booths
-                .Where(b => b.ConstituencyId == cId.Value)
-                .OrderBy(b => b.BoothNumber).ToListAsync();
-            Wards = await _db.Wards
-                .Where(w => w.ConstituencyId == cId.Value)
-                .OrderBy(w => w.WardNumber).ToListAsync();
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any())
+                boothQuery = boothQuery.Where(b => assignedBooths.Contains(b.BoothNumber));
         }
+
+        Booths = await boothQuery.OrderBy(b => b.BoothNumber).ToListAsync();
+        Wards = await _db.Wards
+            .Where(w => w.ConstituencyId == cId.Value)
+            .OrderBy(w => w.WardNumber).ToListAsync();
     }
+
+    private static List<int> ParseAssignedBooths(string? assignedBoothNumbers) =>
+        (assignedBoothNumbers ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+            .Where(n => n.HasValue).Select(n => n!.Value).ToList();
 }

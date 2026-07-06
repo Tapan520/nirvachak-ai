@@ -29,6 +29,7 @@ public class IndexModel : PageModel
     public List<Ward> Wards { get; set; } = new();
     public bool IsAdmin { get; set; }
     public bool CanImportCsv { get; set; }
+    public bool CanAddVoter { get; set; }
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }
 
@@ -52,6 +53,7 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         IsAdmin = user?.Role == UserRole.SuperAdmin;
         CanImportCsv = user?.Role != UserRole.FieldWorker && user?.Role != UserRole.BoothAgent;
+        CanAddVoter = user != null;
 
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();

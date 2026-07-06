@@ -23,7 +23,7 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         var item = await _db.PannaPramukhs.FindAsync(id);
         if (item == null) return NotFound();
         if (!IsAdmin && item.ConstituencyId != user?.ConstituencyId) return Forbid();
@@ -36,7 +36,7 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         var existing = await _db.PannaPramukhs.FindAsync(PannaPramukh.Id);
         if (existing == null) return NotFound();
         if (!IsAdmin && existing.ConstituencyId != user?.ConstituencyId) return Forbid();

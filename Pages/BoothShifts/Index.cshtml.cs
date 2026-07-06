@@ -29,7 +29,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin) Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
         int? cId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
@@ -50,7 +50,7 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAddAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role != UserRole.Admin && user?.Role != UserRole.SuperAdmin)
+        if (user?.Role != UserRole.SuperAdmin)
             NewShift.ConstituencyId = user?.ConstituencyId ?? 1;
         NewShift.CreatedAt = DateTime.UtcNow;
         _db.BoothShiftAssignments.Add(NewShift);

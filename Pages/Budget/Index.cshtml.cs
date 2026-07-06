@@ -32,7 +32,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin) Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
         int? cId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
@@ -64,7 +64,7 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostSaveAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        bool isAdminRole = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        bool isAdminRole = user?.Role == UserRole.SuperAdmin;
 
         int cId;
         if (isAdminRole && ConstituencyFilter.HasValue)

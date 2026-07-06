@@ -22,7 +22,7 @@ public class EditModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         var item = await _db.RapidResponseItems.FindAsync(id);
         if (item == null) return NotFound();
-        var isAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
         if (!isAdmin && item.ConstituencyId != user?.ConstituencyId) return Forbid();
         Item = item;
         return Page();

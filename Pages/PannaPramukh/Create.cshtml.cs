@@ -23,7 +23,7 @@ public class CreateModel : PageModel
     public async Task OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        IsAdmin = user?.Role == UserRole.Admin || user?.Role == UserRole.SuperAdmin;
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
         if (IsAdmin) Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         else if (user?.ConstituencyId.HasValue == true)
             PannaPramukh.ConstituencyId = user.ConstituencyId.Value;
@@ -33,7 +33,7 @@ public class CreateModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role != UserRole.Admin && user?.Role != UserRole.SuperAdmin)
+        if (user?.Role != UserRole.SuperAdmin)
             PannaPramukh.ConstituencyId = user?.ConstituencyId ?? 1;
         PannaPramukh.CreatedAt = DateTime.UtcNow;
         _db.PannaPramukhs.Add(PannaPramukh);

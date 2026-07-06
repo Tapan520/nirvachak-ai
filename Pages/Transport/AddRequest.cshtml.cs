@@ -26,7 +26,7 @@ public class AddRequestModel : PageModel
         {
             var user = await _userManager.GetUserAsync(User);
             int? cId = user?.ConstituencyId;
-            var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
+            var isSuperAdmin  = user?.Role == UserRole.SuperAdmin;
             SearchResults = await _db.Voters
                 .Where(v => !v.IsDeleted && (v.Name.Contains(SearchVoter) || (v.MobileNumber != null && v.MobileNumber.Contains(SearchVoter)) || v.VoterId.Contains(SearchVoter)))
                 .Where(v => isSuperAdmin || !cId.HasValue || v.ConstituencyId == cId)

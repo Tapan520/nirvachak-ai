@@ -1,0 +1,39 @@
+@page
+@model Nirvachak_AI.Pages.Broadcast.CreateTemplateModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Create Message Template"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/Broadcast/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-file-plus-fill me-2 text-success"></i>Create Message Template</h4>
+</div>
+<div class="card border-0 shadow-sm" style="max-width:680px">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-8"><label class="form-label fw-semibold">Template Name *</label><input asp-for="Template.Title" class="form-control" required /></div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Language</label>
+                    <select asp-for="Template.Language" class="form-select">
+                        <option>English</option><option>Hindi</option><option>Marathi</option><option>Gujarati</option><option>Tamil</option><option>Telugu</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Category</label>
+                    <select asp-for="Template.Category" class="form-select">
+                        @foreach (var c in Enum.GetValues<MessageCategory>()) { <option value="@c">@c</option> }
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Message Body *</label>
+                    <textarea asp-for="Template.Body" class="form-control" rows="5" placeholder="Write your message here. Use {Name} for voter name placeholder." required></textarea>
+                    <div class="form-text">Available placeholders: {Name}, {BoothNumber}, {Date}</div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i>Save Template</button>
+                <a asp-page="/Broadcast/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

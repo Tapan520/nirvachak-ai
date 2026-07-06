@@ -1,0 +1,58 @@
+@page
+@model Nirvachak_AI.Pages.RapidResponse.CreateModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Log Rapid Response Item"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/RapidResponse/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-lightning-charge-fill me-2 text-danger"></i>Log New Response Item</h4>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:700px">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                    <input asp-for="Item.Title" class="form-control" placeholder="Short description of the rumour/campaign" required />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                    <textarea asp-for="Item.Description" class="form-control" rows="3" placeholder="Detailed description of the issue…" required></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Source</label>
+                    <select asp-for="Item.Source" class="form-select">
+                        <option>WhatsApp Forward</option><option>Local Media</option><option>Competitor Campaign</option><option>Social Media</option><option>Word of Mouth</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Threat Level</label>
+                    <select asp-for="Item.ThreatLevel" class="form-select">
+                        @foreach (var t in Enum.GetValues<RapidResponseThreat>()) { <option value="@t">@t</option> }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Affected Wards</label>
+                    <input asp-for="Item.AffectedWards" class="form-control" placeholder="e.g. 1, 3, 5" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Detected At</label>
+                    <input asp-for="Item.DetectedAt" type="datetime-local" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Assign To (Name)</label>
+                    <input asp-for="Item.AssignedToName" class="form-control" placeholder="Team member name" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Response Text (Counter-messaging)</label>
+                    <textarea asp-for="Item.ResponseText" class="form-control" rows="3" placeholder="Drafted counter-message to be deployed…"></textarea>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-danger"><i class="bi bi-lightning-charge me-1"></i>Log Item</button>
+                <a asp-page="/RapidResponse/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

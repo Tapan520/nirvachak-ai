@@ -1,0 +1,134 @@
+@page
+@model Nirvachak_AI.Pages.Transport.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Voter Transport Management"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-truck me-2 text-primary"></i>Voter Transport</h4>
+        <small class="text-muted">Manage Election Day voter pickup & transport logistics</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-page="/Transport/AddRequest" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Request</a>
+        @if (Model.CanManage) { <a asp-page="/Transport/Vehicles" class="btn btn-outline-secondary"><i class="bi bi-truck me-1"></i>Vehicles</a> }
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center"><div class="card-body"><div class="fs-3 fw-bold text-warning">@Model.PendingCount</div><div class="text-muted small">Pending</div></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center"><div class="card-body"><div class="fs-3 fw-bold text-info">@Model.AssignedCount</div><div class="text-muted small">Assigned</div></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center"><div class="card-body"><div class="fs-3 fw-bold text-primary">@Model.PickedUpCount</div><div class="text-muted small">Picked Up</div></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center"><div class="card-body"><div class="fs-3 fw-bold text-success">@Model.VotedCount</div><div class="text-muted small">Voted ?</div></div></div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            @if (Model.IsAdmin && Model.Constituencies.Any())
+            {
+                <div class="col-auto">
+                    <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Constituencies</option>
+                        @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-auto">
+                <select name="StatusFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in Enum.GetValues<TransportStatus>()) { <option value="@s" selected="@(Model.StatusFilter==s.ToString())">@s</option> }
+                </select>
+            </div>
+            <div class="col-auto"><a asp-page="/Transport/Index" class="btn btn-sm btn-outline-secondary">Clear</a></div>
+        </form>
+    </div>
+</div>
+
+<!-- Vehicles Summary -->
+@if (Model.Vehicles.Any())
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent fw-semibold"><i class="bi bi-truck me-1"></i>Available Vehicles (@Model.Vehicles.Count(v=>v.IsAvailable) available)</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>Driver</th><th>Phone</th><th>Vehicle</th><th>Type</th><th>Capacity</th><th>Booth</th><th>Status</th></tr></thead>
+                    <tbody>
+                    @foreach (var v in Model.Vehicles)
+                    {
+                        <tr>
+                            <td>@v.DriverName</td><td>@v.DriverPhone</td>
+                            <td>@v.VehicleNumber</td><td>@v.VehicleType</td><td>@v.Capacity</td>
+                            <td><span class="badge bg-secondary">Booth @v.BoothNumber</span></td>
+                            <td>@if(v.IsAvailable){<span class="badge bg-success">Available</span>}else{<span class="badge bg-danger">Busy</span>}</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Transport Requests -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent fw-semibold"><i class="bi bi-list-task me-1"></i>Transport Requests (@Model.Requests.Count)</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Voter</th><th>Booth</th><th>Pickup Address</th><th>Vehicle</th><th>Status</th><th>Requested</th><th>Actions</th></tr></thead>
+                <tbody>
+                @foreach (var r in Model.Requests)
+                {
+                    var badge = r.Status switch { TransportStatus.Pending => "warning", TransportStatus.Assigned => "info", TransportStatus.PickedUp => "primary", TransportStatus.Voted => "success", _ => "secondary" };
+                    <tr>
+                        <td><strong>@r.Voter?.Name</strong><br/><small class="text-muted">@r.Voter?.VoterId · @r.Voter?.MobileNumber</small></td>
+                        <td><span class="badge bg-secondary">Booth @r.Voter?.BoothNumber</span></td>
+                        <td><small>@r.PickupAddress</small><br/><small class="text-muted">@r.PickupNotes</small></td>
+                        <td>@(r.Vehicle != null ? $"{r.Vehicle.DriverName} ({r.Vehicle.VehicleType})" : "-")</td>
+                        <td><span class="badge bg-@badge">@r.Status</span></td>
+                        <td><small class="text-muted">@r.RequestedAt.ToLocalTime().ToString("dd MMM HH:mm")</small></td>
+                        <td>
+                            @if (r.Status == TransportStatus.Pending && Model.Vehicles.Any(v => v.IsAvailable))
+                            {
+                                <form method="post" class="d-inline">
+                                    <input type="hidden" name="requestId" value="@r.Id" />
+                                    <select name="vehicleId" class="form-select form-select-sm d-inline-block" style="width:auto">
+                                        @foreach (var v in Model.Vehicles.Where(v => v.IsAvailable))
+                                        { <option value="@v.Id">@v.DriverName (@v.VehicleType)</option> }
+                                    </select>
+                                    <button asp-page-handler="AssignVehicle" class="btn btn-sm btn-outline-info">Assign</button>
+                                </form>
+                            }
+                            @if (r.Status == TransportStatus.Assigned)
+                            {
+                                <form method="post" class="d-inline"><input type="hidden" name="id" value="@r.Id"/><input type="hidden" name="status" value="PickedUp"/><button asp-page-handler="UpdateStatus" class="btn btn-sm btn-outline-primary">Picked Up</button></form>
+                            }
+                            @if (r.Status == TransportStatus.PickedUp)
+                            {
+                                <form method="post" class="d-inline"><input type="hidden" name="id" value="@r.Id"/><input type="hidden" name="status" value="Voted"/><button asp-page-handler="UpdateStatus" class="btn btn-sm btn-success">? Voted</button></form>
+                            }
+                            <form method="post" class="d-inline"><input type="hidden" name="id" value="@r.Id"/><button asp-page-handler="DeleteRequest" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Requests.Any())
+                { <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-truck fs-3 d-block mb-2"></i>No transport requests. <a asp-page="/Transport/AddRequest">Add one</a></td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,122 @@
+@page
+@model Nirvachak_AI.Pages.BoothShifts.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Booth Shift Planner"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-calendar2-check-fill me-2 text-primary"></i>Booth Shift Planner</h4>
+        <small class="text-muted">Assign volunteers to booth shifts for Election Day</small>
+    </div>
+    <span class="badge bg-success fs-6">@Model.CoveredBooths Booths Covered</span>
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<div class="row g-4">
+    <!-- Add Shift Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold"><i class="bi bi-plus-circle me-1"></i>Assign Shift</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Add">
+                    @if (Model.IsAdmin)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Constituency</label>
+                            <select asp-for="NewShift.ConstituencyId" class="form-select form-select-sm">
+                                @foreach (var c in Model.Constituencies) { <option value="@c.Id">@c.Name</option> }
+                            </select>
+                        </div>
+                    }
+                    else { <input type="hidden" asp-for="NewShift.ConstituencyId" /> }
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Volunteer *</label>
+                        <select asp-for="NewShift.VolunteerId" class="form-select form-select-sm" required>
+                            <option value="">-- Select --</option>
+                            @foreach (var v in Model.Volunteers) { <option value="@v.Id">@v.Name (@v.Phone)</option> }
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Booth # *</label>
+                        <input asp-for="NewShift.BoothNumber" type="number" class="form-control form-control-sm" required />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Role</label>
+                        <select asp-for="NewShift.Role" class="form-select form-select-sm">
+                            @foreach (var r in Enum.GetValues<ShiftRole>()) { <option value="@r">@r</option> }
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Shift Start *</label>
+                        <input asp-for="NewShift.ShiftStart" type="datetime-local" class="form-control form-control-sm" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Shift End *</label>
+                        <input asp-for="NewShift.ShiftEnd" type="datetime-local" class="form-control form-control-sm" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea asp-for="NewShift.Notes" class="form-control form-control-sm" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg me-1"></i>Assign</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignments List -->
+    <div class="col-lg-8">
+        <!-- Filters -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-2">
+                <form method="get" class="row g-2 align-items-center">
+                    @if (Model.IsAdmin && Model.Constituencies.Any())
+                    {
+                        <div class="col-auto">
+                            <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Constituencies</option>
+                                @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+                            </select>
+                        </div>
+                    }
+                    <div class="col-auto"><input type="number" name="BoothFilter" class="form-control form-control-sm" placeholder="Booth #" value="@Model.BoothFilter" style="width:90px" /></div>
+                    <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button></div>
+                    <div class="col-auto"><a asp-page="/BoothShifts/Index" class="btn btn-sm btn-outline-secondary">Clear</a></div>
+                </form>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light"><tr><th>Volunteer</th><th>Booth</th><th>Role</th><th>Shift</th><th>Confirmed</th><th>Notes</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var a in Model.Assignments)
+                        {
+                            <tr>
+                                <td><strong>@a.Volunteer?.Name</strong><br/><small class="text-muted">@a.Volunteer?.Phone</small></td>
+                                <td><span class="badge bg-secondary">Booth @a.BoothNumber</span></td>
+                                <td><span class="badge bg-info">@a.Role</span></td>
+                                <td><small>@a.ShiftStart.ToLocalTime().ToString("dd MMM HH:mm") – @a.ShiftEnd.ToLocalTime().ToString("HH:mm")</small></td>
+                                <td>
+                                    <form method="post"><input type="hidden" name="id" value="@a.Id"/>
+                                        <button asp-page-handler="Confirm" class="btn btn-sm @(a.IsConfirmed?"btn-success":"btn-outline-secondary")">
+                                            @(a.IsConfirmed ? "? Confirmed" : "Pending")
+                                        </button>
+                                    </form>
+                                </td>
+                                <td><small>@a.Notes</small></td>
+                                <td><form method="post"><input type="hidden" name="id" value="@a.Id"/><button asp-page-handler="Delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form></td>
+                            </tr>
+                        }
+                        @if (!Model.Assignments.Any())
+                        { <tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-calendar2-x fs-3 d-block mb-2"></i>No shifts assigned yet.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

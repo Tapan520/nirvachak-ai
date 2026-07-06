@@ -1,0 +1,119 @@
+@page
+@model Nirvachak_AI.Pages.PannaPramukh.IndexModel
+@{ ViewData["Title"] = "Panna Pramukh Management"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-journals me-2 text-primary"></i>Panna Pramukh Management</h4>
+        <small class="text-muted">Manage booth-level page workers assigned to voter groups</small>
+    </div>
+    <a asp-page="/PannaPramukh/Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Panna Pramukh</a>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body"><div class="fs-2 fw-bold text-primary">@Model.PannaPramukhs.Count</div><div class="text-muted small">Total Panna Pramukhs</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body"><div class="fs-2 fw-bold text-info">@Model.TotalAssigned</div><div class="text-muted small">Voters Assigned</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body"><div class="fs-2 fw-bold text-success">@Model.TotalContacted</div><div class="text-muted small">Voters Contacted</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body">
+                <div class="fs-2 fw-bold @(Model.CoveragePercent >= 70 ? "text-success" : Model.CoveragePercent >= 40 ? "text-warning" : "text-danger")">@Model.CoveragePercent%</div>
+                <div class="text-muted small">Coverage</div>
+                <div class="progress mt-1" style="height:6px"><div class="progress-bar bg-success" style="width:@Model.CoveragePercent%"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            @if (Model.IsAdmin && Model.Constituencies.Any())
+            {
+                <div class="col-auto">
+                    <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Constituencies</option>
+                        @foreach (var c in Model.Constituencies)
+                        { <option value="@c.Id" selected="@(Model.ConstituencyFilter == c.Id)">@c.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-auto">
+                <input type="number" name="BoothFilter" class="form-control form-control-sm" placeholder="Booth #" value="@Model.BoothFilter" style="width:100px" />
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button></div>
+            <div class="col-auto"><a asp-page="/PannaPramukh/Index" class="btn btn-sm btn-outline-secondary">Clear</a></div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th><th>Phone</th><th>Booth</th><th>Panna</th>
+                        <th>Assigned</th><th>Contacted</th><th>Coverage</th><th>Status</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var pp in Model.PannaPramukhs)
+                {
+                    var cov = pp.TotalVotersAssigned > 0 ? (int)Math.Round((double)pp.VotersContacted / pp.TotalVotersAssigned * 100) : 0;
+                    <tr>
+                        <td><strong>@pp.Name</strong><br/><small class="text-muted">@pp.Notes</small></td>
+                        <td>@pp.Phone</td>
+                        <td><span class="badge bg-secondary">Booth @pp.BoothNumber</span></td>
+                        <td><span class="badge bg-primary">Panna @pp.PannaNumber</span></td>
+                        <td>@pp.TotalVotersAssigned</td>
+                        <td>@pp.VotersContacted</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1">
+                                <div class="progress flex-grow-1" style="height:8px">
+                                    <div class="progress-bar @(cov>=70?"bg-success":cov>=40?"bg-warning":"bg-danger")" style="width:@cov%"></div>
+                                </div>
+                                <small>@cov%</small>
+                            </div>
+                        </td>
+                        <td>
+                            @if (pp.IsActive) { <span class="badge bg-success">Active</span> }
+                            else { <span class="badge bg-secondary">Inactive</span> }
+                        </td>
+                        <td>
+                            <a asp-page="/PannaPramukh/Edit" asp-route-id="@pp.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <form method="post" class="d-inline" onsubmit="return confirm('Delete this Panna Pramukh?')">
+                                <input type="hidden" name="id" value="@pp.Id"/>
+                                <button asp-page-handler="Delete" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.PannaPramukhs.Any())
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-journals fs-3 d-block mb-2"></i>No Panna Pramukhs found. <a asp-page="/PannaPramukh/Create">Add one</a></td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

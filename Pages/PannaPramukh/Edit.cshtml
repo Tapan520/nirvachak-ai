@@ -1,0 +1,49 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.PannaPramukh.EditModel
+@{ ViewData["Title"] = "Edit Panna Pramukh"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/PannaPramukh/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-pencil-fill me-2 text-primary"></i>Edit Panna Pramukh</h4>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:700px">
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" asp-for="PannaPramukh.Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+            @if (Model.IsAdmin)
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Constituency</label>
+                    <select asp-for="PannaPramukh.ConstituencyId" class="form-select">
+                        @foreach (var c in Model.Constituencies) { <option value="@c.Id">@c.Name</option> }
+                    </select>
+                </div>
+            }
+            else { <input type="hidden" asp-for="PannaPramukh.ConstituencyId" /> }
+
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label fw-semibold">Name</label><input asp-for="PannaPramukh.Name" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input asp-for="PannaPramukh.Phone" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label fw-semibold">Email</label><input asp-for="PannaPramukh.Email" class="form-control" /></div>
+                <div class="col-md-6"><label class="form-label fw-semibold">Address</label><input asp-for="PannaPramukh.Address" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label fw-semibold">Booth #</label><input asp-for="PannaPramukh.BoothNumber" type="number" class="form-control" required /></div>
+                <div class="col-md-4"><label class="form-label fw-semibold">Panna #</label><input asp-for="PannaPramukh.PannaNumber" class="form-control" required /></div>
+                <div class="col-md-4"><label class="form-label fw-semibold">Assigned</label><input asp-for="PannaPramukh.TotalVotersAssigned" type="number" class="form-control" /></div>
+                <div class="col-md-4"><label class="form-label fw-semibold">Contacted</label><input asp-for="PannaPramukh.VotersContacted" type="number" class="form-control" /></div>
+                <div class="col-md-4 d-flex align-items-end pb-1">
+                    <div class="form-check">
+                        <input asp-for="PannaPramukh.IsActive" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label fw-semibold">Active</label>
+                    </div>
+                </div>
+                <div class="col-12"><label class="form-label fw-semibold">Notes</label><textarea asp-for="PannaPramukh.Notes" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Update</button>
+                <a asp-page="/PannaPramukh/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -16,3 +16,12 @@ public enum CompetitorActivityType { Rally, RoadShow, DoorToDoor, SmallMeeting, 
 public enum CompetitorThreatLevel { Low, Medium, High, Critical }
 public enum InfluencerAlignment { Unknown, Favour, Against, Neutral, Floating }
 public enum CallOutcome { NoAnswer, Talked, CallBack, Wrong, Refused }
+
+// ── New Enums for Election Enhancement Modules ────────────────
+public enum TransportStatus { Pending, Assigned, PickedUp, Voted, Cancelled }
+public enum FieldReportStatus { Submitted, Reviewed, Flagged }
+public enum MessageCategory { ElectionReminder, EventInvite, VoterOutreach, Announcement, ThankYou }
+public enum BroadcastStatus { Draft, Scheduled, Sent, Failed }
+public enum RapidResponseStatus { Detected, ResponseDrafted, Deployed, Resolved }
+public enum RapidResponseThreat { Low, Medium, High, Critical }
+public enum ShiftRole { BoothAgent, Coordinator, Transport, Security, Observer, Other }

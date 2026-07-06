@@ -1,0 +1,89 @@
+@page
+@model Nirvachak_AI.Pages.RapidResponse.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Rapid Response Tracker"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-lightning-charge-fill me-2 text-danger"></i>Rapid Response Tracker</h4>
+        <small class="text-muted">Track rumours, negative propaganda & counter-campaign items</small>
+    </div>
+    <a asp-page="/RapidResponse/Create" class="btn btn-danger"><i class="bi bi-plus-lg me-1"></i>Log New Item</a>
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<!-- Status Summary -->
+<div class="row g-3 mb-4">
+    @foreach (var s in Enum.GetValues<RapidResponseStatus>())
+    {
+        var cnt = Model.Items.Count(i => i.Status == s);
+        var col = s switch { RapidResponseStatus.Detected => "danger", RapidResponseStatus.ResponseDrafted => "warning", RapidResponseStatus.Deployed => "info", _ => "success" };
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-center"><div class="card-body"><div class="fs-3 fw-bold text-@col">@cnt</div><small class="text-muted">@s</small></div></div>
+        </div>
+    }
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            @if (Model.IsAdmin && Model.Constituencies.Any())
+            {
+                <div class="col-auto">
+                    <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Constituencies</option>
+                        @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+                    </select>
+                </div>
+            }
+            <div class="col-auto">
+                <select name="StatusFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in Enum.GetValues<RapidResponseStatus>()) { <option value="@s" selected="@(Model.StatusFilter==s.ToString())">@s</option> }
+                </select>
+            </div>
+            <div class="col-auto"><a asp-page="/RapidResponse/Index" class="btn btn-sm btn-outline-secondary">Clear</a></div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Title</th><th>Source</th><th>Wards</th><th>Threat</th><th>Status</th><th>Assigned To</th><th>Detected</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var threat = item.ThreatLevel switch { RapidResponseThreat.Critical => "danger", RapidResponseThreat.High => "warning", RapidResponseThreat.Medium => "info", _ => "success" };
+                    var status = item.Status switch { RapidResponseStatus.Detected => "danger", RapidResponseStatus.ResponseDrafted => "warning", RapidResponseStatus.Deployed => "info", _ => "success" };
+                    <tr>
+                        <td><strong>@item.Title</strong><br/><small class="text-muted text-truncate d-block" style="max-width:200px">@item.Description</small></td>
+                        <td><small>@item.Source</small></td>
+                        <td><small>@item.AffectedWards</small></td>
+                        <td><span class="badge bg-@threat">@item.ThreatLevel</span></td>
+                        <td><span class="badge bg-@status">@item.Status</span></td>
+                        <td><small>@item.AssignedToName</small></td>
+                        <td><small>@item.DetectedAt.ToLocalTime().ToString("dd MMM HH:mm")</small></td>
+                        <td>
+                            <a asp-page="/RapidResponse/Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            @if (item.Status != RapidResponseStatus.Resolved)
+                            {
+                                <form method="post" class="d-inline"><input type="hidden" name="id" value="@item.Id"/><input type="hidden" name="status" value="Resolved"/><button asp-page-handler="UpdateStatus" class="btn btn-sm btn-outline-success">? Resolve</button></form>
+                            }
+                            <form method="post" class="d-inline"><input type="hidden" name="id" value="@item.Id"/><button asp-page-handler="Delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')"><i class="bi bi-trash"></i></button></form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Items.Any())
+                { <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-lightning-charge fs-3 d-block mb-2"></i>No items logged. <a asp-page="/RapidResponse/Create">Log one</a></td></tr> }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.Broadcast.EditTemplateModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Edit Template"; }
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/Broadcast/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Template</h4>
+</div>
+<div class="card border-0 shadow-sm" style="max-width:680px">
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" asp-for="Template.Id" />
+            <div class="row g-3">
+                <div class="col-md-8"><label class="form-label fw-semibold">Name</label><input asp-for="Template.Title" class="form-control" required /></div>
+                <div class="col-md-4"><label class="form-label fw-semibold">Language</label>
+                    <select asp-for="Template.Language" class="form-select"><option>English</option><option>Hindi</option><option>Marathi</option><option>Gujarati</option><option>Tamil</option><option>Telugu</option></select>
+                </div>
+                <div class="col-12"><label class="form-label fw-semibold">Category</label>
+                    <select asp-for="Template.Category" class="form-select">@foreach(var c in Enum.GetValues<MessageCategory>()){<option value="@c">@c</option>}</select>
+                </div>
+                <div class="col-12"><label class="form-label fw-semibold">Body</label><textarea asp-for="Template.Body" class="form-control" rows="5" required></textarea></div>
+            </div>
+            <div class="mt-4 d-flex gap-2"><button type="submit" class="btn btn-primary">Update</button><a asp-page="/Broadcast/Index" class="btn btn-outline-secondary">Cancel</a></div>
+        </form>
+    </div>
+</div>

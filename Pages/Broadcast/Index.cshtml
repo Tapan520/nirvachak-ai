@@ -1,0 +1,96 @@
+@page
+@model Nirvachak_AI.Pages.Broadcast.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "WhatsApp / SMS Broadcast"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-whatsapp me-2 text-success"></i>WhatsApp / SMS Broadcast</h4>
+        <small class="text-muted">Create message templates and schedule voter broadcasts</small>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-page="/Broadcast/CreateTemplate" class="btn btn-outline-success"><i class="bi bi-plus-lg me-1"></i>New Template</a>
+        <a asp-page="/Broadcast/CreateBroadcast" class="btn btn-success"><i class="bi bi-broadcast me-1"></i>Send Broadcast</a>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+@if (Model.IsAdmin && Model.Constituencies.Any())
+{
+    <form method="get" class="mb-3">
+        <select name="ConstituencyFilter" class="form-select w-auto" onchange="this.form.submit()">
+            <option value="">All Constituencies</option>
+            @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+        </select>
+    </form>
+}
+
+<div class="row g-4">
+    <!-- Templates -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold"><i class="bi bi-file-text me-1"></i>Message Templates (@Model.Templates.Count)</div>
+            <div class="card-body p-0">
+                @if (Model.Templates.Any())
+                {
+                    @foreach (var t in Model.Templates)
+                    {
+                        <div class="p-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@t.Title</strong>
+                                    <span class="badge bg-secondary ms-1">@t.Language</span>
+                                    <span class="badge bg-info ms-1">@t.Category</span>
+                                </div>
+                                <a asp-page="/Broadcast/EditTemplate" asp-route-id="@t.Id" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                            </div>
+                            <p class="text-muted small mt-1 mb-0">@t.Body</p>
+                        </div>
+                    }
+                }
+                else
+                { <div class="text-center text-muted py-4"><i class="bi bi-file-earmark-x fs-3 d-block mb-2"></i>No templates. <a asp-page="/Broadcast/CreateTemplate">Create one</a></div> }
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcasts -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold"><i class="bi bi-broadcast me-1"></i>Broadcast History (@Model.Broadcasts.Count)</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light"><tr><th>Template</th><th>Target</th><th>Sent</th><th>Status</th><th>Date</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var b in Model.Broadcasts)
+                        {
+                            var badge = b.Status switch { BroadcastStatus.Sent => "success", BroadcastStatus.Failed => "danger", BroadcastStatus.Scheduled => "info", _ => "secondary" };
+                            <tr>
+                                <td><strong>@b.Template?.Title</strong><br/><small class="text-muted">@b.Template?.Language</small></td>
+                                <td><small>@b.TargetDescription</small><br/><small class="text-muted">@b.TotalTargeted voters</small></td>
+                                <td>
+                                    <span class="text-success">@b.SentCount ?</span>
+                                    @if (b.FailedCount > 0) { <span class="text-danger ms-1">@b.FailedCount ?</span> }
+                                </td>
+                                <td><span class="badge bg-@badge">@b.Status</span></td>
+                                <td><small class="text-muted">@(b.SentAt?.ToLocalTime().ToString("dd MMM HH:mm") ?? b.CreatedAt.ToLocalTime().ToString("dd MMM"))</small></td>
+                                <td><form method="post"><input type="hidden" name="id" value="@b.Id"/><button asp-page-handler="Delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form></td>
+                            </tr>
+                        }
+                        @if (!Model.Broadcasts.Any())
+                        { <tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-broadcast fs-3 d-block mb-2"></i>No broadcasts yet.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Note:</strong> Broadcasts respect voter consent flags (<code>AllowWhatsAppMessages</code>). Only consenting voters with mobile numbers will be targeted. Actual message delivery requires integration with a WhatsApp Business API or SMS gateway provider.
+</div>

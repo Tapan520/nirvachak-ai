@@ -1,0 +1,48 @@
+@page
+@model Nirvachak_AI.Pages.Broadcast.CreateBroadcastModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Create Broadcast"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/Broadcast/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-broadcast me-2 text-success"></i>Create Broadcast</h4>
+</div>
+<div class="card border-0 shadow-sm" style="max-width:680px">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Message Template *</label>
+                    <select asp-for="Broadcast.TemplateId" asp-items="Model.TemplateItems" class="form-select" required>
+                        <option value="">-- Select Template --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Target Sentiment</label>
+                    <select name="TargetSentiment" class="form-select">
+                        <option value="">All Sentiments</option>
+                        @foreach (var s in Enum.GetValues<VoterSentiment>()) { <option value="@s">@s</option> }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Target Ward</label>
+                    <input name="TargetWard" class="form-control" placeholder="e.g. 3 (leave blank for all)" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Schedule For (optional)</label>
+                    <input asp-for="Broadcast.ScheduledAt" type="datetime-local" class="form-control" />
+                    <div class="form-text">Leave blank to save as Draft.</div>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-people-fill me-1"></i>
+                Estimated reach: <strong>~@Model.EstimatedCount voters</strong> with mobile numbers and WhatsApp consent.
+                Final count depends on your target filters above.
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-success"><i class="bi bi-send me-1"></i>Create Broadcast</button>
+                <a asp-page="/Broadcast/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

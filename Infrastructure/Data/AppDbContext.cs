@@ -39,6 +39,19 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<CouponPool> CouponPools => Set<CouponPool>();
     public DbSet<SurveyCompletion> SurveyCompletions => Set<SurveyCompletion>();
 
+    // ── Election Enhancement Modules ─────────────────────────────
+    public DbSet<PannaPramukh> PannaPramukhs => Set<PannaPramukh>();
+    public DbSet<TransportVehicle> TransportVehicles => Set<TransportVehicle>();
+    public DbSet<VoterTransportRequest> VoterTransportRequests => Set<VoterTransportRequest>();
+    public DbSet<FieldReport> FieldReports => Set<FieldReport>();
+    public DbSet<MessageTemplate> MessageTemplates => Set<MessageTemplate>();
+    public DbSet<MessageBroadcast> MessageBroadcasts => Set<MessageBroadcast>();
+    public DbSet<VoterTag> VoterTags => Set<VoterTag>();
+    public DbSet<BoothShiftAssignment> BoothShiftAssignments => Set<BoothShiftAssignment>();
+    public DbSet<RapidResponseItem> RapidResponseItems => Set<RapidResponseItem>();
+    public DbSet<BudgetPlan> BudgetPlans => Set<BudgetPlan>();
+    public DbSet<ElectionResult> ElectionResults => Set<ElectionResult>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -46,10 +59,6 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<Voter>().HasIndex(v => v.VoterId);
         builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.BoothNumber });
         builder.Entity<Voter>().HasIndex(v => v.Name);
-
-        builder.Entity<Expense>()
-            .Property(e => e.Amount)
-            .HasColumnType("decimal(18,2)");
 
         builder.Entity<AnnouncementAcknowledgement>()
             .HasIndex(a => new { a.AnnouncementId, a.UserId })
@@ -91,5 +100,42 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany()
             .HasForeignKey(s => s.CouponId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // ── Election Enhancement Modules ─────────────────────────
+        builder.Entity<VoterTag>()
+            .HasIndex(t => new { t.VoterId, t.Tag })
+            .IsUnique();
+
+        builder.Entity<BoothShiftAssignment>()
+            .HasOne(b => b.Volunteer)
+            .WithMany()
+            .HasForeignKey(b => b.VolunteerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<VoterTransportRequest>()
+            .HasOne(r => r.Voter)
+            .WithMany()
+            .HasForeignKey(r => r.VoterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<VoterTransportRequest>()
+            .HasOne(r => r.Vehicle)
+            .WithMany()
+            .HasForeignKey(r => r.VehicleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<MessageBroadcast>()
+            .HasOne(b => b.Template)
+            .WithMany()
+            .HasForeignKey(b => b.TemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Expense>()
+            .Property(e => e.Amount)
+            .HasColumnType("decimal(18,2)");
+
+        builder.Entity<BudgetPlan>()
+            .Property(b => b.PlannedAmount)
+            .HasColumnType("decimal(18,2)");
     }
 }

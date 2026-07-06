@@ -1,0 +1,118 @@
+@page
+@model Nirvachak_AI.Pages.Budget.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Budget Planning vs Actuals"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-wallet2 me-2 text-success"></i>Budget Planning vs Actuals</h4>
+        <small class="text-muted">Plan category budgets and track actual spend against EC limit</small>
+    </div>
+    @if (Model.IsAdmin && Model.Constituencies.Any())
+    {
+        <form method="get">
+            <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Constituencies</option>
+                @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+            </select>
+        </form>
+    }
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<!-- EC Budget bar -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h6 class="mb-0 fw-semibold">EC Total Budget Utilisation</h6>
+            <span class="badge @(Model.ECBudgetPercent >= 90 ? "bg-danger" : Model.ECBudgetPercent >= 70 ? "bg-warning text-dark" : "bg-success")">@Model.ECBudgetPercent%</span>
+        </div>
+        <div class="progress" style="height:12px">
+            <div class="progress-bar @(Model.ECBudgetPercent>=90?"bg-danger":Model.ECBudgetPercent>=70?"bg-warning":"bg-success")" style="width:@Model.ECBudgetPercent%"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+            <small class="text-muted">Spent: ?@Model.TotalActual.ToString("N0")</small>
+            <small class="text-muted">EC Limit: ?@Model.ECBudgetLimit.ToString("N0")</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Category breakdown -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold">Category Breakdown</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Category</th><th>Planned (?)</th><th>Actual (?)</th><th>Progress</th><th>Remaining</th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            var remaining = row.Planned - row.Actual;
+                            var barColor = row.UsedPercent >= 100 ? "bg-danger" : row.UsedPercent >= 80 ? "bg-warning" : "bg-success";
+                            <tr>
+                                <td><strong>@row.Category</strong></td>
+                                <td>@(row.Planned > 0 ? "?" + row.Planned.ToString("N0") : "-")</td>
+                                <td>?@row.Actual.ToString("N0")</td>
+                                <td style="min-width:150px">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div class="progress flex-grow-1" style="height:8px">
+                                            <div class="progress-bar @barColor" style="width:@row.UsedPercent%"></div>
+                                        </div>
+                                        <small>@row.UsedPercent%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (row.Planned > 0)
+                                    {
+                                        <span class="@(remaining < 0 ? "text-danger fw-bold" : "text-success")">
+                                            @(remaining < 0 ? "-" : "")?@Math.Abs(remaining).ToString("N0")
+                                        </span>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                        }
+                        <tr class="table-light fw-bold">
+                            <td>TOTAL</td>
+                            <td>?@Model.TotalPlanned.ToString("N0")</td>
+                            <td>?@Model.TotalActual.ToString("N0")</td>
+                            <td></td>
+                            <td class="@(Model.TotalPlanned - Model.TotalActual < 0 ? "text-danger" : "text-success")">
+                                ?@Math.Abs(Model.TotalPlanned - Model.TotalActual).ToString("N0")
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set budget -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold"><i class="bi bi-pencil-fill me-1"></i>Set/Update Budget</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Save">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <select asp-for="NewPlan.Category" class="form-select">
+                            @foreach (var cat in Enum.GetValues<ExpenseCategory>()) { <option value="@cat">@cat</option> }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Planned Amount (?)</label>
+                        <input asp-for="NewPlan.PlannedAmount" type="number" class="form-control" placeholder="e.g. 500000" min="0" required />
+                    </div>
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-save me-1"></i>Save Budget</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

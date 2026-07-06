@@ -1,0 +1,57 @@
+@page
+@model Nirvachak_AI.Pages.FieldReports.SubmitModel
+@{ ViewData["Title"] = "Submit Daily Report"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/FieldReports/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-clipboard2-plus-fill me-2 text-primary"></i>Submit Daily Report</h4>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:680px">
+    <div class="card-body">
+        <form method="post">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Report Date</label>
+                    <input asp-for="Report.ReportDate" type="date" class="form-control" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Total Contacts Made</label>
+                    <input asp-for="Report.ContactsMade" type="number" class="form-control" min="0" value="0" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Issues Logged</label>
+                    <input asp-for="Report.IssuesLogged" type="number" class="form-control" min="0" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Favour Contacts</label>
+                    <input asp-for="Report.FavourContacts" type="number" class="form-control" min="0" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Floating Contacts</label>
+                    <input asp-for="Report.FloatingContacts" type="number" class="form-control" min="0" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Against Contacts</label>
+                    <input asp-for="Report.AgainstContacts" type="number" class="form-control" min="0" value="0" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Highlights / Key Outcomes</label>
+                    <textarea asp-for="Report.Highlights" class="form-control" rows="3" placeholder="Key observations, voter feedback, positive outcomes…"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Challenges Faced</label>
+                    <textarea asp-for="Report.Challenges" class="form-control" rows="2" placeholder="Difficulties, inaccessible areas, negative responses…"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Plan for Tomorrow</label>
+                    <textarea asp-for="Report.PlannedForTomorrow" class="form-control" rows="2" placeholder="Target areas, follow-ups, priority voters…"></textarea>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill me-1"></i>Submit Report</button>
+                <a asp-page="/FieldReports/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

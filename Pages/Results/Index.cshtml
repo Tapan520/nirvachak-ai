@@ -1,0 +1,133 @@
+@page
+@model Nirvachak_AI.Pages.Results.IndexModel
+@{ ViewData["Title"] = "Result Day — Live Counting"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-trophy-fill me-2 text-warning"></i>Result Day — Live Counting</h4>
+        <small class="text-muted">Enter booth-wise results round by round as counting progresses</small>
+    </div>
+    @if (Model.IsAdmin && Model.Constituencies.Any())
+    {
+        <form method="get">
+            <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Constituencies</option>
+                @foreach (var c in Model.Constituencies) { <option value="@c.Id" selected="@(Model.ConstituencyFilter==c.Id)">@c.Name</option> }
+            </select>
+        </form>
+    }
+</div>
+
+@if (TempData["Message"] != null)
+{ <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle me-1"></i>@TempData["Message"]<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div> }
+
+<!-- Lead/Trail Banner -->
+@if (Model.Results.Any())
+{
+    <div class="alert @(Model.IsLeading ? "alert-success" : "alert-danger") fw-semibold fs-5 text-center mb-4">
+        @if (Model.IsLeading)
+        { <i class="bi bi-arrow-up-circle-fill me-2"></i><span>LEADING by @Model.LeadMargin votes</span> }
+        else
+        { <i class="bi bi-arrow-down-circle-fill me-2"></i><span>TRAILING by @Model.LeadMargin votes</span> }
+    </div>
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center bg-success bg-opacity-10">
+                <div class="card-body"><div class="fs-2 fw-bold text-success">@Model.TotalCandidateVotes.ToString("N0")</div><small class="text-muted">Our Candidate</small></div>
+            </div>
+        </div>
+        @if (Model.Competitor1Name != null)
+        {
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body"><div class="fs-2 fw-bold text-danger">@Model.TotalCompetitor1Votes.ToString("N0")</div><small class="text-muted">@Model.Competitor1Name</small></div>
+                </div>
+            </div>
+        }
+        @if (Model.Competitor2Name != null)
+        {
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body"><div class="fs-2 fw-bold text-warning">@Model.TotalCompetitor2Votes.ToString("N0")</div><small class="text-muted">@Model.Competitor2Name</small></div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Enter Result Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent fw-semibold"><i class="bi bi-plus-circle me-1"></i>Enter Result</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Add">
+                    @if (Model.IsAdmin)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Constituency</label>
+                            <select asp-for="NewResult.ConstituencyId" class="form-select form-select-sm">
+                                @foreach (var c in Model.Constituencies) { <option value="@c.Id">@c.Name</option> }
+                            </select>
+                        </div>
+                    }
+                    else { <input type="hidden" asp-for="NewResult.ConstituencyId" /> }
+                    <div class="mb-2"><label class="form-label fw-semibold">Booth # *</label><input asp-for="NewResult.BoothNumber" type="number" class="form-control form-control-sm" required /></div>
+                    <div class="mb-2"><label class="form-label fw-semibold">Round # *</label><input asp-for="NewResult.RoundNumber" type="number" class="form-control form-control-sm" value="1" required /></div>
+                    <div class="mb-2"><label class="form-label fw-semibold">Our Candidate Votes *</label><input asp-for="NewResult.CandidateVotes" type="number" class="form-control form-control-sm" required /></div>
+                    <div class="mb-2"><label class="form-label fw-semibold">Competitor 1 Name</label><input asp-for="NewResult.Competitor1Name" class="form-control form-control-sm" /></div>
+                    <div class="mb-2"><label class="form-label fw-semibold">Competitor 1 Votes</label><input asp-for="NewResult.Competitor1Votes" type="number" class="form-control form-control-sm" /></div>
+                    <div class="mb-2"><label class="form-label fw-semibold">Competitor 2 Name</label><input asp-for="NewResult.Competitor2Name" class="form-control form-control-sm" /></div>
+                    <div class="mb-3"><label class="form-label fw-semibold">Competitor 2 Votes</label><input asp-for="NewResult.Competitor2Votes" type="number" class="form-control form-control-sm" /></div>
+                    <div class="mb-3">
+                        <div class="form-check"><input asp-for="NewResult.IsFinal" class="form-check-input" type="checkbox"/><label class="form-check-label fw-semibold">Final Result</label></div>
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-sm w-100"><i class="bi bi-plus-lg me-1"></i>Save Result</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-2">
+            <div class="card-body py-2">
+                <form method="get" class="d-flex gap-2 align-items-center">
+                    <input type="number" name="RoundFilter" class="form-control form-control-sm" placeholder="Filter Round" value="@Model.RoundFilter" style="width:130px" />
+                    @if (Model.ConstituencyFilter.HasValue) { <input type="hidden" name="ConstituencyFilter" value="@Model.ConstituencyFilter" /> }
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
+                    <a asp-page="/Results/Index" class="btn btn-sm btn-outline-secondary">Clear</a>
+                </form>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light"><tr><th>Round</th><th>Booth</th><th>Our Votes</th><th>Comp. 1</th><th>Comp. 2</th><th>Status</th><th>Entered</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var r in Model.Results)
+                        {
+                            var maxComp = Math.Max(r.Competitor1Votes ?? 0, r.Competitor2Votes ?? 0);
+                            var leading = r.CandidateVotes > maxComp;
+                            <tr class="@(leading ? "table-success" : "table-danger") bg-opacity-10">
+                                <td><span class="badge bg-secondary">R@r.RoundNumber</span></td>
+                                <td>Booth @r.BoothNumber</td>
+                                <td><strong class="@(leading?"text-success":"text-danger")">@r.CandidateVotes</strong></td>
+                                <td>@(r.Competitor1Votes.HasValue ? $"{r.Competitor1Name}: {r.Competitor1Votes}" : "-")</td>
+                                <td>@(r.Competitor2Votes.HasValue ? $"{r.Competitor2Name}: {r.Competitor2Votes}" : "-")</td>
+                                <td>@if(r.IsFinal){<span class="badge bg-success">Final</span>}else{<span class="badge bg-warning text-dark">Live</span>}</td>
+                                <td><small class="text-muted">@r.EnteredAt.ToLocalTime().ToString("HH:mm")</small></td>
+                                <td><form method="post"><input type="hidden" name="id" value="@r.Id"/><button asp-page-handler="Delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove?')"><i class="bi bi-trash"></i></button></form></td>
+                            </tr>
+                        }
+                        @if (!Model.Results.Any())
+                        { <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-trophy fs-3 d-block mb-2"></i>No results entered yet.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

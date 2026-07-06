@@ -1,0 +1,45 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.RapidResponse.EditModel
+@using Nirvachak_AI.Domain.Enums
+@{ ViewData["Title"] = "Edit Response Item"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/RapidResponse/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-pencil-fill me-2 text-danger"></i>Edit Response Item</h4>
+</div>
+<div class="card border-0 shadow-sm" style="max-width:700px">
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" asp-for="Item.Id" />
+            <div class="row g-3">
+                <div class="col-12"><label class="form-label fw-semibold">Title</label><input asp-for="Item.Title" class="form-control" required /></div>
+                <div class="col-12"><label class="form-label fw-semibold">Description</label><textarea asp-for="Item.Description" class="form-control" rows="3" required></textarea></div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Source</label>
+                    <select asp-for="Item.Source" class="form-select">
+                        <option>WhatsApp Forward</option><option>Local Media</option><option>Competitor Campaign</option><option>Social Media</option><option>Word of Mouth</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Threat Level</label>
+                    <select asp-for="Item.ThreatLevel" class="form-select">
+                        @foreach (var t in Enum.GetValues<RapidResponseThreat>()) { <option value="@t">@t</option> }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select asp-for="Item.Status" class="form-select">
+                        @foreach (var s in Enum.GetValues<RapidResponseStatus>()) { <option value="@s">@s</option> }
+                    </select>
+                </div>
+                <div class="col-md-6"><label class="form-label fw-semibold">Affected Wards</label><input asp-for="Item.AffectedWards" class="form-control" /></div>
+                <div class="col-md-6"><label class="form-label fw-semibold">Assign To</label><input asp-for="Item.AssignedToName" class="form-control" /></div>
+                <div class="col-12"><label class="form-label fw-semibold">Counter Response Text</label><textarea asp-for="Item.ResponseText" class="form-control" rows="3"></textarea></div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a asp-page="/RapidResponse/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+@page "{id:int}"
+@model Nirvachak_AI.Pages.FieldReports.ViewModel
+@{ ViewData["Title"] = "Field Report Detail"; }
+
+<div class="d-flex align-items-center mb-4">
+    <a asp-page="/FieldReports/Index" class="btn btn-sm btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-clipboard2-fill me-2 text-primary"></i>Field Report — @Model.Report?.ReportDate.ToString("dd MMMM yyyy")</h4>
+</div>
+
+@if (Model.Report == null)
+{ <div class="alert alert-warning">Report not found.</div> }
+else
+{
+    var r = Model.Report;
+    var badge = r.Status switch { Domain.Enums.FieldReportStatus.Reviewed => "success", Domain.Enums.FieldReportStatus.Flagged => "danger", _ => "warning" };
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between bg-transparent">
+            <span class="fw-semibold">@r.WorkerName</span>
+            <span class="badge bg-@badge fs-6">@r.Status</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3 text-center"><div class="fs-3 fw-bold text-info">@r.ContactsMade</div><small class="text-muted">Total Contacts</small></div>
+                <div class="col-6 col-md-3 text-center"><div class="fs-3 fw-bold text-success">@r.FavourContacts</div><small class="text-muted">Favour</small></div>
+                <div class="col-6 col-md-3 text-center"><div class="fs-3 fw-bold text-warning">@r.FloatingContacts</div><small class="text-muted">Floating</small></div>
+                <div class="col-6 col-md-3 text-center"><div class="fs-3 fw-bold text-danger">@r.AgainstContacts</div><small class="text-muted">Against</small></div>
+            </div>
+            @if (!string.IsNullOrEmpty(r.Highlights))
+            {
+                <h6 class="fw-semibold">Highlights</h6><p class="text-muted">@r.Highlights</p>
+            }
+            @if (!string.IsNullOrEmpty(r.Challenges))
+            {
+                <h6 class="fw-semibold">Challenges</h6><p class="text-muted">@r.Challenges</p>
+            }
+            @if (!string.IsNullOrEmpty(r.PlannedForTomorrow))
+            {
+                <h6 class="fw-semibold">Plan for Tomorrow</h6><p class="text-muted">@r.PlannedForTomorrow</p>
+            }
+            @if (!string.IsNullOrEmpty(r.ReviewerNotes))
+            {
+                <div class="alert alert-info mt-3"><strong>Manager Notes:</strong> @r.ReviewerNotes</div>
+            }
+        </div>
+    </div>
+}

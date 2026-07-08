@@ -26,7 +26,22 @@ export default function ReportsScreen() {
 
   if (loading) return <View style={s.center}><ActivityIndicator color={BRAND} size="large" /></View>;
 
-  const r = report!;
+  if (!report) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <Text style={s.title}>Expense Report</Text>
+          <Text style={s.sub}>EC budget utilisation summary</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="wallet-outline" size={52} color="#dee2e6" />
+          <Text style={{ color: '#adb5bd', marginTop: 12, fontSize: 14 }}>No expense data available.</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const r = report;
 
   return (
     <View style={s.container}>

@@ -66,7 +66,24 @@ export default function ResultsScreen() {
 
   if (loading) return <View style={s.center}><ActivityIndicator color={BRAND} size="large" /></View>;
 
-  const sm = summary!;
+  if (!summary) {
+    return (
+      <View style={s.container}>
+        <View style={s.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.title}>Election Results</Text>
+            <Text style={s.sub}>No results data available</Text>
+          </View>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="bar-chart-outline" size={52} color="#dee2e6" />
+          <Text style={{ color: '#adb5bd', marginTop: 12, fontSize: 14 }}>No constituency assigned to your account.</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const sm = summary;
 
   return (
     <View style={s.container}>
@@ -88,7 +105,7 @@ export default function ResultsScreen() {
               {sm.isLeading ? `Leading by ${sm.leadMargin.toLocaleString('en-IN')} votes` : `Trailing by ${sm.leadMargin.toLocaleString('en-IN')} votes`}
             </Text>
             <Text style={s.leadSub}>
-              Candidate: {sm.totalCandidateVotes.toLocaleString('en-IN')}
+              {`Candidate: ${sm.totalCandidateVotes.toLocaleString('en-IN')}`}
               {sm.competitor1Name ? `  ·  ${sm.competitor1Name}: ${sm.totalCompetitor1Votes.toLocaleString('en-IN')}` : ''}
               {sm.competitor2Name ? `  ·  ${sm.competitor2Name}: ${sm.totalCompetitor2Votes.toLocaleString('en-IN')}` : ''}
             </Text>

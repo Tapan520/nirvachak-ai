@@ -19,10 +19,7 @@ const TIER_CONFIG: Record<string, { color: string; bg: string; icon: string; mes
 // ??? Score Gauge ?????????????????????????????????????????????????????????????
 
 function ScoreGauge({ score, tier }: { score: number; tier: string }) {
-  const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG['Critical'];
-  const circumference = 2 * Math.PI * 54;         // r=54
-  const filled        = (score / 100) * circumference * 0.75; // 270° arc
-  const totalArc      = circumference * 0.75;
+const cfg = TIER_CONFIG[tier] ?? TIER_CONFIG['Critical'];
 
   return (
     <View style={sg.wrapper}>
@@ -177,7 +174,7 @@ export default function WinProbabilityScreen() {
           <StatCard icon="thumbs-down-outline"    label="Against"        value={data.againstVoters.toLocaleString('en-IN')}  sub="to be countered"                                 color="#e03131" />
         </View>
         <View style={s.statsRow}>
-          <StatCard icon="person-done-outline"    label="Contacted"      value={data.contactedVoters.toLocaleString('en-IN')} sub={`${data.contactCoverage.toFixed(1)}% coverage`}  color="#3b5bdb" />
+          <StatCard icon="checkmark-done-outline" label="Contacted"      value={data.contactedVoters.toLocaleString('en-IN')} sub={`${data.contactCoverage.toFixed(1)}% coverage`}  color="#3b5bdb" />
           <StatCard icon="warning-outline"        label="Booths At Risk"  value={data.boothsAtRisk.toString()}                sub="low turnout risk"                                color="#e67700" />
           <StatCard icon="checkmark-circle-outline" label="Est. Win Votes" value={data.estimatedWinVotes.toLocaleString('en-IN')} sub="if turnout holds"                           color="#7950f2" />
         </View>

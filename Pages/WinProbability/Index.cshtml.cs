@@ -30,7 +30,7 @@ public class IndexModel : PageModel
     public WinProbabilityResult? Result            { get; set; }
     public List<Constituency>   Constituencies     { get; set; } = new();
     public Constituency?        ActiveConstituency { get; set; }
-    public bool                 IsAdmin            { get; set; }
+    public bool                 IsSuperAdmin       { get; set; }
     public string               GeneratedAt        { get; set; } = string.Empty;
 
     public async Task<IActionResult> OnGetAsync()
@@ -38,12 +38,13 @@ public class IndexModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToPage("/Account/Login");
 
-        IsAdmin = user.Role == UserRole.SuperAdmin;
+        // Only SuperAdmin can select any constituency via the dropdown
+        IsSuperAdmin = user.Role is UserRole.SuperAdmin;
 
-        if (IsAdmin)
+        if (IsSuperAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
-        int? cId = IsAdmin ? (SelectedConstituencyId ?? user.ConstituencyId) : user.ConstituencyId;
+        int? cId = IsSuperAdmin ? (SelectedConstituencyId ?? user.ConstituencyId) : user.ConstituencyId;
         if (!cId.HasValue) return Page();
 
         ActiveConstituency = await _db.Constituencies.FindAsync(cId.Value);

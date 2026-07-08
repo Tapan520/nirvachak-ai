@@ -17,7 +17,7 @@
             </p>
         }
     </div>
-    @if (Model.IsAdmin && Model.Constituencies.Any())
+    @if (Model.IsSuperAdmin && Model.Constituencies.Any())
     {
         <form method="get" class="d-flex align-items-center gap-2">
             <label class="fw-semibold mb-0 text-nowrap small">Constituency:</label>

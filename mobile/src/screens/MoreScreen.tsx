@@ -88,6 +88,7 @@ export default function MoreScreen() {
         {(user?.role === 'Admin' || user?.role === 'CampaignManager' || user?.role === 'Candidate' || user?.role === 'SuperAdmin') && (
           <>
             <MenuItem icon="trending-up-outline"  label="Predictive Analytics" desc="AI forecasts for turnout & support"       color="#e67700" screen="PredictiveAnalytics" />
+            <MenuItem icon="trophy-outline"        label="Win Probability"      desc="AI win probability score & campaign analysis" color="#f59f00" screen="WinProbability" />
             <MenuItem icon="people-circle-outline" label="Influencers"          desc="Track community & political influencers"  color="#7950f2" screen="Influencers" />
             <MenuItem icon="eye-outline"           label="Competitor Tracker"   desc="Log & monitor rival campaign activities"  color="#e03131" screen="Competitor" />
             <MenuItem icon="shield-outline"        label="Rapid Response"       desc="Log & resolve campaign incidents"         color="#e03131" screen="RapidResponse" />

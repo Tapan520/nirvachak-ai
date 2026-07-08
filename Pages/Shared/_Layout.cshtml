@@ -151,6 +151,11 @@
                             <i class="bi bi-graph-up-arrow me-2"></i> Predictive Analytics
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/WinProbability") ? "active" : "")" asp-page="/WinProbability/Index">
+                            <i class="bi bi-trophy-fill me-2"></i> Win Probability
+                        </a>
+                    </li>
                     }
                     @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
                     {

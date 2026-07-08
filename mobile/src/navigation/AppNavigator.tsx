@@ -38,6 +38,7 @@ import ResultsScreen from '../screens/ResultsScreen';
 import TransportScreen from '../screens/TransportScreen';
 import VoterSlipsScreen from '../screens/VoterSlipsScreen';
 import AdminScreen from '../screens/AdminScreen';
+import WinProbabilityScreen from '../screens/WinProbabilityScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -150,6 +151,8 @@ export default function AppNavigator() {
             <Stack.Screen name="VoterSlips" component={VoterSlipsScreen}
               options={{ headerShown: false }} />
             <Stack.Screen name="Admin" component={AdminScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="WinProbability" component={WinProbabilityScreen}
               options={{ headerShown: false }} />
           </>
         ) : (

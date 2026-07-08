@@ -227,6 +227,16 @@ public record CreateCompetitorActivityRequest(
     DateTime ActivityDate, int? EstimatedCrowd,
     string? Notes, string ThreatLevel);
 
+// ── Win Probability ───────────────────────────────────────────────
+public record WinProbabilityResponse(
+    double Score, string Tier, string TierColor,
+    int TotalVoters, int FavourVoters, int FloatingVoters,
+    int AgainstVoters, int ContactedVoters,
+    double ContactCoverage, double FavourRate,
+    double FloatingConversionPotential, int EstimatedWinVotes,
+    int BoothsAtRisk,
+    List<string> StrengthPoints, List<string> RiskPoints);
+
 // ── Booth Shifts ──────────────────────────────────────────────────
 public record BoothShiftItem(
     int Id, int VolunteerId, string VolunteerName, string VolunteerPhone,

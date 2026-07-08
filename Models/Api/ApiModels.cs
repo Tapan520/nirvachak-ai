@@ -180,6 +180,179 @@ public record PredictionSummaryResponse(
     int AtRiskBoothCount, int WeakSupportBoothCount,
     List<BoothPredictionResponse> BoothPredictions);
 
+// ── Phone Banking ─────────────────────────────────────────────────
+public record PhoneBankingStatsResponse(
+    int TotalCallsToday, int TalkedCount, int NoAnswerCount, int CallBackCount,
+    List<PhoneCallItem> RecentCalls, List<PendingCallVoter> PendingVoters);
+
+public record PhoneCallItem(
+    int Id, int VoterId, string VoterName, string? Phone,
+    DateTime CalledAt, string Outcome, int DurationSeconds,
+    string? Notes, string? SentimentAfterCall);
+
+public record PendingCallVoter(
+    int Id, string Name, string Phone,
+    int BoothNumber, string? WardNumber, string Sentiment);
+
+public record LogPhoneCallRequest(
+    int VoterId, string Outcome, int DurationSeconds,
+    string? Notes, string? SentimentAfterCall);
+
+// ── Influencers ───────────────────────────────────────────────────
+public record InfluencerListItem(
+    int Id, string Name, string? MobileNumber, string? Category, string? Community,
+    int? EstimatedFollowers, string? Ward, int? BoothNumber,
+    string Alignment, string? Notes, DateTime? LastMetAt, string? LastMeetingOutcome);
+
+public record CreateInfluencerRequest(
+    string Name, string? MobileNumber, string? Category, string? Community,
+    int? EstimatedFollowers, string? Ward, int? BoothNumber,
+    string Alignment, string? Notes);
+
+public record UpdateInfluencerMeetingRequest(
+    string Alignment, string? OutcomeNotes, string? Notes);
+
+// ── Competitor Tracker ────────────────────────────────────────────
+public record CompetitorActivityItem(
+    int Id, string CompetitorName, string? PartyName,
+    string ActivityTitle, string ActivityType,
+    string? Location, string? Ward, int? BoothNumber,
+    DateTime ActivityDate, int? EstimatedCrowd,
+    string? Notes, string ThreatLevel);
+
+public record CreateCompetitorActivityRequest(
+    string CompetitorName, string? PartyName,
+    string ActivityTitle, string ActivityType,
+    string? Location, string? Ward, int? BoothNumber,
+    DateTime ActivityDate, int? EstimatedCrowd,
+    string? Notes, string ThreatLevel);
+
+// ── Booth Shifts ──────────────────────────────────────────────────
+public record BoothShiftItem(
+    int Id, int VolunteerId, string VolunteerName, string VolunteerPhone,
+    int BoothNumber, DateTime ShiftStart, DateTime ShiftEnd,
+    string Role, bool IsConfirmed, string? Notes);
+
+public record CreateBoothShiftRequest(
+    int VolunteerId, int BoothNumber,
+    DateTime ShiftStart, DateTime ShiftEnd,
+    string Role, string? Notes);
+
+// ── Budget ────────────────────────────────────────────────────────
+public record BudgetItem(
+    int Id, string Category, decimal PlannedAmount, decimal SpentAmount,
+    decimal Remaining, double UtilisationPercent, string? Notes);
+
+public record CreateBudgetItemRequest(
+    string Category, decimal PlannedAmount, string? Notes);
+
+// ── Broadcast / Messaging ─────────────────────────────────────────
+public record MessageTemplateItem(
+    int Id, string Title, string Body, string Language, string Category, DateTime CreatedAt);
+
+public record CreateMessageTemplateRequest(
+    string Title, string Body, string Language, string Category);
+
+public record BroadcastItem(
+    int Id, int TemplateId, string TemplateTitle,
+    string? TargetDescription, int TotalTargeted, int SentCount,
+    string Status, DateTime? ScheduledAt, DateTime? SentAt,
+    string CreatedByName, DateTime CreatedAt);
+
+public record CreateBroadcastRequest(
+    int TemplateId, string? TargetDescription, DateTime? ScheduledAt);
+
+// ── Field Reports ─────────────────────────────────────────────────
+public record FieldReportItem(
+    int Id, string WorkerName, DateTime ReportDate,
+    int ContactsMade, int FavourContacts, int FloatingContacts, int AgainstContacts,
+    int IssuesLogged, string? Highlights, string? Challenges,
+    string? PlannedForTomorrow, string Status);
+
+public record CreateFieldReportRequest(
+    int ContactsMade, int FavourContacts, int FloatingContacts, int AgainstContacts,
+    int IssuesLogged, string? Highlights, string? Challenges, string? PlannedForTomorrow);
+
+// ── Panna Pramukh ─────────────────────────────────────────────────
+public record PannaPramukhItem(
+    int Id, string Name, string Phone, int BoothNumber, string PannaNumber,
+    int TotalVotersAssigned, int VotersContacted, double ContactPercent,
+    bool IsActive, string? Notes);
+
+public record CreatePannaPramukhRequest(
+    string Name, string Phone, string? Email, string? Address,
+    int BoothNumber, string PannaNumber, int TotalVotersAssigned, string? Notes);
+
+public record UpdatePannaContactRequest(int Id, int VotersContacted);
+
+// ── Rapid Response ────────────────────────────────────────────────
+public record RapidResponseListItem(
+    int Id, string Title, string Description, string? Source,
+    string? AffectedWards, string? AssignedToName,
+    string? ResponseText, string Status, string ThreatLevel,
+    DateTime DetectedAt, DateTime? ResolvedAt);
+
+public record CreateRapidResponseRequest(
+    string Title, string Description, string? Source,
+    string? AffectedWards, string ThreatLevel, string? ResponseText);
+
+public record UpdateRapidResponseRequest(string Status, string? ResponseText);
+
+// ── Reports (Expense Summary) ─────────────────────────────────────
+public record ExpenseReportResponse(
+    decimal TotalAmount, decimal EcBudgetLimit, int EcBudgetPercent,
+    List<CategoryTotal> CategoryTotals, List<ExpenseListItem> Expenses);
+
+public record CategoryTotal(string Category, decimal Amount, double Percent);
+
+// ── Election Results ──────────────────────────────────────────────
+public record ElectionResultItem(
+    int Id, int BoothNumber, int RoundNumber,
+    int CandidateVotes, int? Competitor1Votes, string? Competitor1Name,
+    int? Competitor2Votes, string? Competitor2Name,
+    int? TotalVotesCast, bool IsFinal, DateTime EnteredAt);
+
+public record ElectionResultSummary(
+    int TotalCandidateVotes, int TotalCompetitor1Votes, int TotalCompetitor2Votes,
+    string? Competitor1Name, string? Competitor2Name,
+    bool IsLeading, int LeadMargin,
+    List<ElectionResultItem> Results);
+
+public record CreateElectionResultRequest(
+    int BoothNumber, int RoundNumber, int CandidateVotes,
+    int? Competitor1Votes, string? Competitor1Name,
+    int? Competitor2Votes, string? Competitor2Name,
+    int? TotalVotesCast, bool IsFinal);
+
+// ── Transport ─────────────────────────────────────────────────────
+public record TransportVehicleItem(
+    int Id, string DriverName, string DriverPhone,
+    string? VehicleNumber, string? VehicleType,
+    int Capacity, int BoothNumber, bool IsAvailable, string? Notes);
+
+public record TransportRequestItem(
+    int Id, int VoterId, string VoterName, string? VoterPhone,
+    int? VehicleId, string? DriverName, string? VehicleNumber,
+    string Status, string? PickupAddress, DateTime RequestedAt);
+
+public record CreateTransportRequestRequest(
+    int VoterId, string? PickupAddress, string? PickupNotes, int? VehicleId);
+
+public record CreateTransportVehicleRequest(
+    string DriverName, string DriverPhone, string? VehicleNumber,
+    string? VehicleType, int Capacity, int BoothNumber, string? Notes);
+
+// ── Voter Slips ───────────────────────────────────────────────────
+public record VoterSlipItem(
+    int Id, string VoterId, string Name, string? NameLocal,
+    int BoothNumber, string? WardNumber, string? PannaNumber,
+    int SerialNumber, int Age, string Gender, string Address);
+
+// ── Admin (User List) ─────────────────────────────────────────────
+public record AdminUserItem(
+    string Id, string FullName, string? Email, string Role,
+    string? ConstituencyName, string? AssignedWard, bool IsActive);
+
 // ── Generic ───────────────────────────────────────────────────────
 public record ApiResult(bool Success, string? Message = null);
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize, int TotalPages);

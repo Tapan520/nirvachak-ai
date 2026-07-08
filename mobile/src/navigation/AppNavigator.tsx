@@ -24,6 +24,20 @@ import AnnouncementsScreen from '../screens/AnnouncementsScreen';
 import VoterConsentScreen from '../screens/VoterConsentScreen';
 import EditVoterSurveyScreen from '../screens/EditVoterSurveyScreen';
 import PredictiveAnalyticsScreen from '../screens/PredictiveAnalyticsScreen';
+import PhoneBankingScreen from '../screens/PhoneBankingScreen';
+import InfluencersScreen from '../screens/InfluencersScreen';
+import CompetitorScreen from '../screens/CompetitorScreen';
+import BoothShiftsScreen from '../screens/BoothShiftsScreen';
+import BudgetScreen from '../screens/BudgetScreen';
+import BroadcastScreen from '../screens/BroadcastScreen';
+import FieldReportsScreen from '../screens/FieldReportsScreen';
+import PannaPramukhScreen from '../screens/PannaPramukhScreen';
+import RapidResponseScreen from '../screens/RapidResponseScreen';
+import ReportsScreen from '../screens/ReportsScreen';
+import ResultsScreen from '../screens/ResultsScreen';
+import TransportScreen from '../screens/TransportScreen';
+import VoterSlipsScreen from '../screens/VoterSlipsScreen';
+import AdminScreen from '../screens/AdminScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -108,6 +122,34 @@ export default function AppNavigator() {
             <Stack.Screen name="EditVoterSurvey" component={EditVoterSurveyScreen}
               options={{ headerShown: true, title: 'Edit Survey Profile', headerTintColor: BRAND }} />
             <Stack.Screen name="PredictiveAnalytics" component={PredictiveAnalyticsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="PhoneBanking" component={PhoneBankingScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Influencers" component={InfluencersScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Competitor" component={CompetitorScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="BoothShifts" component={BoothShiftsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Budget" component={BudgetScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Broadcast" component={BroadcastScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="FieldReports" component={FieldReportsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="PannaPramukh" component={PannaPramukhScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="RapidResponse" component={RapidResponseScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Reports" component={ReportsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Results" component={ResultsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Transport" component={TransportScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="VoterSlips" component={VoterSlipsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Admin" component={AdminScreen}
               options={{ headerShown: false }} />
           </>
         ) : (

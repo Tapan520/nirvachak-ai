@@ -26,9 +26,11 @@ public class SurveyDemographicsModel : PageModel
     [BindProperty(SupportsGet = true)] public int?    FilterBooth { get; set; }
     [BindProperty(SupportsGet = true)] public string? FilterWard  { get; set; }
     [BindProperty(SupportsGet = true)] public string? FilterTab   { get; set; } = "analytics";
+    [BindProperty(SupportsGet = true)] public int?    SelectedConstituencyId { get; set; }
 
     public bool IsAdmin       { get; set; }
     public bool CanViewStats  { get; set; }
+    public List<Constituency> Constituencies   { get; set; } = new();
     public List<int>    AvailableBooths { get; set; } = new();
     public List<string> AvailableWards  { get; set; } = new();
 
@@ -77,7 +79,10 @@ public class SurveyDemographicsModel : PageModel
         IsAdmin      = user?.Role == UserRole.SuperAdmin;
         CanViewStats = user?.Role is UserRole.Admin or UserRole.SuperAdmin or UserRole.CampaignManager or UserRole.Candidate;
 
-        var cId = user?.ConstituencyId;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
+
+        var cId = IsAdmin ? (SelectedConstituencyId ?? user?.ConstituencyId) : user?.ConstituencyId;
 
         // Resolve assigned booths for restricted roles
         var assignedBooths = (user?.Role is UserRole.FieldWorker or UserRole.BoothAgent)
@@ -210,7 +215,8 @@ public class SurveyDemographicsModel : PageModel
     public async Task<IActionResult> OnGetExportCompletedCsvAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        var cId  = user?.ConstituencyId;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
+        var cId  = isAdmin ? (SelectedConstituencyId ?? user?.ConstituencyId) : user?.ConstituencyId;
 
         IQueryable<Voter> voterQuery = _db.Voters.Where(v => !v.IsDeleted);
         if (cId.HasValue) voterQuery = voterQuery.Where(v => v.ConstituencyId == cId);
@@ -262,7 +268,8 @@ public class SurveyDemographicsModel : PageModel
     public async Task<IActionResult> OnGetExportProfilesCsvAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        var cId  = user?.ConstituencyId;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
+        var cId  = isAdmin ? (SelectedConstituencyId ?? user?.ConstituencyId) : user?.ConstituencyId;
 
         IQueryable<Voter> voterQuery = _db.Voters.Where(v => !v.IsDeleted);
         if (cId.HasValue) voterQuery = voterQuery.Where(v => v.ConstituencyId == cId);
@@ -316,7 +323,8 @@ public class SurveyDemographicsModel : PageModel
     public async Task<IActionResult> OnGetExportPendingCsvAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        var cId  = user?.ConstituencyId;
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
+        var cId = isAdmin ? (SelectedConstituencyId ?? user?.ConstituencyId) : user?.ConstituencyId;
 
         IQueryable<Voter> voterQuery = _db.Voters.Where(v => !v.IsDeleted);
         if (cId.HasValue) voterQuery = voterQuery.Where(v => v.ConstituencyId == cId);

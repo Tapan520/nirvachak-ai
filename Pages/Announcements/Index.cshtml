@@ -69,22 +69,44 @@
 @* Toolbar *@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex gap-2 align-items-center flex-wrap">
-        <a asp-page="/Announcements/Index" class="btn btn-sm @(string.IsNullOrEmpty(Model.Category) ? "btn-primary" : "btn-outline-secondary")">All</a>
+        <a asp-page="/Announcements/Index" asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
+           class="btn btn-sm @(string.IsNullOrEmpty(Model.Category) ? "btn-primary" : "btn-outline-secondary")">All</a>
         @foreach (var cat in categories)
         {
             var vm0 = new Nirvachak_AI.Domain.Entities.Announcement { Category = cat };
             <a asp-page="/Announcements/Index" asp-route-Category="@cat.ToString()"
+               asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
                class="btn btn-sm @(Model.Category == cat.ToString() ? $"btn-{vm0.CategoryColor}" : "btn-outline-secondary")">
                 <i class="bi @vm0.CategoryIcon me-1"></i>@vm0.CategoryLabel
             </a>
         }
     </div>
-    @if (Model.CanCreate)
-    {
-        <a asp-page="/Announcements/Create" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>New Announcement
-        </a>
-    }
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        @if (Model.IsSuperAdmin && Model.Constituencies.Any())
+        {
+            <form method="get" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="Category" value="@Model.Category" />
+                <label class="fw-semibold mb-0 text-nowrap small"><i class="bi bi-geo-alt me-1"></i>Constituency:</label>
+                <select name="SelectedConstituencyId" class="form-select form-select-sm" style="max-width:220px" onchange="this.form.submit()">
+                    <option value="">-- All Constituencies --</option>
+                    @foreach (var c in Model.Constituencies)
+                    {
+                        <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                    }
+                </select>
+                @if (Model.SelectedConstituencyId.HasValue)
+                {
+                    <a asp-page="/Announcements/Index" asp-route-Category="@Model.Category" class="btn btn-sm btn-outline-secondary">Clear</a>
+                }
+            </form>
+        }
+        @if (Model.CanCreate)
+        {
+            <a asp-page="/Announcements/Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>New Announcement
+            </a>
+        }
+    </div>
 </div>
 
 @* Main feed *@

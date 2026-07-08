@@ -17,12 +17,23 @@
     <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportProfilesCsv"
        asp-route-FilterBooth="@Model.FilterBooth"
        asp-route-FilterWard="@Model.FilterWard"
+       asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
        class="btn btn-sm btn-outline-primary">
         <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export Survey Data
     </a>
     @* Filter bar *@
-    <form method="get" class="d-flex flex-nowrap gap-2 align-items-center">
+    <form method="get" class="d-flex flex-nowrap gap-2 align-items-center flex-wrap">
         <input type="hidden" name="FilterTab" value="@activeTab" />
+        @if (Model.IsAdmin && Model.Constituencies.Any())
+        {
+            <select name="SelectedConstituencyId" class="form-select form-select-sm" style="min-width:160px;max-width:220px" onchange="this.form.submit()">
+                <option value="">-- All Constituencies --</option>
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                }
+            </select>
+        }
         @if (Model.AvailableWards.Any())
         {
             <select name="FilterWard" class="form-select form-select-sm" style="min-width:130px;max-width:160px" onchange="this.form.submit()">
@@ -43,7 +54,7 @@
                 }
             </select>
         }
-        @if (Model.FilterBooth.HasValue || !string.IsNullOrEmpty(Model.FilterWard))
+        @if (Model.SelectedConstituencyId.HasValue || Model.FilterBooth.HasValue || !string.IsNullOrEmpty(Model.FilterWard))
         {
             <a href="?FilterTab=@activeTab" class="btn btn-sm btn-outline-secondary">Clear</a>
         }
@@ -115,20 +126,20 @@
 <ul class="nav nav-tabs mb-4" id="analyticsTab">
     <li class="nav-item">
         <a class="nav-link @(activeTab == "analytics" ? "active" : "")"
-           href="?FilterTab=analytics&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+           href="?FilterTab=analytics&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard&SelectedConstituencyId=@Model.SelectedConstituencyId">
             <i class="bi bi-bar-chart-line me-1"></i>Demographics &amp; Consent
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link @(activeTab == "completed" ? "active" : "")"
-           href="?FilterTab=completed&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+           href="?FilterTab=completed&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard&SelectedConstituencyId=@Model.SelectedConstituencyId">
             <i class="bi bi-check2-circle me-1"></i>Completed
             <span class="badge bg-success ms-1">@Model.CompletedCount</span>
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link @(activeTab == "pending" ? "active" : "")"
-           href="?FilterTab=pending&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard">
+           href="?FilterTab=pending&FilterBooth=@Model.FilterBooth&FilterWard=@Model.FilterWard&SelectedConstituencyId=@Model.SelectedConstituencyId">
             <i class="bi bi-hourglass-split me-1"></i>Pending � Send Link
             <span class="badge bg-danger ms-1">@Model.PendingCount</span>
         </a>

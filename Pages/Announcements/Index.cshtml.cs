@@ -29,10 +29,15 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public string? Category { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public int? SelectedConstituencyId { get; set; }
+
     public List<AnnouncementViewModel> Announcements { get; set; } = new();
     public List<AnnouncementViewModel> PinnedAlerts { get; set; } = new();
+    public List<Constituency> Constituencies { get; set; } = new();
     public UserRole CurrentUserRole { get; set; }
     public bool CanCreate { get; set; }
+    public bool IsSuperAdmin { get; set; }
     public int UnacknowledgedCount { get; set; }
 
     public async Task OnGetAsync()
@@ -42,6 +47,10 @@ public class IndexModel : PageModel
 
         CurrentUserRole = user.Role;
         CanCreate = user.Role != UserRole.BoothAgent;
+        IsSuperAdmin = user.Role == UserRole.SuperAdmin;
+
+        if (IsSuperAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
         var now = DateTime.UtcNow;
         var roleStr = user.Role.ToString();
@@ -50,9 +59,16 @@ public class IndexModel : PageModel
             .Include(a => a.Acknowledgements)
             .Where(a => a.IsActive && (a.ExpiresAt == null || a.ExpiresAt > now));
 
-        // Non-admin sees only their constituency
-        if (user.Role != UserRole.SuperAdmin)
+        // Constituency filter
+        if (IsSuperAdmin)
+        {
+            if (SelectedConstituencyId.HasValue)
+                query = query.Where(a => a.ConstituencyId == null || a.ConstituencyId == SelectedConstituencyId);
+        }
+        else
+        {
             query = query.Where(a => a.ConstituencyId == null || a.ConstituencyId == user.ConstituencyId);
+        }
 
         // Must target this role OR be authored by this user
         query = query.Where(a =>

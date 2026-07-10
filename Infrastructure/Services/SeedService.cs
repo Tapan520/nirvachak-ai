@@ -108,49 +108,77 @@ public static class SeedService
             await db.SaveChangesAsync();
         }
 
-        if (!userManager.Users.Any())
+        // Seed each default account independently — never use Users.Any() as the guard
+        // because SuperAdmin is already seeded above, making Users.Any() always true.
+        if (db.Constituencies.Any())
         {
             var constituency = db.Constituencies.First();
 
-            var admin = new AppUser
+            if (await userManager.FindByEmailAsync("admin@election.com") == null)
             {
-                UserName = "admin@election.com",
-                Email = "admin@election.com",
-                FullName = "System Administrator",
-                Role = UserRole.Admin,
-                ConstituencyId = constituency.Id,
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var r = await userManager.CreateAsync(admin, "Admin@123");
-            if (r.Succeeded) await userManager.AddToRoleAsync(admin, nameof(UserRole.Admin));
+                var admin = new AppUser
+                {
+                    UserName       = "admin@election.com",
+                    Email          = "admin@election.com",
+                    FullName       = "System Administrator",
+                    Role           = UserRole.Admin,
+                    ConstituencyId = constituency.Id,
+                    EmailConfirmed = true,
+                    IsActive       = true
+                };
+                var r = await userManager.CreateAsync(admin, "Admin@123");
+                if (r.Succeeded) await userManager.AddToRoleAsync(admin, nameof(UserRole.Admin));
+            }
 
-            var manager = new AppUser
+            if (await userManager.FindByEmailAsync("manager@election.com") == null)
             {
-                UserName = "manager@election.com",
-                Email = "manager@election.com",
-                FullName = "Campaign Manager",
-                Role = UserRole.CampaignManager,
-                ConstituencyId = constituency.Id,
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var r2 = await userManager.CreateAsync(manager, "Manager@123");
-            if (r2.Succeeded) await userManager.AddToRoleAsync(manager, nameof(UserRole.CampaignManager));
+                var manager = new AppUser
+                {
+                    UserName       = "manager@election.com",
+                    Email          = "manager@election.com",
+                    FullName       = "Campaign Manager",
+                    Role           = UserRole.CampaignManager,
+                    ConstituencyId = constituency.Id,
+                    EmailConfirmed = true,
+                    IsActive       = true
+                };
+                var r2 = await userManager.CreateAsync(manager, "Manager@123");
+                if (r2.Succeeded) await userManager.AddToRoleAsync(manager, nameof(UserRole.CampaignManager));
+            }
 
-            var worker = new AppUser
+            if (await userManager.FindByEmailAsync("worker@election.com") == null)
             {
-                UserName = "worker@election.com",
-                Email = "worker@election.com",
-                FullName = "Field Worker 1",
-                Role = UserRole.FieldWorker,
-                ConstituencyId = constituency.Id,
-                AssignedBoothNumbers = "1,2",
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var r3 = await userManager.CreateAsync(worker, "Worker@123");
-            if (r3.Succeeded) await userManager.AddToRoleAsync(worker, nameof(UserRole.FieldWorker));
+                var worker = new AppUser
+                {
+                    UserName             = "worker@election.com",
+                    Email                = "worker@election.com",
+                    FullName             = "Field Worker 1",
+                    Role                 = UserRole.FieldWorker,
+                    ConstituencyId       = constituency.Id,
+                    AssignedBoothNumbers = "1,2",
+                    EmailConfirmed       = true,
+                    IsActive             = true
+                };
+                var r3 = await userManager.CreateAsync(worker, "Worker@123");
+                if (r3.Succeeded) await userManager.AddToRoleAsync(worker, nameof(UserRole.FieldWorker));
+            }
+        }
+
+        // ── Transport Vehicles ────────────────────────────────────────────────
+        if (!db.TransportVehicles.Any())
+        {
+            var constituency = db.Constituencies.First();
+            db.TransportVehicles.AddRange(
+                new TransportVehicle { DriverName = "Ravi Shinde",    DriverPhone = "9876500003", VehicleNumber = "MH12AB1001", VehicleType = "Van",  Capacity = 7, BoothNumber = 1, IsAvailable = true, Notes = "Available from 7 AM on election day.",   ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Suresh Mane",    DriverPhone = "9876500009", VehicleNumber = "MH12CD2002", VehicleType = "Car",  Capacity = 4, BoothNumber = 2, IsAvailable = true, Notes = "Covers Ward 1 & 2.",                    ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Ganesh Thorat",  DriverPhone = "9823400020", VehicleNumber = "MH12EF3003", VehicleType = "Auto", Capacity = 3, BoothNumber = 3, IsAvailable = true, Notes = "Handles narrow lanes in Ward 3.",        ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Pradeep Kamble", DriverPhone = "9823400021", VehicleNumber = "MH12GH4004", VehicleType = "Van",  Capacity = 7, BoothNumber = 4, IsAvailable = true, Notes = "Dedicated to Ambedkar Colony voters.",  ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Rajesh Patil",   DriverPhone = "9823400022", VehicleNumber = "MH12IJ5005", VehicleType = "Car",  Capacity = 4, BoothNumber = 5, IsAvailable = true, Notes = "Available all day, Tilak Nagar area.",  ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Mohan Yadav",    DriverPhone = "9823400023", VehicleNumber = "MH12KL6006", VehicleType = "Bus",  Capacity = 20, BoothNumber = 6, IsAvailable = true, Notes = "Mini-bus for bulk voter transport.",   ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Santosh Nair",   DriverPhone = "9823400024", VehicleNumber = "MH12MN7007", VehicleType = "Van",  Capacity = 7, BoothNumber = 7, IsAvailable = true, Notes = "Patel Wadi & surrounding area.",        ConstituencyId = constituency.Id },
+                new TransportVehicle { DriverName = "Dinesh Salve",   DriverPhone = "9823400025", VehicleNumber = "MH12OP8008", VehicleType = "Car",  Capacity = 4, BoothNumber = 8, IsAvailable = true, Notes = "Laxmi Nagar — senior citizen priority.", ConstituencyId = constituency.Id }
+            );
+            await db.SaveChangesAsync();
         }
 
         // ?? Campaign Events ??????????????????????????????????????????????????

@@ -19,6 +19,22 @@ var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=election.db";
 
+// Warn loudly when running on Railway (or any non-dev environment) without a
+// persistent volume path.  Without DATABASE_PATH pointing to a mounted volume,
+// the SQLite file lives on an ephemeral filesystem and is wiped on every
+// redeploy — which is exactly what caused users/transport data loss.
+if (!builder.Environment.IsDevelopment()
+    && Environment.GetEnvironmentVariable("DATABASE_PATH") is null)
+{
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine(
+        "[STARTUP WARNING] DATABASE_PATH environment variable is NOT set. " +
+        "The database will be stored in the application's ephemeral working directory " +
+        "and ALL DATA WILL BE LOST on every redeploy. " +
+        "Set DATABASE_PATH to a path on a Railway persistent volume (e.g. /data/election.db).");
+    Console.ResetColor();
+}
+
 // Ensure the directory exists (important for Railway volume path /data/)
 var dbFile = dbPath.Replace("Data Source=", "").Trim();
 var dbDir  = Path.GetDirectoryName(dbFile);

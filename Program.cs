@@ -19,20 +19,51 @@ var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=election.db";
 
-// Warn loudly when running on Railway (or any non-dev environment) without a
-// persistent volume path.  Without DATABASE_PATH pointing to a mounted volume,
-// the SQLite file lives on an ephemeral filesystem and is wiped on every
-// redeploy — which is exactly what caused users/transport data loss.
-if (!builder.Environment.IsDevelopment()
-    && Environment.GetEnvironmentVariable("DATABASE_PATH") is null)
+// ── Production volume guard ───────────────────────────────────────────────
+// Railway creates a NEW container on every deploy. Without a persistent Volume
+// mounted at /data, the SQLite file lives inside the ephemeral container
+// filesystem and is WIPED on every push to Git / redeploy.
+//
+// How to fix on Railway dashboard:
+//   1. Go to your service → "Volumes" tab → Add Volume, mount path: /data
+//   2. Go to your service → "Variables" tab → Add: DATABASE_PATH = /data/election.db
+//
+// The check below detects this misconfiguration at startup and stops the app
+// with a clear error BEFORE any data can be lost.
+if (!builder.Environment.IsDevelopment())
 {
-    Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine(
-        "[STARTUP WARNING] DATABASE_PATH environment variable is NOT set. " +
-        "The database will be stored in the application's ephemeral working directory " +
-        "and ALL DATA WILL BE LOST on every redeploy. " +
-        "Set DATABASE_PATH to a path on a Railway persistent volume (e.g. /data/election.db).");
-    Console.ResetColor();
+    var resolvedDbFile = dbPath.Replace("Data Source=", "").Trim();
+    var resolvedDbDir  = Path.GetDirectoryName(resolvedDbFile);
+
+    // Detect if we are writing to the ephemeral container working directory
+    // (i.e. no DATABASE_PATH env var pointing to a mounted volume).
+    var isEphemeralPath = string.IsNullOrEmpty(resolvedDbDir)
+        || resolvedDbDir == "/app"
+        || resolvedDbDir == ".";
+
+    if (isEphemeralPath)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("");
+        Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║          FATAL: NO PERSISTENT VOLUME CONFIGURED              ║");
+        Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
+        Console.WriteLine("║ DATABASE_PATH is not set to a mounted Railway Volume path.   ║");
+        Console.WriteLine("║ The database is stored in the ephemeral container filesystem ║");
+        Console.WriteLine("║ and ALL PRODUCTION DATA WILL BE WIPED on every redeploy.     ║");
+        Console.WriteLine("║                                                              ║");
+        Console.WriteLine("║ FIX on Railway dashboard:                                    ║");
+        Console.WriteLine("║  1. Service → Volumes → Add Volume → Mount path: /data       ║");
+        Console.WriteLine("║  2. Service → Variables → DATABASE_PATH = /data/election.db  ║");
+        Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
+        Console.WriteLine("");
+        Console.ResetColor();
+
+        // Hard stop — do not start the app in an unsafe state.
+        throw new InvalidOperationException(
+            "DATABASE_PATH must point to a Railway persistent Volume path (e.g. /data/election.db). " +
+            "See console output above for setup instructions.");
+    }
 }
 
 // Ensure the directory exists (important for Railway volume path /data/)

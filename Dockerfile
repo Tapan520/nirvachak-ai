@@ -22,9 +22,10 @@ COPY --from=build /app/publish .
 RUN mkdir -p /data
 
 ENV ASPNETCORE_ENVIRONMENT=Production
-# DATABASE_PATH tells the app where to store the SQLite file.
-# Set this to /data/election.db in Railway ? Variables, and mount a Volume at /data.
-ENV DATABASE_PATH=/data/election.db
+# DATABASE_PATH must be set in Railway dashboard ? Variables: DATABASE_PATH=/data/election.db
+# A Railway Volume must be mounted at /data in Railway dashboard ? Volumes.
+# DO NOT hardcode DATABASE_PATH here — if it defaults to /app or a container path,
+# the database is on the ephemeral filesystem and all data is lost on every redeploy.
 
 # Use sh so $PORT is evaluated at container start time
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet Nirvachak_AI.dll"]

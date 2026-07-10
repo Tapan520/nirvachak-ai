@@ -8,26 +8,23 @@ namespace Nirvachak_AI.Infrastructure.Services;
 
 public static class SeedService
 {
-    public static async Task SeedAsync(IServiceProvider services, bool isDevelopment)
+    public static async Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Always run migrations — required in every environment to keep the
-        // schema up to date without manual intervention on Railway.
+        // Apply all pending EF migrations
         await db.Database.MigrateAsync();
 
-        // Always seed Identity roles — the app cannot authorise any user without them.
         foreach (var role in Enum.GetNames<UserRole>())
         {
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
         }
 
-        // Always seed the SuperAdmin account — without it there is no way to log
-        // in to a fresh production database for the first time.
+        // ── Seed SuperAdmin (platform-level, no constituency) ─────────────────
         if (!await userManager.Users.AnyAsync(u => u.Role == UserRole.SuperAdmin))
         {
             var superAdmin = new AppUser
@@ -43,12 +40,6 @@ public static class SeedService
             var r = await userManager.CreateAsync(superAdmin, "SuperAdmin@123");
             if (r.Succeeded) await userManager.AddToRoleAsync(superAdmin, nameof(UserRole.SuperAdmin));
         }
-
-        // ── Demo / sample data — Development only ────────────────────────────
-        // In Production (Railway) none of the blocks below are executed so that
-        // real user data entered by the client is never overwritten or polluted
-        // with dummy records.
-        if (!isDevelopment) return;
 
         if (!db.Constituencies.Any())
         {

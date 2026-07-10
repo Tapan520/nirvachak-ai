@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
 
@@ -26,22 +27,40 @@ public class WinProbabilityService
 {
     private readonly AppDbContext _db;
     private readonly PredictiveAnalyticsService _predictive;
+    private readonly IMemoryCache _cache;
 
-    public WinProbabilityService(AppDbContext db, PredictiveAnalyticsService predictive)
+    public WinProbabilityService(AppDbContext db, PredictiveAnalyticsService predictive, IMemoryCache cache)
     {
         _db        = db;
         _predictive = predictive;
+        _cache      = cache;
     }
 
     public async Task<WinProbabilityResult> ComputeAsync(int constituencyId)
     {
-        var voters    = _db.Voters.Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted);
-        var total     = await voters.CountAsync();
-        var favour    = await voters.CountAsync(v => v.Sentiment == VoterSentiment.Favour);
-        var against   = await voters.CountAsync(v => v.Sentiment == VoterSentiment.Against);
-        var floating  = await voters.CountAsync(v => v.Sentiment == VoterSentiment.Floating);
-        var neutral   = await voters.CountAsync(v => v.Sentiment == VoterSentiment.Neutral);
-        var contacted = await voters.CountAsync(v => v.LastContactedAt != null);
+        var cacheKey = $"winprob_{constituencyId}";
+        if (_cache.TryGetValue(cacheKey, out WinProbabilityResult? cached) && cached != null)
+            return cached;
+
+        var result = await ComputeInternalAsync(constituencyId);
+        _cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+        return result;
+    }
+
+    private async Task<WinProbabilityResult> ComputeInternalAsync(int constituencyId)
+    {
+        // Single DB round-trip — aggregate sentiment + contacted flag in memory
+        var voterAgg = await _db.Voters
+            .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
+            .Select(v => new { v.Sentiment, Contacted = v.LastContactedAt != null })
+            .ToListAsync();
+
+        var total     = voterAgg.Count;
+        var favour    = voterAgg.Count(v => v.Sentiment == VoterSentiment.Favour);
+        var against   = voterAgg.Count(v => v.Sentiment == VoterSentiment.Against);
+        var floating  = voterAgg.Count(v => v.Sentiment == VoterSentiment.Floating);
+        var neutral   = voterAgg.Count(v => v.Sentiment == VoterSentiment.Neutral);
+        var contacted = voterAgg.Count(v => v.Contacted);
 
         if (total == 0)
             return EmptyResult();

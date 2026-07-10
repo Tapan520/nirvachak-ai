@@ -127,37 +127,42 @@ public class IndexModel : PageModel
             SentimentValues.Add(sentiments.FirstOrDefault(x => x.s == s)?.c ?? 0);
         }
 
-        // Age groups
-        var ageGroups = new[] { "18-25", "26-35", "36-45", "46-55", "56-65", "66+" };
-        AgeLabels.AddRange(ageGroups);
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 18 && v.Age <= 25));
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 26 && v.Age <= 35));
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 36 && v.Age <= 45));
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 46 && v.Age <= 55));
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 56 && v.Age <= 65));
-        AgeValues.Add(await query.CountAsync(v => v.Age >= 66));
+        // Age groups + Gender — single DB round-trip, aggregated in memory
+        var ageGenderData = await query.Select(v => new { v.Age, v.Gender }).ToListAsync();
+
+        AgeLabels.AddRange(new[] { "18-25", "26-35", "36-45", "46-55", "56-65", "66+" });
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 18 && v.Age <= 25));
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 26 && v.Age <= 35));
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 36 && v.Age <= 45));
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 46 && v.Age <= 55));
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 56 && v.Age <= 65));
+        AgeValues.Add(ageGenderData.Count(v => v.Age >= 66));
 
         // Gender
-        MaleVoters = await query.CountAsync(v => v.Gender == "M");
-        FemaleVoters = await query.CountAsync(v => v.Gender == "F");
-        OtherVoters = await query.CountAsync(v => v.Gender != "M" && v.Gender != "F");
+        MaleVoters   = ageGenderData.Count(v => v.Gender == "M");
+        FemaleVoters = ageGenderData.Count(v => v.Gender == "F");
+        OtherVoters  = ageGenderData.Count(v => v.Gender != "M" && v.Gender != "F");
 
-        // Booth analytics
-        var boothNums = await query.Select(v => v.BoothNumber).Distinct().OrderBy(n => n).ToListAsync();
-        foreach (var bn in boothNums)
-        {
-            var bVoters = query.Where(v => v.BoothNumber == bn);
-            BoothAnalytics.Add(new BoothAnalyticsRow
+        // Booth analytics — single GroupBy query instead of N+1 per-booth CountAsync calls
+        var boothGroups = await query
+            .GroupBy(v => new { v.BoothNumber, v.Sentiment })
+            .Select(g => new { g.Key.BoothNumber, g.Key.Sentiment, Count = g.Count() })
+            .ToListAsync();
+
+        BoothAnalytics = boothGroups
+            .GroupBy(x => x.BoothNumber)
+            .Select(g => new BoothAnalyticsRow
             {
-                BoothNumber = bn,
-                Total    = await bVoters.CountAsync(),
-                Favour   = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Favour),
-                Against  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Against),
-                Neutral  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Neutral),
-                Unknown  = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Unknown),
-                Floating = await bVoters.CountAsync(v => v.Sentiment == VoterSentiment.Floating)
-            });
-        }
+                BoothNumber = g.Key,
+                Total    = g.Sum(x => x.Count),
+                Favour   = g.Where(x => x.Sentiment == VoterSentiment.Favour).Sum(x => x.Count),
+                Against  = g.Where(x => x.Sentiment == VoterSentiment.Against).Sum(x => x.Count),
+                Neutral  = g.Where(x => x.Sentiment == VoterSentiment.Neutral).Sum(x => x.Count),
+                Unknown  = g.Where(x => x.Sentiment == VoterSentiment.Unknown).Sum(x => x.Count),
+                Floating = g.Where(x => x.Sentiment == VoterSentiment.Floating).Sum(x => x.Count),
+            })
+            .OrderBy(r => r.BoothNumber)
+            .ToList();
 
         // #14 – Demographic × Sentiment matrices
         var voterSentimentPairs = await query

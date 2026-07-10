@@ -54,26 +54,36 @@ public class PredictiveAnalyticsService
             .OrderBy(b => b.BoothNumber)
             .ToListAsync();
 
-        var voters = await _db.Voters
+        // Single aggregated query: booth × sentiment counts — avoids loading full voter rows
+        var boothSentimentGroups = await _db.Voters
             .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
-            .Select(v => new
-            {
-                v.Id, v.BoothNumber, v.Sentiment, v.LastContactedAt
-            })
+            .GroupBy(v => new { v.BoothNumber, v.Sentiment })
+            .Select(g => new { g.Key.BoothNumber, g.Key.Sentiment, Count = g.Count() })
             .ToListAsync();
 
-        // Recent visits (last 7 days): load visits for this constituency's voters
+        // Contacted counts per booth — one query
+        var contactedByBooth = await _db.Voters
+            .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted && v.LastContactedAt != null)
+            .GroupBy(v => v.BoothNumber)
+            .Select(g => new { BoothNumber = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.BoothNumber, x => x.Count);
+
+        // Voter IDs needed only for recent-visit join — lightweight projection
+        var voterBoothMap = await _db.Voters
+            .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
+            .Select(v => new { v.Id, v.BoothNumber })
+            .ToDictionaryAsync(v => v.Id, v => v.BoothNumber);
+
+        // Recent visits (last 7 days)
         var recentCutoff = DateTime.UtcNow.AddDays(-7);
-        var voterIdSet   = voters.Select(v => v.Id).ToHashSet();
+        var voterIdSet   = voterBoothMap.Keys.ToHashSet();
 
         var recentVisits = await _db.DoorToDoorVisits
             .Where(d => d.VisitedAt >= recentCutoff && voterIdSet.Contains(d.VoterId))
             .Select(d => new { d.VoterId })
             .ToListAsync();
 
-        // Index: boothNumber ? recentVisitCount
-        var voterBoothMap      = voters.ToDictionary(v => v.Id, v => v.BoothNumber);
-        var recentByBooth      = recentVisits
+        var recentByBooth = recentVisits
             .GroupBy(d => voterBoothMap.GetValueOrDefault(d.VoterId, 0))
             .ToDictionary(g => g.Key, g => g.Count());
 
@@ -81,14 +91,14 @@ public class PredictiveAnalyticsService
 
         foreach (var booth in booths)
         {
-            var bv = voters.Where(v => v.BoothNumber == booth.BoothNumber).ToList();
-            if (!bv.Any()) continue;
+            var bg = boothSentimentGroups.Where(x => x.BoothNumber == booth.BoothNumber).ToList();
+            int total = bg.Sum(x => x.Count);
+            if (total == 0) continue;
 
-            int total     = bv.Count;
-            int favour    = bv.Count(v => v.Sentiment == VoterSentiment.Favour);
-            int against   = bv.Count(v => v.Sentiment == VoterSentiment.Against);
-            int floating  = bv.Count(v => v.Sentiment == VoterSentiment.Floating);
-            int contacted = bv.Count(v => v.LastContactedAt.HasValue);
+            int favour    = bg.Where(x => x.Sentiment == VoterSentiment.Favour).Sum(x => x.Count);
+            int against   = bg.Where(x => x.Sentiment == VoterSentiment.Against).Sum(x => x.Count);
+            int floating  = bg.Where(x => x.Sentiment == VoterSentiment.Floating).Sum(x => x.Count);
+            int contacted = contactedByBooth.GetValueOrDefault(booth.BoothNumber, 0);
             int recent    = recentByBooth.GetValueOrDefault(booth.BoothNumber, 0);
 
             double contactRate = total > 0 ? (double)contacted / total : 0;

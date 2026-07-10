@@ -63,6 +63,11 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<Voter>().HasIndex(v => v.VoterId);
         builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.BoothNumber });
         builder.Entity<Voter>().HasIndex(v => v.Name);
+        // ── Performance indexes for analytics, sentiment & contact filtering ──
+        builder.Entity<Voter>().HasIndex(v => v.Sentiment);
+        builder.Entity<Voter>().HasIndex(v => v.LastContactedAt);
+        builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.Sentiment });
+        builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.IsDeleted });
 
         // Frequently filtered columns on supporting entities
         builder.Entity<Grievance>().HasIndex(g => g.ConstituencyId);

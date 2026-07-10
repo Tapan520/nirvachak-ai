@@ -116,6 +116,7 @@ builder.Services.AddScoped<PredictiveAnalyticsService>();
 builder.Services.AddScoped<WinProbabilityService>();
 
 // Session (used for survey rate-limiting on public pages)
+builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Nirvachak_AI.Domain.Entities;
 using Nirvachak_AI.Domain.Enums;
 using Nirvachak_AI.Infrastructure.Data;
+using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.PhoneBanking;
 
@@ -14,7 +15,16 @@ public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
-    public IndexModel(AppDbContext db, UserManager<AppUser> userManager) { _db = db; _userManager = userManager; }
+    private readonly IExotelService _exotel;
+
+    public IndexModel(AppDbContext db, UserManager<AppUser> userManager, IExotelService exotel)
+    {
+        _db = db;
+        _userManager = userManager;
+        _exotel = exotel;
+    }
+
+    public bool IsExotelEnabled { get; set; }
 
     public List<PhoneCallLog> TodaysCalls { get; set; } = new();
     public List<Voter> PendingCallVoters { get; set; } = new();
@@ -53,5 +63,8 @@ public class IndexModel : PageModel
                 && (v.Sentiment == VoterSentiment.Floating || v.Sentiment == VoterSentiment.Unknown))
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
             .Take(20).ToListAsync();
+
+        if (user?.ConstituencyId.HasValue == true)
+            IsExotelEnabled = await _exotel.IsConfiguredAsync(user.ConstituencyId.Value);
     }
 }

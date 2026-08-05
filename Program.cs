@@ -124,6 +124,13 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<PredictiveAnalyticsService>();
 builder.Services.AddScoped<WinProbabilityService>();
+builder.Services.AddScoped<IExotelService, ExotelService>();
+
+// Named HTTP client for Exotel (30 s timeout)
+builder.Services.AddHttpClient("exotel", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Session (used for survey rate-limiting on public pages)
 builder.Services.AddMemoryCache();

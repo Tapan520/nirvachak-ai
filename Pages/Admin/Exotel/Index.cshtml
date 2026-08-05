@@ -1,0 +1,202 @@
+@page
+@model Nirvachak_AI.Pages.Admin.Exotel.IndexModel
+@{
+    ViewData["Title"] = "Exotel Settings";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-4">
+                <i class="fas fa-phone-volume text-primary me-2"></i> Exotel Integration Settings
+            </h4>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-cog me-1"></i> Exotel API Configuration
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info small">
+                        <strong>How to get credentials:</strong> Log in to your
+                        <a href="https://my.exotel.com" target="_blank">Exotel Dashboard</a>,
+                        go to <strong>Settings ? API</strong> to find your API Key, API Token,
+                        Account SID and ExoPhone number.
+                    </div>
+
+                    <form method="post" asp-page-handler="Save">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        @if (Model.ConstituencyOptions.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Apply Config To</label>
+                                <select asp-for="Input.ConstituencyId" asp-items="Model.ConstituencyOptions"
+                                        class="form-select">
+                                </select>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" asp-for="Input.ConstituencyId" />
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.ApiKey" class="form-label fw-semibold">API Key <span class="text-danger">*</span></label>
+                                <input asp-for="Input.ApiKey" class="form-control" placeholder="e.g. exo_xxxxxxxxxxx" autocomplete="off" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.ApiToken" class="form-label fw-semibold">API Token <span class="text-danger">*</span></label>
+                                <input asp-for="Input.ApiToken" class="form-control" type="password" placeholder="Your Exotel API Token" autocomplete="off" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.AccountSid" class="form-label fw-semibold">Account SID <span class="text-danger">*</span></label>
+                                <input asp-for="Input.AccountSid" class="form-control" placeholder="e.g. exotel" />
+                                <div class="form-text">The Account SID from your Exotel dashboard.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.Subdomain" class="form-label fw-semibold">API Subdomain</label>
+                                <input asp-for="Input.Subdomain" class="form-control" placeholder="api.exotel.com" />
+                                <div class="form-text">Default: <code>api.exotel.com</code>. Use <code>sg1.exotel.com</code> for Singapore region.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.ExoPhone" class="form-label fw-semibold">ExoPhone Number <span class="text-danger">*</span></label>
+                                <input asp-for="Input.ExoPhone" class="form-control" placeholder="e.g. 09XXXXXXXXX" />
+                                <div class="form-text">Your Exotel virtual number shown as caller ID. Format: <code>0XXXXXXXXXX</code></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.SmsSenderId" class="form-label fw-semibold">SMS Sender ID <small class="text-muted">(optional)</small></label>
+                                <input asp-for="Input.SmsSenderId" class="form-control" placeholder="e.g. NIRVCH" maxlength="11" />
+                                <div class="form-text">DLT-registered 6-character sender ID. Leave blank to use ExoPhone.</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    <input asp-for="Input.IsEnabled" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="Input.IsEnabled" class="form-check-label fw-semibold">Enable Exotel Integration</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save Configuration
+                            </button>
+                            @if (Model.Config != null)
+                            {
+                                <button type="submit" asp-page-handler="Delete"
+                                        class="btn btn-outline-danger"
+                                        onclick="return confirm('Remove Exotel configuration?')">
+                                    <i class="fas fa-trash me-1"></i> Remove
+                                </button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <!-- Current Status Card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-1"></i> Current Status
+                </div>
+                <div class="card-body">
+                    @if (Model.Config != null)
+                    {
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted">Status</td>
+                                <td>
+                                    @if (Model.Config.IsEnabled)
+                                    {
+                                        <span class="badge bg-success">Enabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Disabled</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">API Key</td>
+                                <td><code>@(Model.Config.ApiKey[..Math.Min(6, Model.Config.ApiKey.Length)])***</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Account SID</td>
+                                <td><code>@Model.Config.AccountSid</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">ExoPhone</td>
+                                <td><code>@Model.Config.ExoPhone</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Subdomain</td>
+                                <td><code>@Model.Config.Subdomain</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Last Updated</td>
+                                <td>@Model.Config.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                            </tr>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                            No Exotel configuration found. Fill in the form to enable click-to-call and SMS features.
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <!-- Webhook Info Card -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="fas fa-webhook me-1"></i> Callback Webhook URL
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">
+                        Set this as the <strong>Status Callback URL</strong> in your Exotel app settings
+                        to automatically update call logs with duration and recording links.
+                    </p>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control font-monospace"
+                               value="@(HttpContext.Request.Scheme + "://" + HttpContext.Request.Host + "/api/exotel/callback/call")"
+                               id="webhookUrl" readonly />
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="navigator.clipboard.writeText(document.getElementById('webhookUrl').value)">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

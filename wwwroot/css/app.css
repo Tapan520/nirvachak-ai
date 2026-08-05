@@ -59,6 +59,42 @@
     text-transform: uppercase;
 }
 
+.sidebar-section-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-section-toggle:hover {
+    background: var(--sidebar-link-hover);
+    color: #fff;
+}
+
+.sidebar-section-toggle .sidebar-chevron {
+    font-size: 0.65rem;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-section-toggle.collapsed .sidebar-chevron {
+    transform: rotate(-90deg);
+}
+
+.sidebar-submenu {
+    padding-left: 0.5rem;
+}
+
 /* --- Page content --- */
 #page-content-wrapper {
     min-height: 100vh;

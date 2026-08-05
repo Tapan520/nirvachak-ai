@@ -6,7 +6,15 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3><i class="bi bi-telephone-fill text-success me-2"></i>Phone Banking</h3>
-    <a asp-page="./LogCall" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>Log a Call</a>
+    <div class="d-flex gap-2">
+        @if (Model.IsExotelEnabled)
+        {
+            <span class="badge bg-success align-self-center">
+                <i class="bi bi-telephone-fill me-1"></i> Exotel Active
+            </span>
+        }
+        <a asp-page="./LogCall" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>Log a Call</a>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -60,9 +68,24 @@
                             <span class="badge bg-secondary ms-1">B-@v.BoothNumber</span><br/>
                             <small class="text-muted">@v.MobileNumber</small>
                         </div>
-                        <a asp-page="./LogCall" asp-route-voterId="@v.Id" class="btn btn-sm btn-success">
-                            <i class="bi bi-telephone"></i>
-                        </a>
+                        <div class="d-flex gap-1">
+                            @if (Model.IsExotelEnabled)
+                            {
+                                <button class="btn btn-sm btn-primary"
+                                        onclick="exotelCall(@v.Id, '@v.Name')"
+                                        title="Click-to-Call via Exotel">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        onclick="exotelSmsPrompt(@v.Id, '@v.Name')"
+                                        title="Send SMS via Exotel">
+                                    <i class="bi bi-chat-dots-fill"></i>
+                                </button>
+                            }
+                            <a asp-page="./LogCall" asp-route-voterId="@v.Id" class="btn btn-sm btn-success" title="Log call manually">
+                                <i class="bi bi-journal-text"></i>
+                            </a>
+                        </div>
                     </div>
                 }
                 @if (!Model.PendingCallVoters.Any())
@@ -118,3 +141,65 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    // ?? Exotel Click-to-Call ??????????????????????????????????????????????
+    async function exotelCall(voterId, voterName) {
+        if (!confirm(`Initiate Exotel call to ${voterName}?\nYour registered phone will ring first.`)) return;
+        try {
+            const res = await fetch('/api/exotel/call', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgery() },
+                body: JSON.stringify({ voterId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`? Call initiated to ${voterName}. Your phone will ring shortly.`, 'success');
+            } else {
+                showToast(`? ${data.error ?? 'Failed to initiate call.'}`, 'danger');
+            }
+        } catch (e) {
+            showToast('? Network error. Please try again.', 'danger');
+        }
+    }
+
+    // ?? Exotel SMS ????????????????????????????????????????????????????????
+    async function exotelSmsPrompt(voterId, voterName) {
+        const msg = prompt(`Enter SMS message to send to ${voterName}:`);
+        if (!msg || !msg.trim()) return;
+        try {
+            const res = await fetch('/api/exotel/sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': getAntiForgery() },
+                body: JSON.stringify({ voterId, message: msg.trim() })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`? SMS sent to ${voterName}.`, 'success');
+            } else {
+                showToast(`? ${data.error ?? 'Failed to send SMS.'}`, 'danger');
+            }
+        } catch (e) {
+            showToast('? Network error. Please try again.', 'danger');
+        }
+    }
+
+    // ?? Helpers ???????????????????????????????????????????????????????????
+    function getAntiForgery() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    }
+
+    function showToast(message, type) {
+        const id = 'exotel-toast-' + Date.now();
+        const html = `<div id="${id}" class="toast align-items-center text-bg-${type} border-0 show position-fixed bottom-0 end-0 m-3" role="alert" style="z-index:9999">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${id}').remove()"></button>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+        setTimeout(() => { document.getElementById(id)?.remove(); }, 5000);
+    }
+</script>
+}

@@ -62,132 +62,184 @@
                 </div>
             </div>
             <div class="sidebar-body flex-grow-1 overflow-auto py-2">
+                @{
+                    bool votersOpen      = currentPage.StartsWith("/Voters") || currentPage == "/VoterSlips/Index";
+                    bool campaignOpen    = currentPage.StartsWith("/PhoneBanking") || currentPage.StartsWith("/Influencers") || currentPage.StartsWith("/Competitor") || currentPage.StartsWith("/Campaign") || currentPage.StartsWith("/Volunteers");
+                    bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys");
+                    bool electionOpsOpen = currentPage.StartsWith("/PannaPramukh") || currentPage.StartsWith("/BoothShifts") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/RapidResponse") || currentPage.StartsWith("/Broadcast") || currentPage.StartsWith("/Budget") || currentPage.StartsWith("/Results") || currentPage.StartsWith("/FieldReports");
+                    bool managementOpen  = currentPage.StartsWith("/Admin") || currentPage.StartsWith("/Booths");
+                }
                 <ul class="nav flex-column px-2">
+                    <!-- Dashboard (standalone) -->
                     <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage == "/Dashboard/Index" ? "active" : "")" asp-page="/Dashboard/Index">
                             <i class="bi bi-speedometer2 me-2"></i> Dashboard
                         </a>
                     </li>
-                    <li class="sidebar-section-label px-2 mt-3 mb-1">VOTERS</li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Voters/Index") ? "active" : "")" asp-page="/Voters/Index">
-                            <i class="bi bi-people-fill me-2"></i> Voter List
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage == "/Voters/Create" ? "active" : "")" asp-page="/Voters/Create">
-                            <i class="bi bi-person-plus-fill me-2"></i> Add Voter
-                        </a>
-                    </li>
-                    @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
-                    {
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage == "/Voters/Import" ? "active" : "")" asp-page="/Voters/Import">
-                            <i class="bi bi-upload me-2"></i> Import Voters
-                        </a>
-                    </li>
-                    }
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage == "/VoterSlips/Index" ? "active" : "")" asp-page="/VoterSlips/Index">
-                            <i class="bi bi-printer-fill me-2"></i> Voter Slips
-                        </a>
-                    </li>
-                    <li class="sidebar-section-label px-2 mt-3 mb-1">CAMPAIGN</li>
-                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate") || User.IsInRole("FieldWorker") || User.IsInRole("BoothAgent"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/PhoneBanking") ? "active" : "")" asp-page="/PhoneBanking/Index">
-                                <i class="bi bi-telephone-fill me-2"></i> Phone Banking
-                            </a>
-                        </li>
-                    }
-                    @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Influencers") ? "active" : "")" asp-page="/Influencers/Index">
-                                <i class="bi bi-people-fill me-2"></i> Influencer Network
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Competitor") ? "active" : "")" asp-page="/Competitor/Index">
-                                <i class="bi bi-eye-fill me-2"></i> Competitor Intel
-                            </a>
-                        </li>
-                    }
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Campaign") ? "active" : "")" asp-page="/Campaign/Index">
-                            <i class="bi bi-calendar-event-fill me-2"></i> Campaign Events
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Volunteers") ? "active" : "")" asp-page="/Volunteers/Index">
-                            <i class="bi bi-person-check-fill me-2"></i> Volunteers
-                        </a>
-                    </li>
-                    <li class="sidebar-section-label px-2 mt-3 mb-1">OPERATIONS</li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Announcements") ? "active" : "")" asp-page="/Announcements/Index">
-                            <i class="bi bi-megaphone-fill me-2"></i> Announcements
-                            @if (annUnread > 0)
-                            {
-                                <span class="badge bg-warning text-dark ms-auto">@annUnread</span>
-                            }
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/ElectionDay") ? "active" : "")" asp-page="/ElectionDay/Index">
-                            <i class="bi bi-activity me-2"></i> Election Day
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/Index">
-                            <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
-                        </a>
-                    </li>
-                    @if (isSuperAdmin || User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
-                    {
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Predictions") ? "active" : "")" asp-page="/Predictions/Index">
-                            <i class="bi bi-graph-up-arrow me-2"></i> Predictive Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/WinProbability") ? "active" : "")" asp-page="/WinProbability/Index">
-                            <i class="bi bi-trophy-fill me-2"></i> Win Probability
-                        </a>
-                    </li>
-                    }
-                    @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
-                    {
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Grievances") ? "active" : "")" asp-page="/Grievances/Index">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Grievances
-                        </a>
-                    </li>
-                    }
-                    @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
-                    {
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Expenses") ? "active" : "")" asp-page="/Expenses/Index">
-                            <i class="bi bi-cash-coin me-2"></i> Expenses
-                        </a>
-                    </li>
-                    }
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Surveys") ? "active" : "")" asp-page="/Surveys/Index">
-                            <i class="bi bi-clipboard2-data-fill me-2"></i> Surveys &amp; Feedback
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics/SurveyDemographics") || currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/SurveyDemographics">
-                            <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
-                        </a>
-                    </li>
 
-                    @* ── ELECTION OPERATIONS SECTION ── *@
-                    @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
-                    {
-                        <li class="sidebar-section-label px-2 mt-3 mb-1">ELECTION OPS</li>
+                    <!-- VOTERS -->
+                    <li class="nav-item mt-2">
+                        <button class="sidebar-section-toggle @(votersOpen ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#sec-voters" aria-expanded="@votersOpen.ToString().ToLower()">
+                            <span><i class="bi bi-people-fill me-2"></i>VOTERS</span>
+                            <i class="bi bi-chevron-down sidebar-chevron"></i>
+                        </button>
+                    </li>
+                </ul>
+                <div class="collapse @(votersOpen ? "show" : "")" id="sec-voters">
+                    <ul class="nav flex-column px-2 sidebar-submenu">
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Voters/Index") ? "active" : "")" asp-page="/Voters/Index">
+                                <i class="bi bi-people-fill me-2"></i> Voter List
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage == "/Voters/Create" ? "active" : "")" asp-page="/Voters/Create">
+                                <i class="bi bi-person-plus-fill me-2"></i> Add Voter
+                            </a>
+                        </li>
+                        @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage == "/Voters/Import" ? "active" : "")" asp-page="/Voters/Import">
+                                <i class="bi bi-upload me-2"></i> Import Voters
+                            </a>
+                        </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage == "/VoterSlips/Index" ? "active" : "")" asp-page="/VoterSlips/Index">
+                                <i class="bi bi-printer-fill me-2"></i> Voter Slips
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- CAMPAIGN -->
+                <ul class="nav flex-column px-2">
+                    <li class="nav-item mt-1">
+                        <button class="sidebar-section-toggle @(campaignOpen ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#sec-campaign" aria-expanded="@campaignOpen.ToString().ToLower()">
+                            <span><i class="bi bi-calendar-event-fill me-2"></i>CAMPAIGN</span>
+                            <i class="bi bi-chevron-down sidebar-chevron"></i>
+                        </button>
+                    </li>
+                </ul>
+                <div class="collapse @(campaignOpen ? "show" : "")" id="sec-campaign">
+                    <ul class="nav flex-column px-2 sidebar-submenu">
+                        @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate") || User.IsInRole("FieldWorker") || User.IsInRole("BoothAgent"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link sidebar-link @(currentPage.StartsWith("/PhoneBanking") ? "active" : "")" asp-page="/PhoneBanking/Index">
+                                    <i class="bi bi-telephone-fill me-2"></i> Phone Banking
+                                </a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link sidebar-link @(currentPage.StartsWith("/Influencers") ? "active" : "")" asp-page="/Influencers/Index">
+                                    <i class="bi bi-people-fill me-2"></i> Influencer Network
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link sidebar-link @(currentPage.StartsWith("/Competitor") ? "active" : "")" asp-page="/Competitor/Index">
+                                    <i class="bi bi-eye-fill me-2"></i> Competitor Intel
+                                </a>
+                            </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Campaign") ? "active" : "")" asp-page="/Campaign/Index">
+                                <i class="bi bi-calendar-event-fill me-2"></i> Campaign Events
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Volunteers") ? "active" : "")" asp-page="/Volunteers/Index">
+                                <i class="bi bi-person-check-fill me-2"></i> Volunteers
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- OPERATIONS -->
+                <ul class="nav flex-column px-2">
+                    <li class="nav-item mt-1">
+                        <button class="sidebar-section-toggle @(operationsOpen ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#sec-operations" aria-expanded="@operationsOpen.ToString().ToLower()">
+                            <span><i class="bi bi-gear-fill me-2"></i>OPERATIONS</span>
+                            <i class="bi bi-chevron-down sidebar-chevron"></i>
+                        </button>
+                    </li>
+                </ul>
+                <div class="collapse @(operationsOpen ? "show" : "")" id="sec-operations">
+                    <ul class="nav flex-column px-2 sidebar-submenu">
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Announcements") ? "active" : "")" asp-page="/Announcements/Index">
+                                <i class="bi bi-megaphone-fill me-2"></i> Announcements
+                                @if (annUnread > 0)
+                                {
+                                    <span class="badge bg-warning text-dark ms-auto">@annUnread</span>
+                                }
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/ElectionDay") ? "active" : "")" asp-page="/ElectionDay/Index">
+                                <i class="bi bi-activity me-2"></i> Election Day
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/Index">
+                                <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
+                            </a>
+                        </li>
+                        @if (isSuperAdmin || User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Predictions") ? "active" : "")" asp-page="/Predictions/Index">
+                                <i class="bi bi-graph-up-arrow me-2"></i> Predictive Analytics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/WinProbability") ? "active" : "")" asp-page="/WinProbability/Index">
+                                <i class="bi bi-trophy-fill me-2"></i> Win Probability
+                            </a>
+                        </li>
+                        }
+                        @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Grievances") ? "active" : "")" asp-page="/Grievances/Index">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Grievances
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Expenses") ? "active" : "")" asp-page="/Expenses/Index">
+                                <i class="bi bi-cash-coin me-2"></i> Expenses
+                            </a>
+                        </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Surveys") ? "active" : "")" asp-page="/Surveys/Index">
+                                <i class="bi bi-clipboard2-data-fill me-2"></i> Surveys &amp; Feedback
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics/SurveyDemographics") || currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/SurveyDemographics">
+                                <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- ELECTION OPS -->
+                @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                {
+                <ul class="nav flex-column px-2">
+                    <li class="nav-item mt-1">
+                        <button class="sidebar-section-toggle @(electionOpsOpen ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#sec-electionops" aria-expanded="@electionOpsOpen.ToString().ToLower()">
+                            <span><i class="bi bi-flag-fill me-2"></i>ELECTION OPS</span>
+                            <i class="bi bi-chevron-down sidebar-chevron"></i>
+                        </button>
+                    </li>
+                </ul>
+                <div class="collapse @(electionOpsOpen ? "show" : "")" id="sec-electionops">
+                    <ul class="nav flex-column px-2 sidebar-submenu">
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/PannaPramukh") ? "active" : "")" asp-page="/PannaPramukh/Index">
                                 <i class="bi bi-journals me-2"></i> Panna Pramukh
@@ -223,17 +275,39 @@
                                 <i class="bi bi-trophy-fill me-2"></i> Result Day
                             </a>
                         </li>
-                    }
-                    @* Field Reports — all roles *@
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/FieldReports") ? "active" : "")" asp-page="/FieldReports/Index">
+                                <i class="bi bi-clipboard2-check-fill me-2"></i> Field Reports
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                }
+                @* Field Reports for non-election-ops roles *@
+                @if (!(User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate")))
+                {
+                <ul class="nav flex-column px-2">
                     <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage.StartsWith("/FieldReports") ? "active" : "")" asp-page="/FieldReports/Index">
                             <i class="bi bi-clipboard2-check-fill me-2"></i> Field Reports
                         </a>
                     </li>
-                    @if (isManagementRole)
-                    {
-                        <li class="sidebar-section-label px-2 mt-3 mb-1">MANAGEMENT</li>
-                        @* Constituencies — SuperAdmin only *@
+                </ul>
+                }
+
+                <!-- MANAGEMENT -->
+                @if (isManagementRole)
+                {
+                <ul class="nav flex-column px-2">
+                    <li class="nav-item mt-1">
+                        <button class="sidebar-section-toggle @(managementOpen ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#sec-management" aria-expanded="@managementOpen.ToString().ToLower()">
+                            <span><i class="bi bi-shield-lock-fill me-2"></i>MANAGEMENT</span>
+                            <i class="bi bi-chevron-down sidebar-chevron"></i>
+                        </button>
+                    </li>
+                </ul>
+                <div class="collapse @(managementOpen ? "show" : "")" id="sec-management">
+                    <ul class="nav flex-column px-2 sidebar-submenu">
                         @if (isSuperAdmin)
                         {
                             <li class="nav-item">
@@ -242,32 +316,34 @@
                                 </a>
                             </li>
                         }
-                        @* Wards — all management roles *@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Wards") ? "active" : "")" asp-page="/Admin/Wards/Index">
                                 <i class="bi bi-map me-2"></i> Wards
                             </a>
                         </li>
-                        @* Booths — moved here from Campaign; part of electoral structure *@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Booths") ? "active" : "")" asp-page="/Booths/Index">
                                 <i class="bi bi-geo-alt-fill me-2"></i> Booths
                             </a>
                         </li>
-                        @* Users — all management roles *@
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Index">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") && !currentPage.StartsWith("/Admin/Exotel") ? "active" : "")" asp-page="/Admin/Index">
                                 <i class="bi bi-people me-2"></i> Users
                             </a>
                         </li>
-                        @* Rewards — all management roles (SuperAdmin now included) *@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Rewards/Index">
                                 <i class="bi bi-gift-fill me-2"></i> Rewards
                             </a>
                         </li>
-                    }
-                </ul>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Exotel") ? "active" : "")" asp-page="/Admin/Exotel/Index">
+                                <i class="bi bi-telephone-fill me-2"></i> Exotel (Call &amp; SMS)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                }
             </div>
             <div class="sidebar-footer px-3 py-2 border-top border-secondary">
                 <div class="d-flex align-items-center justify-content-between">

@@ -32,6 +32,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     // ── Phone Banking ────────────────────────────────────────────
     public DbSet<PhoneCallLog> PhoneCallLogs => Set<PhoneCallLog>();
 
+    // ── Exotel Integration ───────────────────────────────────────
+    public DbSet<ExotelConfig> ExotelConfigs => Set<ExotelConfig>();
+
     // ── Voter Self-Survey Module ──────────────────────────────────
     public DbSet<VoterProfile> VoterProfiles => Set<VoterProfile>();
     public DbSet<VoterConsent> VoterConsents => Set<VoterConsent>();
@@ -149,6 +152,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany()
             .HasForeignKey(b => b.TemplateId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ── Exotel Integration ────────────────────────────────────
+        builder.Entity<ExotelConfig>()
+            .HasOne(e => e.Constituency)
+            .WithMany()
+            .HasForeignKey(e => e.ConstituencyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ExotelConfig>()
+            .HasIndex(e => e.ConstituencyId);
 
         builder.Entity<Expense>()
             .Property(e => e.Amount)

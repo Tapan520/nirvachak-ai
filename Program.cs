@@ -17,10 +17,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Locally:    defaults to election.db in working directory
 var isProduction = !builder.Environment.IsDevelopment();
 
-// Resolve the raw DB path from env var or config
+// Resolve the raw DB path from env var or config.
+// IMPORTANT: In production we must NOT fall back to the relative "election.db" path
+// from appsettings.json — that resolves to /app/election.db inside the ephemeral
+// container filesystem and data is lost on every redeploy.
+// Priority: DATABASE_PATH env var → /data/election.db (Railway volume) in prod → appsettings fallback in dev only.
 var dbPathRaw = Environment.GetEnvironmentVariable("DATABASE_PATH")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? (isProduction ? "/data/election.db" : "election.db");
+    ?? (isProduction
+        ? "/data/election.db"
+        : builder.Configuration.GetConnectionString("DefaultConnection") ?? "election.db");
 
 // Strip "Data Source=" prefix to get the bare file path
 var dbFilePart = dbPathRaw.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)

@@ -33,7 +33,7 @@ public class LogCallModel : PageModel
     {
         Call.CalledAt = DateTime.Now;
         if (VoterId.HasValue)
-            SelectedVoter = await _db.Voters.FindAsync(VoterId.Value);
+            SelectedVoter = await _db.Voters.IgnoreQueryFilters().FirstOrDefaultAsync(v => v.Id == VoterId.Value);
 
         if (!string.IsNullOrWhiteSpace(SearchName))
         {
@@ -41,6 +41,7 @@ public class LogCallModel : PageModel
             int? cId = user?.ConstituencyId;
             var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
             SearchResults = await _db.Voters
+                .IgnoreQueryFilters()
                 .Where(v => !v.IsDeleted && v.MobileNumber != null &&
                     (v.Name.Contains(SearchName) || (v.MobileNumber != null && v.MobileNumber.Contains(SearchName))))
                 .Where(v => isSuperAdmin || !cId.HasValue || v.ConstituencyId == cId.Value)
@@ -54,8 +55,15 @@ public class LogCallModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         Call.CalledByUserId = user?.Id ?? string.Empty;
         Call.CalledByName   = user?.FullName;
-        Call.ConstituencyId = user?.ConstituencyId ?? Call.ConstituencyId;
         Call.CalledAt       = DateTime.UtcNow;
+        // Resolve constituency: prefer the voter's constituency as fallback for SuperAdmin
+        if (user?.ConstituencyId.HasValue == true)
+            Call.ConstituencyId = user.ConstituencyId.Value;
+        else if (Call.ConstituencyId == 0)
+        {
+            var voterCId = await _db.Voters.IgnoreQueryFilters().Where(v => v.Id == Call.VoterId).Select(v => v.ConstituencyId).FirstOrDefaultAsync();
+            Call.ConstituencyId = voterCId;
+        }
         _db.PhoneCallLogs.Add(Call);
 
         // Update voter's last contacted date and sentiment if changed

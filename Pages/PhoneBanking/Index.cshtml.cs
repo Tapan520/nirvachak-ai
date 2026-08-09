@@ -41,9 +41,13 @@ public class IndexModel : PageModel
         // Non-SuperAdmin users are always scoped to their own constituency
         var todayStart = DateTime.UtcNow.Date;
 
-        IQueryable<PhoneCallLog> callQ = _db.PhoneCallLogs.Include(c => c.Voter).AsNoTracking();
+        // Use IgnoreQueryFilters on the Voter include so soft-deleted voters
+        // do not cause a runtime exception when their call logs are loaded
+        IQueryable<PhoneCallLog> callQ = _db.PhoneCallLogs
+            .Include(c => c.Voter).IgnoreQueryFilters().AsNoTracking();
         if (!isSuperAdmin && user != null) callQ = callQ.Where(c => c.CalledByUserId == user.Id);
-        if (!isSuperAdmin && cId.HasValue) callQ = callQ.Where(c => c.ConstituencyId == cId.Value);
+        if (cId.HasValue) callQ = callQ.Where(c => c.ConstituencyId == cId.Value);
+        else if (!isSuperAdmin) return; // no constituency and not superadmin — nothing to show
 
         TodaysCalls = await callQ
             .Where(c => c.CalledAt >= todayStart)

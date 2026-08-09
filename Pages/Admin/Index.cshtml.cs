@@ -34,6 +34,8 @@ public class IndexModel : PageModel
     public List<string> AuditUsers   { get; set; } = new();
     public List<string> AuditActions { get; set; } = new();
 
+    public int AuditLogTotal { get; set; }
+
     public async Task OnGetAsync()
     {
         var currentUser = await _userManager.GetUserAsync(User);
@@ -72,7 +74,8 @@ public class IndexModel : PageModel
         if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());
         if (AuditDateTo.HasValue)   auditQ = auditQ.Where(a => a.CreatedAt <= AuditDateTo.Value.ToUniversalTime().AddDays(1));
 
-        AuditLogs    = await auditQ.Take(50).ToListAsync();
+        AuditLogTotal = await auditQ.CountAsync();
+        AuditLogs    = await auditQ.ToListAsync();
 
         IQueryable<AuditLog> scopedAudit = _db.AuditLogs;
         if (!isSuperAdmin && currentUser?.ConstituencyId != null)

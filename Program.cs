@@ -16,13 +16,30 @@ var builder = WebApplication.CreateBuilder(args);
 // On Railway: set DATABASE_PATH=/data/election.db  (volume mounted at /data)
 // Locally:    defaults to election.db in working directory
 var isProduction = !builder.Environment.IsDevelopment();
-var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH")
+
+// Resolve the raw DB path from env var or config
+var dbPathRaw = Environment.GetEnvironmentVariable("DATABASE_PATH")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? (isProduction ? "/data/election.db" : "Data Source=election.db");
+    ?? (isProduction ? "/data/election.db" : "election.db");
+
+// Strip "Data Source=" prefix to get the bare file path
+var dbFilePart = dbPathRaw.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
+    ? dbPathRaw["Data Source=".Length..].Trim()
+    : dbPathRaw.Trim();
+
+// Always resolve relative paths against the app's content root (project directory).
+// This guarantees the same DB file is used regardless of the working directory —
+// i.e., whether the app is launched via "dotnet run", Visual Studio, IIS Express, etc.
+var dbFile = Path.IsPathRooted(dbFilePart)
+    ? dbFilePart
+    : Path.Combine(builder.Environment.ContentRootPath, dbFilePart);
+
+// Build the final absolute connection string
+var dbPath = $"Data Source={dbFile}";
 
 // Log the active database path on every startup so it is visible in Railway deploy logs.
 Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine($"[DB] Active database path: {dbPath}");
+Console.WriteLine($"[DB] Active database path: {dbFile}");
 if (isProduction && Environment.GetEnvironmentVariable("DATABASE_PATH") == null)
 {
     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -32,14 +49,13 @@ if (isProduction && Environment.GetEnvironmentVariable("DATABASE_PATH") == null)
 Console.ResetColor();
 
 // Ensure the directory exists (important for Railway volume path /data/)
-var dbFile = dbPath.Replace("Data Source=", "").Trim();
-var dbDir  = Path.GetDirectoryName(dbFile);
+var dbDir = Path.GetDirectoryName(dbFile);
 if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
     Directory.CreateDirectory(dbDir);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlite(dbPath.StartsWith("Data Source=") ? dbPath : $"Data Source={dbPath}");
+    options.UseSqlite(dbPath);
     // Child entities (DoorToDoorVisit, PhoneCallLog, etc.) have non-nullable VoterId FKs.
     // The global Voter query filter is intentional — child rows of a soft-deleted voter
     // are unreachable by design. Suppress the EF model-validation warning.

@@ -1,0 +1,151 @@
+@page
+@model Nirvachak_AI.Pages.Reports.ExportModel
+@{
+    ViewData["Title"] = "Export Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>Export Reports</h4>
+        <p class="text-muted small mb-0">Download Excel reports for voters, expenses, volunteers and election day data.</p>
+    </div>
+</div>
+
+@if (!Model.HasConstituency)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>No constituency assigned. Please contact your administrator.
+    </div>
+}
+else
+{
+    <div class="row g-4">
+
+        @* Voters Export *@
+        <div class="col-md-6">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-people-fill me-2"></i>Voter List
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Export complete voter list with sentiment, contact status and demographics.</p>
+                    <form method="get" action="/api/export/voters/@Model.ConstituencyId">
+                        <div class="mb-2">
+                            <label class="form-label small">Ward (optional)</label>
+                            <select name="ward" class="form-select form-select-sm">
+                                <option value="">All Wards</option>
+                                @foreach (var w in Model.Wards)
+                                {
+                                    <option value="@w.WardNumber">@w.WardName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Sentiment (optional)</label>
+                            <select name="sentiment" class="form-select form-select-sm">
+                                <option value="">All Sentiments</option>
+                                <option value="Favour">Favour</option>
+                                <option value="Against">Against</option>
+                                <option value="Floating">Floating</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-download me-1"></i>Download Voters (.xlsx)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @* Expenses Export *@
+        <div class="col-md-6">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-cash-coin me-2"></i>EC Expense Report
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Export expenses in EC-compliance format. Filter by date range.</p>
+                    <form method="get" action="/api/export/expenses/@Model.ConstituencyId">
+                        <div class="mb-2">
+                            <label class="form-label small">From Date</label>
+                            <input type="date" name="from" class="form-control form-control-sm" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">To Date</label>
+                            <input type="date" name="to" class="form-control form-control-sm" />
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-sm w-100">
+                            <i class="bi bi-download me-1"></i>Download Expenses (.xlsx)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @* Election Day Export *@
+        <div class="col-md-6">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Election Day — Booth Turnout
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Booth-wise voter turnout with colour-coded status. Includes agent details.</p>
+                    <a href="/api/export/electionday/@Model.ConstituencyId" class="btn btn-success btn-sm w-100">
+                        <i class="bi bi-download me-1"></i>Download Turnout Report (.xlsx)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Volunteers Export *@
+        <div class="col-md-6">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-person-check-fill me-2"></i>Volunteer List
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Complete volunteer roster with tasks, booth assignments and contact details.</p>
+                    <a href="/api/export/volunteers/@Model.ConstituencyId" class="btn btn-info btn-sm w-100 text-white">
+                        <i class="bi bi-download me-1"></i>Download Volunteers (.xlsx)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @* DB Backup Status — Admin only *@
+    @if (Model.IsAdmin)
+    {
+        <div class="card mt-4 border-secondary">
+            <div class="card-header">
+                <i class="bi bi-shield-check me-2 text-secondary"></i>Database Backups
+            </div>
+            <div class="card-body">
+                @if (!Model.Backups.Any())
+                {
+                    <p class="text-muted small mb-0">No backups found yet. First backup runs 2 minutes after deployment.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Backup File</th><th>Size</th><th>Created</th></tr></thead>
+                            <tbody>
+                            @foreach (var b in Model.Backups)
+                            {
+                                <tr>
+                                    <td class="font-monospace small">@b.Name</td>
+                                    <td class="small">@(b.Length / 1024) KB</td>
+                                    <td class="small text-muted">@b.LastWriteTimeUtc.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}

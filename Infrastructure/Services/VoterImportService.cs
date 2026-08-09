@@ -61,21 +61,38 @@ public class VoterImportService
             result.Total = rows.Count;
 
             var existingIds = _db.Voters
+                .IgnoreQueryFilters()
                 .Where(v => v.ConstituencyId == constituencyId)
                 .Select(v => v.VoterId)
                 .ToHashSet();
 
+            // Detect duplicates within the import file itself
+            var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var voters = new List<Voter>();
             foreach (var row in rows)
             {
-                if (string.IsNullOrWhiteSpace(row.VoterId) || existingIds.Contains(row.VoterId))
+                if (string.IsNullOrWhiteSpace(row.VoterId))
                 {
                     result.Skipped++;
+                    result.Errors.Add($"Row skipped — empty Voter ID (Name: {row.Name})");
+                    continue;
+                }
+                var cleanId = row.VoterId.Trim();
+                if (existingIds.Contains(cleanId))
+                {
+                    result.Skipped++;
+                    result.Errors.Add($"Duplicate (already in DB): {cleanId} — {row.Name}");
+                    continue;
+                }
+                if (!seenInFile.Add(cleanId))
+                {
+                    result.Skipped++;
+                    result.Errors.Add($"Duplicate (within file): {cleanId} — {row.Name}");
                     continue;
                 }
                 voters.Add(new Voter
                 {
-                    VoterId = row.VoterId.Trim(),
+                    VoterId = cleanId,
                     Name = row.Name.Trim(),
                     NameLocal = row.NameLocal,
                     FatherHusbandName = row.FatherHusbandName,
@@ -91,7 +108,7 @@ public class VoterImportService
                     Sentiment = VoterSentiment.Unknown,
                     ImportedAt = DateTime.UtcNow
                 });
-                existingIds.Add(row.VoterId);
+                existingIds.Add(cleanId);
             }
 
             if (voters.Count > 0)

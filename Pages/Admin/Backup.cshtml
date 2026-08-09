@@ -1,0 +1,222 @@
+@page
+@model Nirvachak_AI.Pages.Admin.BackupModel
+@{
+    ViewData["Title"] = "Database Backup Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-shield-check me-2 text-success"></i>Database Backup Management</h4>
+        <p class="text-muted small mb-0">Control automated backups of the production database.</p>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-2"></i>@TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+
+    @* ?? Status Card ??????????????????????????????????????????? *@
+    <div class="col-md-5">
+        <div class="card h-100 border-@(Model.IsEnabled ? "success" : "danger")">
+            <div class="card-header bg-@(Model.IsEnabled ? "success" : "danger") text-white d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-database-fill me-2"></i>Backup Status</span>
+                <span class="badge bg-white text-@(Model.IsEnabled ? "success" : "danger") fw-bold">
+                    @(Model.IsEnabled ? "ENABLED" : "DISABLED")
+                </span>
+            </div>
+            <div class="card-body">
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted">Status</dt>
+                    <dd class="col-7">
+                        @if (Model.IsEnabled)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Enabled</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Disabled</span>
+                        }
+                    </dd>
+
+                    <dt class="col-5 text-muted">Schedule (UTC)</dt>
+                    <dd class="col-7 fw-semibold">Daily at @Model.ScheduleHour:00 UTC</dd>
+
+                    <dt class="col-5 text-muted">Keep Backups</dt>
+                    <dd class="col-7 fw-semibold">Last @Model.RetentionCount files</dd>
+
+                    <dt class="col-5 text-muted">Last Backup</dt>
+                    <dd class="col-7">
+                        @if (Model.LastBackupAt.HasValue)
+                        {
+                            <span class="text-success fw-semibold">@Model.LastBackupAt.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</span>
+                            <div class="text-muted font-monospace" style="font-size:0.72rem">@Model.LastBackupFile</div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No backup yet</span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.LastError))
+                    {
+                        <dt class="col-5 text-muted">Last Error</dt>
+                        <dd class="col-7 text-danger small">@Model.LastError</dd>
+                    }
+
+                    <dt class="col-5 text-muted">Total Backups</dt>
+                    <dd class="col-7 fw-semibold">@Model.BackupFiles.Count file(s)</dd>
+
+                    <dt class="col-5 text-muted">Total Size</dt>
+                    <dd class="col-7 fw-semibold">@((Model.BackupFiles.Sum(f => f.Length) / 1024.0).ToString("N0")) KB</dd>
+                </dl>
+            </div>
+
+            @* Toggle Enable/Disable *@
+            <div class="card-footer d-flex gap-2">
+                <form method="post" asp-page-handler="Toggle" class="flex-grow-1">
+                    @if (Model.IsEnabled)
+                    {
+                        <button type="submit" class="btn btn-danger w-100"
+                                onclick="return confirm('Disable automatic database backups?')">
+                            <i class="bi bi-pause-circle me-1"></i>Disable Backups
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-play-circle me-1"></i>Enable Backups
+                        </button>
+                    }
+                </form>
+                <form method="post" asp-page-handler="RunNow">
+                    <button type="submit" class="btn btn-primary"
+                            onclick="return confirm('Run a manual backup now?')" title="Run backup now">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Backup Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ?? Settings Card ????????????????????????????????????????? *@
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-gear-fill me-2 text-secondary"></i>Backup Settings</div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="SaveSettings">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Daily Backup Time (UTC hour)</label>
+                        <select name="scheduleHour" class="form-select">
+                            @for (int h = 0; h < 24; h++)
+                            {
+                                var val = h.ToString("D2");
+                                <option value="@val" selected="@(Model.ScheduleHour == val)">
+                                    @val:00 UTC (@(h == 2 ? "recommended — low traffic" : h + ":00"))
+                                </option>
+                            }
+                        </select>
+                        <div class="form-text">Backup runs once daily at this UTC hour.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Number of Backups to Keep</label>
+                        <input type="number" name="retentionCount" class="form-control"
+                               min="1" max="30" value="@Model.RetentionCount" />
+                        <div class="form-text">Older backups beyond this count are automatically deleted. Max: 30.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ?? Backup Files Table ???????????????????????????????????? *@
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-folder2-open me-2 text-warning"></i>Backup Files</span>
+                <span class="badge bg-secondary">@Model.BackupFiles.Count files</span>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.BackupFiles.Any())
+                {
+                    <div class="text-center text-muted py-4 small">
+                        <i class="bi bi-database-x fs-2 d-block mb-2 opacity-25"></i>
+                        No backup files found yet.
+                        @if (!Model.IsEnabled)
+                        {
+                            <div>Backups are currently <strong>disabled</strong>. Enable them above.</div>
+                        }
+                        else
+                        {
+                            <div>First backup will run at <strong>@Model.ScheduleHour:00 UTC</strong> today or click <strong>Backup Now</strong>.</div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Size</th>
+                                    <th>Created (UTC)</th>
+                                    <th>Age</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var f in Model.BackupFiles)
+                            {
+                                var age     = DateTime.UtcNow - f.LastWriteTimeUtc;
+                                var ageStr  = age.TotalDays >= 1
+                                    ? $"{(int)age.TotalDays}d ago"
+                                    : age.TotalHours >= 1
+                                        ? $"{(int)age.TotalHours}h ago"
+                                        : "Just now";
+                                var isLatest = f == Model.BackupFiles.FirstOrDefault();
+
+                                <tr>
+                                    <td class="font-monospace small">
+                                        @f.Name
+                                        @if (isLatest)
+                                        { <span class="badge bg-success ms-1">latest</span> }
+                                    </td>
+                                    <td class="small">@(f.Length / 1024) KB</td>
+                                    <td class="small text-muted">@f.LastWriteTimeUtc.ToString("dd MMM yyyy, HH:mm")</td>
+                                    <td class="small text-muted">@ageStr</td>
+                                    <td>
+                                        <form method="post" asp-page-handler="Delete"
+                                              onsubmit="return confirm('Delete backup @f.Name?')">
+                                            <input type="hidden" name="fileName" value="@f.Name" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -295,6 +295,18 @@
                 </ul>
                 }
 
+                <!-- REPORTS & EXPORTS -->
+                @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                {
+                <ul class="nav flex-column px-2">
+                    <li class="nav-item mt-1">
+                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Reports/Export") ? "active" : "")" asp-page="/Reports/Export">
+                            <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i> Export Reports
+                        </a>
+                    </li>
+                </ul>
+                }
+
                 <!-- MANAGEMENT -->
                 @if (isManagementRole)
                 {
@@ -341,6 +353,14 @@
                                 <i class="bi bi-telephone-fill me-2"></i> Exotel (Call &amp; SMS)
                             </a>
                         </li>
+                        @if (isSuperAdmin)
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage == "/Admin/Backup" ? "active" : "")" asp-page="/Admin/Backup">
+                                <i class="bi bi-shield-check me-2 text-success"></i> DB Backup
+                            </a>
+                        </li>
+                        }
                     </ul>
                 </div>
                 }

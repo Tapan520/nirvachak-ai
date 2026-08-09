@@ -42,7 +42,10 @@ var dbFile = Path.IsPathRooted(dbFilePart)
     : Path.Combine(builder.Environment.ContentRootPath, dbFilePart);
 
 // Build the final absolute connection string
-var dbPath = $"Data Source={dbFile}";
+// WAL (Write-Ahead Logging) mode allows concurrent reads during background-service writes.
+// Without WAL, SQLite write locks block all reads — causing "database is locked" errors
+// on Railway where SwingVoterAlertService / DatabaseBackupService write concurrently.
+var dbPath = $"Data Source={dbFile};Journal Mode=WAL";
 
 // Log the active database path on every startup so it is visible in Railway deploy logs.
 Console.ForegroundColor = ConsoleColor.Cyan;

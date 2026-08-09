@@ -43,21 +43,28 @@ public class SwingVoterAlertService : BackgroundService
         var cutoff = DateTime.UtcNow.AddHours(-1);
 
         // Find visits in the last hour where the visit recorded Favour sentiment
-        // but the voter's CURRENT sentiment is now Floating or Against (swing detected)
+        // but the voter's CURRENT sentiment is now Floating or Against (swing detected).
+        // IMPORTANT: Do NOT check v.Voter != null in the WHERE clause — the Voter navigation
+        // property has a global soft-delete query filter which makes EF Core translate
+        // navigation-null checks incorrectly (triggers PossibleIncorrectRequiredNavigation warning).
+        // Instead, join directly via the FK and filter in the DB projection.
         var swings = await db.DoorToDoorVisits
-            .Include(v => v.Voter)
             .Where(v => v.VisitedAt >= cutoff
-                && v.SentimentAfterVisit == VoterSentiment.Favour
-                && v.Voter != null
-                && (v.Voter.Sentiment == VoterSentiment.Floating
-                    || v.Voter.Sentiment == VoterSentiment.Against))
-            .Select(v => new {
-                v.Voter!.Name,
-                v.Voter.BoothNumber,
-                v.Voter.WardNumber,
-                v.Voter.ConstituencyId,
-                CurrentSentiment = v.Voter.Sentiment
-            })
+                && v.SentimentAfterVisit == VoterSentiment.Favour)
+            .Join(db.Voters.Where(voter =>
+                    !voter.IsDeleted &&
+                    (voter.Sentiment == VoterSentiment.Floating
+                     || voter.Sentiment == VoterSentiment.Against)),
+                visit  => visit.VoterId,
+                voter  => voter.Id,
+                (visit, voter) => new
+                {
+                    voter.Name,
+                    voter.BoothNumber,
+                    voter.WardNumber,
+                    voter.ConstituencyId,
+                    CurrentSentiment = voter.Sentiment
+                })
             .ToListAsync();
 
         if (!swings.Any()) return;

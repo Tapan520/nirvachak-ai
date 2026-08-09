@@ -41,10 +41,12 @@ public class IndexModel : PageModel
         // Non-SuperAdmin users are always scoped to their own constituency
         var todayStart = DateTime.UtcNow.Date;
 
-        // Use IgnoreQueryFilters on the Voter include so soft-deleted voters
-        // do not cause a runtime exception when their call logs are loaded
+        // IgnoreQueryFilters() must be called on the root DbSet BEFORE Include() in EF Core 8
+        // so the soft-delete global filter on Voter is properly bypassed for the navigation include.
         IQueryable<PhoneCallLog> callQ = _db.PhoneCallLogs
-            .Include(c => c.Voter).IgnoreQueryFilters().AsNoTracking();
+            .IgnoreQueryFilters()
+            .Include(c => c.Voter)
+            .AsNoTracking();
         if (!isSuperAdmin && user != null) callQ = callQ.Where(c => c.CalledByUserId == user.Id);
         if (cId.HasValue) callQ = callQ.Where(c => c.ConstituencyId == cId.Value);
         else if (!isSuperAdmin) return; // no constituency and not superadmin — nothing to show
@@ -69,6 +71,9 @@ public class IndexModel : PageModel
             .Take(20).ToListAsync();
 
         if (user?.ConstituencyId.HasValue == true)
-            IsExotelEnabled = await _exotel.IsConfiguredAsync(user.ConstituencyId.Value);
+        {
+            try { IsExotelEnabled = await _exotel.IsConfiguredAsync(user.ConstituencyId.Value); }
+            catch { IsExotelEnabled = false; } // ExotelConfigs may not be configured — degrade gracefully
+        }
     }
 }

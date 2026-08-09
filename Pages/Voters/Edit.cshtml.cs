@@ -24,7 +24,6 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role == UserRole.FieldWorker) return Forbid();
         Voter = await _db.Voters.FindAsync(id);
         if (Voter == null) return NotFound();
         if (user?.Role != UserRole.SuperAdmin && Voter.ConstituencyId != user?.ConstituencyId)
@@ -35,7 +34,6 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role == UserRole.FieldWorker) return Forbid();
         if (!ModelState.IsValid) return Page();
         var existing = await _db.Voters.FindAsync(Voter!.Id);
         if (existing == null) return NotFound();

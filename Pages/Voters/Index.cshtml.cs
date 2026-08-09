@@ -9,6 +9,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Voters;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;

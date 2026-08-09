@@ -9,6 +9,7 @@ using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class IndexModel : PageModel
 {
     private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.SuperAdmin, UserRole.CampaignManager, UserRole.Candidate];

@@ -10,6 +10,7 @@ using Nirvachak_AI.Pages.Announcements;
 
 namespace Nirvachak_AI.Pages.Dashboard;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;

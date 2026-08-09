@@ -61,8 +61,8 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAddAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role != UserRole.SuperAdmin)
-            NewResult.ConstituencyId = user?.ConstituencyId ?? 1;
+        if (user?.Role != UserRole.SuperAdmin && user?.ConstituencyId.HasValue == true)
+            NewResult.ConstituencyId = user.ConstituencyId.Value;
         NewResult.EnteredByUserId = user?.Id;
         NewResult.EnteredAt = DateTime.UtcNow;
         _db.ElectionResults.Add(NewResult);

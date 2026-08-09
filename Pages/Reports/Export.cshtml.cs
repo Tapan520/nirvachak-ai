@@ -8,6 +8,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Reports;
 
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate")]
 public class ExportModel : PageModel
 {
     private readonly AppDbContext _db;

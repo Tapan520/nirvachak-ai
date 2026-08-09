@@ -8,6 +8,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Analytics;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class BoothAnalyticsRow
 {
     public int BoothNumber { get; set; }

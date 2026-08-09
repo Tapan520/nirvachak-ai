@@ -50,8 +50,8 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostAddAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role != UserRole.SuperAdmin)
-            NewShift.ConstituencyId = user?.ConstituencyId ?? 1;
+        if (user?.Role != UserRole.SuperAdmin && user?.ConstituencyId.HasValue == true)
+            NewShift.ConstituencyId = user.ConstituencyId.Value;
         NewShift.CreatedAt = DateTime.UtcNow;
         _db.BoothShiftAssignments.Add(NewShift);
         await _db.SaveChangesAsync();

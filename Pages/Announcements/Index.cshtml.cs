@@ -8,6 +8,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Announcements;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class AnnouncementViewModel
 {
     public Announcement Announcement { get; set; } = null!;

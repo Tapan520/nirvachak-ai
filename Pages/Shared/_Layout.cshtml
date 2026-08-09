@@ -65,8 +65,8 @@
                 @{
                     bool votersOpen      = currentPage.StartsWith("/Voters") || currentPage == "/VoterSlips/Index";
                     bool campaignOpen    = currentPage.StartsWith("/PhoneBanking") || currentPage.StartsWith("/Influencers") || currentPage.StartsWith("/Competitor") || currentPage.StartsWith("/Campaign") || currentPage.StartsWith("/Volunteers");
-                    bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys");
-                    bool electionOpsOpen = currentPage.StartsWith("/PannaPramukh") || currentPage.StartsWith("/BoothShifts") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/RapidResponse") || currentPage.StartsWith("/Broadcast") || currentPage.StartsWith("/Budget") || currentPage.StartsWith("/Results") || currentPage.StartsWith("/FieldReports");
+                    bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/Reports");
+                    bool electionOpsOpen = currentPage.StartsWith("/PannaPramukh") || currentPage.StartsWith("/BoothShifts") || currentPage.StartsWith("/RapidResponse") || currentPage.StartsWith("/Broadcast") || currentPage.StartsWith("/Budget") || currentPage.StartsWith("/Results") || currentPage.StartsWith("/FieldReports");
                     bool managementOpen  = currentPage.StartsWith("/Admin") || currentPage.StartsWith("/Booths");
                 }
                 <ul class="nav flex-column px-2">
@@ -179,12 +179,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/ElectionDay") ? "active" : "")" asp-page="/ElectionDay/Index">
+                            <a class="nav-link sidebar-link @(currentPage == "/ElectionDay/Index" ? "active" : "")" asp-page="/ElectionDay/Index">
                                 <i class="bi bi-activity me-2"></i> Election Day
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/ElectionDay/Checklist") ? "active" : "")" asp-page="/ElectionDay/Checklist">
+                            <a class="nav-link sidebar-link @(currentPage == "/ElectionDay/Checklist" ? "active" : "")" asp-page="/ElectionDay/Checklist">
                                 <i class="bi bi-clipboard2-check me-2"></i> Booth Checklist
                             </a>
                         </li>
@@ -229,6 +229,22 @@
                                 <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
                             </a>
                         </li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Transport") ? "active" : "")" asp-page="/Transport/Index">
+                                <i class="bi bi-truck me-2"></i> Voter Transport
+                            </a>
+                        </li>
+                        }
+                        @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        {
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Reports") ? "active" : "")" asp-page="/Reports/Export">
+                                <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i> Export Reports
+                            </a>
+                        </li>
+                        }
                     </ul>
                 </div>
 
@@ -253,11 +269,6 @@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/BoothShifts") ? "active" : "")" asp-page="/BoothShifts/Index">
                                 <i class="bi bi-calendar2-check-fill me-2"></i> Booth Shift Planner
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Transport") ? "active" : "")" asp-page="/Transport/Index">
-                                <i class="bi bi-truck me-2"></i> Voter Transport
                             </a>
                         </li>
                         <li class="nav-item">
@@ -295,18 +306,6 @@
                     <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage.StartsWith("/FieldReports") ? "active" : "")" asp-page="/FieldReports/Index">
                             <i class="bi bi-clipboard2-check-fill me-2"></i> Field Reports
-                        </a>
-                    </li>
-                </ul>
-                }
-
-                <!-- REPORTS & EXPORTS -->
-                @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
-                {
-                <ul class="nav flex-column px-2">
-                    <li class="nav-item mt-1">
-                        <a class="nav-link sidebar-link @(currentPage.StartsWith("/Reports/Export") ? "active" : "")" asp-page="/Reports/Export">
-                            <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i> Export Reports
                         </a>
                     </li>
                 </ul>

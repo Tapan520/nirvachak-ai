@@ -87,16 +87,12 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostDeleteLogAsync(int logId)
     {
         bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
-        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
-        if (!isSuperAdmin && !isAdmin) return Forbid();
+        if (!isSuperAdmin) return Forbid();
 
         var currentUser = await _userManager.GetUserAsync(User);
         var log = await _db.AuditLogs.FindAsync(logId);
         if (log != null)
         {
-            // Admin can only delete logs that belong to their constituency
-            if (!isSuperAdmin && log.ConstituencyId != currentUser?.ConstituencyId)
-                return Forbid();
 
             _db.AuditLogs.Remove(log);
             await _db.SaveChangesAsync();
@@ -119,15 +115,11 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnPostDeleteAllLogsAsync()
     {
         bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
-        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
-        if (!isSuperAdmin && !isAdmin) return Forbid();
+        if (!isSuperAdmin) return Forbid();
 
         var currentUser = await _userManager.GetUserAsync(User);
 
         IQueryable<AuditLog> auditQ = _db.AuditLogs;
-        // Admin can only delete logs scoped to their own constituency
-        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
-            auditQ = auditQ.Where(a => a.ConstituencyId == currentUser.ConstituencyId);
         if (!string.IsNullOrEmpty(AuditUserFilter))   auditQ = auditQ.Where(a => a.UserName == AuditUserFilter);
         if (!string.IsNullOrEmpty(AuditActionFilter)) auditQ = auditQ.Where(a => a.Action == AuditActionFilter);
         if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());

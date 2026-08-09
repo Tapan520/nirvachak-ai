@@ -15,6 +15,7 @@ public class Expense
     public string? ApprovedByName { get; set; }
     public string? Notes { get; set; }
     public bool IsECCompliant { get; set; } = true;
+    public string? ReceiptPhotoPath { get; set; }
     public int ConstituencyId { get; set; }
     public Constituency? Constituency { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -136,6 +136,17 @@
                                min="1" max="30" value="@Model.RetentionCount" />
                         <div class="form-text">Older backups beyond this count are automatically deleted. Max: 30.</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">?? Cloud Webhook URL <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="url" name="cloudWebhookUrl" class="form-control font-monospace"
+                               placeholder="https://hook.make.com/your-webhook-id"
+                               value="@Model.CloudWebhookUrl" />
+                        <div class="form-text">
+                            After each backup, the DB file is POSTed (base64) to this URL.
+                            Works with <strong>Make</strong>, <strong>Zapier</strong>, <strong>n8n</strong> or any custom endpoint.
+                            Leave blank to disable cloud upload.
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save me-1"></i>Save Settings
                     </button>

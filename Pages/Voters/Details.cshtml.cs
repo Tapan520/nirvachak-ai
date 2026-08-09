@@ -27,6 +27,7 @@ public class DetailsModel : PageModel
     public VoterProfile? SurveyProfile { get; set; }
     public VoterConsent? ConsentRecord { get; set; }
     public bool SurveyCompleted { get; set; }
+    public List<Voter> HouseholdMembers { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -42,6 +43,15 @@ public class DetailsModel : PageModel
         SurveyProfile  = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == id);
         ConsentRecord  = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == id);
         SurveyCompleted = await _db.SurveyCompletions.AnyAsync(s => s.VoterId == id);
+
+        // Load household members if this voter belongs to a household
+        if (!string.IsNullOrEmpty(Voter.HouseholdId))
+        {
+            HouseholdMembers = await _db.Voters
+                .Where(v => v.HouseholdId == Voter.HouseholdId && v.Id != id && !v.IsDeleted)
+                .OrderBy(v => v.Name)
+                .ToListAsync();
+        }
         return Page();
     }
 

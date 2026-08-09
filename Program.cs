@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -148,12 +150,14 @@ builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<PredictiveAnalyticsService>();
 builder.Services.AddScoped<WinProbabilityService>();
 builder.Services.AddScoped<IExotelService, ExotelService>();
+builder.Services.AddScoped<PushNotificationService>();
 
 // ?? Background Services ??????????????????????????????????????
 builder.Services.AddSingleton<BackupSettings>();
 builder.Services.AddSingleton<DatabaseBackupService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<DatabaseBackupService>());
 builder.Services.AddHostedService<ExpenseBudgetAlertService>();
+builder.Services.AddHostedService<SwingVoterAlertService>();
 
 // Named HTTP client for Exotel (30 s timeout)
 builder.Services.AddHttpClient("exotel", c =>
@@ -173,6 +177,19 @@ builder.Services.AddSession(options =>
 
 // ?? SignalR ???????????????????????????????????????????????????
 builder.Services.AddSignalR();
+
+// ?? Rate Limiting (public survey pages) ??????????????????????
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("survey", limiterOptions =>
+    {
+        limiterOptions.PermitLimit         = 20;
+        limiterOptions.Window              = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit          = 0;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // ?? API Controllers ???????????????????????????????????????????
 builder.Services.AddControllers();
@@ -212,6 +229,7 @@ builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
     options.Conventions.AllowAnonymousToPage("/Account/Login");
+    options.Conventions.AllowAnonymousToPage("/Account/TwoFactorLogin");
     options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
     options.Conventions.AllowAnonymousToFolder("/Survey");
 });
@@ -240,6 +258,7 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseCors(Constants.Policy.CorsAllowAll);
 app.UseRouting();
+app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -247,6 +266,14 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<ElectionDayHub>("/hubs/electionday");
+
+// Apply rate limit to public survey pages
+app.MapGet("/Survey/{**slug}", () => Results.Ok())
+   .RequireRateLimiting("survey")
+   .WithDisplayName("Survey-GET-RateLimit");
+app.MapPost("/Survey/{**slug}", () => Results.Ok())
+   .RequireRateLimiting("survey")
+   .WithDisplayName("Survey-POST-RateLimit");
 
 // ?? Health Check ???????????????????????????????????????????
 app.MapGet("/health", () =>

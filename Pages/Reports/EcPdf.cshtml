@@ -1,0 +1,181 @@
+@page
+@model Nirvachak_AI.Pages.Reports.EcPdfModel
+@{
+    ViewData["Title"] = "EC Compliance Expense Report";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>EC Expense Report — @Model.ConstituencyName</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; background: #fff; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 15mm 12mm; }
+
+        /* Header */
+        .report-header { border-bottom: 2pt solid #000; padding-bottom: 8px; margin-bottom: 12px; }
+        .report-header h1 { font-size: 14pt; font-weight: bold; text-align: center; }
+        .report-header h2 { font-size: 11pt; text-align: center; font-weight: normal; }
+        .report-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 9pt; }
+        .report-meta span { }
+
+        /* Summary box */
+        .summary-box { border: 1pt solid #000; padding: 8px 10px; margin: 10px 0; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .summary-row .label { font-weight: bold; }
+        .budget-bar-outer { height: 10px; background: #ddd; border: 1pt solid #999; margin: 4px 0; }
+        .budget-bar-inner { height: 100%; background: #000; }
+
+        /* Category table */
+        table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+        th { background: #000; color: #fff; font-size: 9pt; padding: 4px 6px; text-align: left; }
+        td { border: 0.5pt solid #ccc; padding: 3px 6px; font-size: 9pt; vertical-align: top; }
+        tr:nth-child(even) td { background: #f5f5f5; }
+        tfoot td { border-top: 1.5pt solid #000; font-weight: bold; background: #ebebeb; }
+
+        /* EC badge */
+        .ec-yes { color: green; font-weight: bold; }
+        .ec-no  { color: red;   font-weight: bold; }
+
+        /* Footer */
+        .footer { border-top: 1pt solid #999; margin-top: 14px; padding-top: 6px; font-size: 8pt; color: #555; display: flex; justify-content: space-between; }
+        .disclaimer { font-size: 8pt; color: #555; margin-top: 8px; font-style: italic; }
+
+        @@media print {
+            @@page { size: A4 portrait; margin: 10mm; }
+            body { background: #fff; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="no-print" style="padding:12px; background:#f8f9fa; border-bottom:1px solid #dee2e6; display:flex; gap:10px; align-items:center;">
+    <button onclick="window.print()" style="padding:8px 20px; background:#000; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+        ??? Print / Save as PDF
+    </button>
+    <a href="/Expenses/Index" style="text-decoration:none; color:#555; font-size:0.9rem;">? Back to Expenses</a>
+</div>
+
+<div class="page">
+    <!-- Header -->
+    <div class="report-header">
+        <h1>ELECTION COMMISSION EXPENSE STATEMENT</h1>
+        <h2>@Model.ConstituencyName</h2>
+        @if (!string.IsNullOrEmpty(Model.CandidateName))
+        {
+            <h2 style="font-size:10pt;">Candidate: @Model.CandidateName &nbsp;|&nbsp; Party: @Model.PartyName</h2>
+        }
+        <div class="report-meta">
+            <span>Election Date: @(Model.ElectionDate?.ToString("dd MMMM yyyy") ?? "—")</span>
+            <span>Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "All") – @(Model.DateTo?.ToString("dd MMM yyyy") ?? "All")</span>
+            <span>Generated: @Model.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")</span>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-box">
+        <div class="summary-row"><span class="label">Total Expenditure:</span><span>?@Model.TotalAmount.ToString("N2")</span></div>
+        <div class="summary-row"><span class="label">EC Permissible Limit:</span><span>?@Model.ECBudgetLimit.ToString("N2")</span></div>
+        <div class="summary-row"><span class="label">Budget Used:</span><span>@Model.ECBudgetPercent%</span></div>
+        <div class="budget-bar-outer">
+            <div class="budget-bar-inner" style="width:@Math.Min(100, Model.ECBudgetPercent)%;"></div>
+        </div>
+        <div class="summary-row"><span class="label">EC Compliant Expenses:</span><span>@Model.Expenses.Count(e => e.IsECCompliant) of @Model.Expenses.Count</span></div>
+        <div class="summary-row"><span class="label">Total Records:</span><span>@Model.Expenses.Count</span></div>
+    </div>
+
+    <!-- Category breakdown -->
+    @if (Model.CategoryTotals.Any())
+    {
+        <h3 style="font-size:10pt; margin:10px 0 4px;">Expenditure by Category</h3>
+        <table>
+            <thead><tr><th>Category</th><th style="text-align:right">Amount (?)</th><th style="text-align:right">% of Total</th></tr></thead>
+            <tbody>
+            @foreach (var cat in Model.CategoryTotals.OrderByDescending(c => c.Value))
+            {
+                var pct = Model.TotalAmount > 0 ? Math.Round(cat.Value / Model.TotalAmount * 100, 1) : 0;
+                <tr>
+                    <td>@cat.Key</td>
+                    <td style="text-align:right">@cat.Value.ToString("N2")</td>
+                    <td style="text-align:right">@pct%</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                <tr><td><strong>TOTAL</strong></td><td style="text-align:right"><strong>?@Model.TotalAmount.ToString("N2")</strong></td><td></td></tr>
+            </tfoot>
+        </table>
+    }
+
+    <!-- Expense details -->
+    <h3 style="font-size:10pt; margin:12px 0 4px;">Detailed Expense Register</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Payee</th>
+                <th>Voucher</th>
+                <th style="text-align:right">Amount (?)</th>
+                <th>EC</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{ int sno = 0; }
+        @foreach (var e in Model.Expenses)
+        {
+            sno++;
+            <tr>
+                <td>@sno</td>
+                <td style="white-space:nowrap">@e.ExpenseDate.ToString("dd/MM/yy")</td>
+                <td>@e.Description</td>
+                <td>@e.Category</td>
+                <td>@(e.PayeeName ?? "—")</td>
+                <td style="font-family:monospace">@(e.VoucherNumber ?? "—")</td>
+                <td style="text-align:right">@e.Amount.ToString("N2")</td>
+                <td class="@(e.IsECCompliant ? "ec-yes" : "ec-no")">@(e.IsECCompliant ? "?" : "?")</td>
+            </tr>
+        }
+        </tbody>
+        @if (Model.Expenses.Any())
+        {
+            <tfoot>
+                <tr>
+                    <td colspan="6" style="text-align:right">GRAND TOTAL</td>
+                    <td style="text-align:right">?@Model.TotalAmount.ToString("N2")</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        }
+    </table>
+
+    <p class="disclaimer">
+        This report is generated by Nirvachak AI Campaign Management System for EC compliance documentation.
+        All expenses marked EC Compliant (?) have been verified by the authorised campaign account holder.
+        This document must be countersigned by the candidate before submission to the Returning Officer.
+    </p>
+
+    <!-- Signature block -->
+    <div style="margin-top:30px; display:flex; justify-content:space-between;">
+        <div style="text-align:center; width:30%">
+            <div style="border-top:1pt solid #000; padding-top:4px; font-size:9pt;">Candidate's Signature</div>
+        </div>
+        <div style="text-align:center; width:30%">
+            <div style="border-top:1pt solid #000; padding-top:4px; font-size:9pt;">Election Agent's Signature</div>
+        </div>
+        <div style="text-align:center; width:30%">
+            <div style="border-top:1pt solid #000; padding-top:4px; font-size:9pt;">Date</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Nirvachak AI — Confidential Campaign Document</span>
+        <span>Page 1 of 1</span>
+    </div>
+</div>
+</body>
+</html>

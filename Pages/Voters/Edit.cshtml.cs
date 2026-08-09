@@ -53,6 +53,7 @@ public class EditModel : PageModel
         existing.SerialNumber = Voter.SerialNumber;
         existing.Sentiment = Voter.Sentiment;
         existing.Notes = Voter.Notes;
+        existing.HouseholdId = string.IsNullOrWhiteSpace(Voter.HouseholdId) ? null : Voter.HouseholdId.Trim();
 
         await _db.SaveChangesAsync();
         TempData["Message"] = "Voter updated successfully.";

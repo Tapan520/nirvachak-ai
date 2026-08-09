@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useOfflineSync } from '../context/OfflineSyncContext';
 import { getUnreadCount } from '../api/announcements';
 
 interface MenuItemProps {
@@ -34,13 +35,14 @@ const m = StyleSheet.create({
 });
 
 export default function MoreScreen() {
-  const { user, logout } = useAuth();
-  const nav = useNavigation<any>();
-  const [unread, setUnread] = useState(0);
+const { user, logout } = useAuth();
+const nav = useNavigation<any>();
+const { isOnline, pendingCount, syncNow } = useOfflineSync();
+const [unread, setUnread] = useState(0);
 
-  useEffect(() => {
-    getUnreadCount().then(setUnread).catch(() => {});
-  }, []);
+useEffect(() => {
+  getUnreadCount().then(setUnread).catch(() => {});
+}, []);
 
   return (
     <ScrollView style={s.container}>
@@ -51,6 +53,19 @@ export default function MoreScreen() {
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={s.name}>{user?.fullName}</Text>
           <Text style={s.role}>{user?.role}</Text>
+          {/* Offline / sync status */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4,
+              backgroundColor: isOnline ? '#2f9e44' : '#e67700' }} />
+            <Text style={{ color: isOnline ? '#2f9e44' : '#e67700', fontSize: 11, fontWeight: '600' }}>
+              {isOnline ? 'Online' : `Offline — ${pendingCount} queued`}
+            </Text>
+            {isOnline && pendingCount > 0 && (
+              <TouchableOpacity onPress={() => syncNow()} style={{ marginLeft: 4 }}>
+                <Text style={{ color: '#3b5bdb', fontSize: 11, fontWeight: '700' }}>Sync now</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
 
@@ -79,6 +94,8 @@ export default function MoreScreen() {
         <MenuItem icon="wallet-outline"        label="Expenses"         desc="Campaign expense tracker"         color="#2f9e44" screen="Expenses" />
         <MenuItem icon="clipboard-check-outline" label="Voter Consent"   desc="Survey completions & pending outreach" color="#0c8599" screen="VoterConsent" />
         <MenuItem icon="call-outline"           label="Phone Banking"       desc="Call floating voters & log outcomes"       color="#1971c2" screen="PhoneBanking" />
+        <MenuItem icon="logo-whatsapp"          label="WhatsApp Outreach"   desc="Send templated messages to voters"         color="#25D366" screen="WhatsAppOutreach" />
+        <MenuItem icon="map-outline"            label="Volunteer Map"       desc="Live field worker location tracking"       color="#1971c2" screen="VolunteerMap" />
         {/* Voter Slips – not required on mobile */}
         {/* <MenuItem icon="card-outline"           label="Voter Slips"         desc="Browse & filter voter slip records"        color="#3b5bdb" screen="VoterSlips" /> */}
         <MenuItem icon="people-circle-outline"  label="Panna Pramukh"       desc="Panna-level voter coverage tracker"        color="#0c8599" screen="PannaPramukh" />

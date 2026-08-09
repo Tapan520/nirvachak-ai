@@ -26,6 +26,9 @@ public class CreateModel : PageModel
     [BindProperty]
     public int? SelectedConstituencyId { get; set; }
 
+    [BindProperty]
+    public IFormFile? ReceiptPhoto { get; set; }
+
     public SelectList? ConstituencyList { get; set; }
     public bool IsAdmin { get; set; }
 
@@ -59,6 +62,31 @@ public class CreateModel : PageModel
         Expense.ApprovedByUserId = user?.Id;
         Expense.ApprovedByName = user?.FullName;
         Expense.CreatedAt = DateTime.UtcNow;
+
+        // Handle receipt photo upload
+        if (ReceiptPhoto != null && ReceiptPhoto.Length > 0)
+        {
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "application/pdf" };
+            if (!allowedTypes.Contains(ReceiptPhoto.ContentType.ToLower()))
+            {
+                ModelState.AddModelError("ReceiptPhoto", "Only JPG, PNG, WebP, or PDF files are allowed.");
+                return Page();
+            }
+            if (ReceiptPhoto.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError("ReceiptPhoto", "File size must be under 5 MB.");
+                return Page();
+            }
+            var uploadsDir = Path.Combine("wwwroot", "uploads", "receipts");
+            Directory.CreateDirectory(uploadsDir);
+            var ext      = Path.GetExtension(ReceiptPhoto.FileName);
+            var fileName = $"receipt_{DateTime.UtcNow:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+            using var stream = System.IO.File.Create(filePath);
+            await ReceiptPhoto.CopyToAsync(stream);
+            Expense.ReceiptPhotoPath = $"/uploads/receipts/{fileName}";
+        }
+
         _db.Expenses.Add(Expense);
         await _db.SaveChangesAsync();
         TempData["Message"] = "Expense recorded.";

@@ -17,14 +17,17 @@ public class IndexModel : PageModel
     private readonly ElectionDayService _electionDayService;
     private readonly UserManager<AppUser> _userManager;
     private readonly IHubContext<ElectionDayHub> _hub;
+    private readonly IExotelService _exotel;
 
     public IndexModel(AppDbContext db, ElectionDayService electionDayService,
-        UserManager<AppUser> userManager, IHubContext<ElectionDayHub> hub)
+        UserManager<AppUser> userManager, IHubContext<ElectionDayHub> hub,
+        IExotelService exotel)
     {
-        _db = db;
+        _db                 = db;
         _electionDayService = electionDayService;
-        _userManager = userManager;
-        _hub = hub;
+        _userManager        = userManager;
+        _hub                = hub;
+        _exotel             = exotel;
     }
 
     public List<BoothTurnoutDto> BoothTurnout { get; set; } = new();
@@ -32,10 +35,12 @@ public class IndexModel : PageModel
     public List<Voter> NotYetVotedFavour { get; set; } = new();
     public List<Constituency> Constituencies { get; set; } = new();
     public bool IsAdmin { get; set; }
+    public bool ExotelConfigured { get; set; }
     public int TotalVoters { get; set; }
     public int TotalVoted { get; set; }
     public double OverallPercent { get; set; }
     public int ConstituencyId { get; set; }
+    public int SmsBlastCount { get; set; }
 
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public int? ConstituencyFilter { get; set; }
@@ -67,6 +72,9 @@ public class IndexModel : PageModel
                      && v.Sentiment == VoterSentiment.Favour)
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
             .Take(200).ToListAsync();
+
+        ExotelConfigured = await _exotel.IsConfiguredAsync(ConstituencyId);
+        SmsBlastCount    = NotYetVotedFavour.Count(v => !string.IsNullOrEmpty(v.MobileNumber));
     }
 
     public async Task<IActionResult> OnPostMarkVotedAsync(int voterId)
@@ -90,8 +98,41 @@ public class IndexModel : PageModel
             var booth = await _db.Booths.FirstOrDefaultAsync(b => b.BoothNumber == voter.BoothNumber && b.ConstituencyId == cId);
             if (booth != null)
                 await ElectionDayHub.BroadcastTurnoutUpdate(_hub, cId, booth.BoothNumber, booth.VotedCount, booth.TotalVoters);
-            TempData["Message"] = $"Voter {voter.Name} marked as voted.";
+        TempData["Message"] = $"Voter {voter.Name} marked as voted.";
         }
         return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostSmsBlastAsync(string? customMessage)
+    {
+        var user    = await _userManager.GetUserAsync(User);
+        var isAdmin = user?.Role == UserRole.SuperAdmin;
+        var cId     = isAdmin ? (ConstituencyFilter ?? user?.ConstituencyId ?? 1)
+                              : (user?.ConstituencyId ?? 1);
+
+        var constituency = await _db.Constituencies.FindAsync(cId);
+        var defaultMsg   = $"Dear voter, polling is underway for {constituency?.Name ?? "your constituency"}. " +
+                           "Please exercise your right to vote today. Your vote matters!";
+        var message = string.IsNullOrWhiteSpace(customMessage) ? defaultMsg : customMessage.Trim();
+
+        // Only send to Favour voters who haven't voted and have a mobile number
+        var targets = await _db.Voters
+            .Where(v => v.ConstituencyId == cId && !v.IsDeleted
+                     && v.ElectionDayStatus == ElectionDayStatus.NotVoted
+                     && v.Sentiment == VoterSentiment.Favour
+                     && v.MobileNumber != null && v.MobileNumber != "")
+            .OrderBy(v => v.BoothNumber)
+            .Take(500)
+            .ToListAsync();
+
+        int sent = 0, failed = 0;
+        foreach (var voter in targets)
+        {
+            var (success, _, _) = await _exotel.SendSmsAsync(cId, voter.MobileNumber!, message);
+            if (success) sent++; else failed++;
+        }
+
+        TempData["Message"] = $"📱 SMS Blast complete: {sent} sent, {failed} failed.";
+        return RedirectToPage(new { ConstituencyFilter });
     }
 }

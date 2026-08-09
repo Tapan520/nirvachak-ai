@@ -66,8 +66,16 @@ public class VoterImportService
                 .Select(v => v.VoterId)
                 .ToHashSet();
 
+            // Build a set of existing (normalised name + booth + serial) keys for fuzzy duplicate detection
+            var existingKeys = _db.Voters
+                .IgnoreQueryFilters()
+                .Where(v => v.ConstituencyId == constituencyId)
+                .Select(v => v.Name.ToLower() + "|" + v.BoothNumber + "|" + v.SerialNumber)
+                .ToHashSet();
+
             // Detect duplicates within the import file itself
-            var seenInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenInFile    = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenKeysInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var voters = new List<Voter>();
             foreach (var row in rows)
             {
@@ -88,6 +96,20 @@ public class VoterImportService
                 {
                     result.Skipped++;
                     result.Errors.Add($"Duplicate (within file): {cleanId} — {row.Name}");
+                    continue;
+                }
+                // Fuzzy duplicate: same name + booth + serial already in DB or file
+                var fuzzyKey = row.Name.Trim().ToLower() + "|" + row.BoothNumber + "|" + row.SerialNumber;
+                if (existingKeys.Contains(fuzzyKey))
+                {
+                    result.Skipped++;
+                    result.Errors.Add($"Probable duplicate (same name+booth+serial in DB): {cleanId} — {row.Name}");
+                    continue;
+                }
+                if (!seenKeysInFile.Add(fuzzyKey))
+                {
+                    result.Skipped++;
+                    result.Errors.Add($"Probable duplicate (same name+booth+serial within file): {cleanId} — {row.Name}");
                     continue;
                 }
                 voters.Add(new Voter

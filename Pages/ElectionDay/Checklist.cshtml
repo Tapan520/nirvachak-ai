@@ -1,0 +1,129 @@
+@page
+@model Nirvachak_AI.Pages.ElectionDay.ChecklistModel
+@{
+    ViewData["Title"] = "Booth Readiness Checklist";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-clipboard2-check-fill me-2 text-success"></i>Booth Readiness Checklist</h4>
+        <p class="text-muted small mb-0">Mark each booth as ready before election day begins.</p>
+    </div>
+    @if (Model.IsAdmin && Model.Constituencies.Any())
+    {
+        <form method="get">
+            <select name="ConstituencyFilter" class="form-select form-select-sm" onchange="this.form.submit()" style="max-width:220px">
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.ConstituencyFilter == c.Id)">@c.Name</option>
+                }
+            </select>
+        </form>
+    }
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show py-2">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@* Overall progress *@
+@if (Model.TotalBooths > 0)
+{
+    var pct = (int)Math.Round((double)Model.ReadyCount / Model.TotalBooths * 100);
+    <div class="card mb-4 border-@(pct == 100 ? "success" : pct >= 50 ? "warning" : "danger")">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold">Overall Readiness</span>
+                <span class="badge bg-@(pct == 100 ? "success" : pct >= 50 ? "warning text-dark" : "danger")">
+                    @Model.ReadyCount / @Model.TotalBooths booths fully ready (@pct%)
+                </span>
+            </div>
+            <div class="progress" style="height:12px; border-radius:6px;">
+                <div class="progress-bar bg-@(pct == 100 ? "success" : pct >= 50 ? "warning" : "danger")"
+                     style="width:@pct%; border-radius:6px;"></div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!Model.Booths.Any())
+{
+    <div class="alert alert-info">No booths found. Please add booths first.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var booth in Model.Booths)
+        {
+            var cl = Model.Checklists.GetValueOrDefault(booth.BoothNumber);
+            var isFullyReady = cl != null && cl.AgentPresent && cl.BannerDisplayed &&
+                               cl.VoterListPrinted && cl.TransportArranged &&
+                               cl.PhoneCharged && cl.BoothClean;
+            var checkedCount = cl == null ? 0 :
+                (cl.AgentPresent ? 1 : 0) + (cl.BannerDisplayed ? 1 : 0) +
+                (cl.VoterListPrinted ? 1 : 0) + (cl.TransportArranged ? 1 : 0) +
+                (cl.PhoneCharged ? 1 : 0) + (cl.BoothClean ? 1 : 0);
+
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 border-@(isFullyReady ? "success" : cl != null ? "warning" : "secondary")">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2
+                                bg-@(isFullyReady ? "success" : cl != null ? "warning" : "light")
+                                @(isFullyReady || cl != null ? "text-white" : "")">
+                        @if (isFullyReady)   { <span class="fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Booth #@booth.BoothNumber — READY</span> }
+                        else if (cl != null) { <span class="fw-bold text-dark"><i class="bi bi-exclamation-circle-fill me-1"></i>Booth #@booth.BoothNumber — @checkedCount/6</span> }
+                        else                 { <span class="fw-bold"><i class="bi bi-dash-circle me-1"></i>Booth #@booth.BoothNumber — Not checked</span> }
+                        <small>@booth.BoothName</small>
+                    </div>
+                    <div class="card-body py-2">
+                        <form method="post" asp-page-handler="Save">
+                            <input type="hidden" name="boothNumber" value="@booth.BoothNumber" />
+                            <input type="hidden" name="ConstituencyFilter" value="@Model.ConstituencyFilter" />
+                            <div class="row g-1">
+                                @{
+                                    void CheckItem(string name, string label, bool val, string icon) {
+                                        <div class="col-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="@name" id="@($"{name}_{booth.BoothNumber}")"
+                                                       value="true" @(val ? "checked" : "") />
+                                                <label class="form-check-label small" for="@($"{name}_{booth.BoothNumber}")">
+                                                    <i class="bi @icon me-1"></i>@label
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                @{ CheckItem("agentPresent",     "Agent Present",      cl?.AgentPresent ?? false,      "bi-person-check-fill"); }
+                                @{ CheckItem("bannerDisplayed",  "Banner Up",          cl?.BannerDisplayed ?? false,   "bi-flag-fill"); }
+                                @{ CheckItem("voterListPrinted", "Voter List Printed", cl?.VoterListPrinted ?? false,  "bi-printer-fill"); }
+                                @{ CheckItem("transportArranged","Transport Ready",    cl?.TransportArranged ?? false, "bi-truck"); }
+                                @{ CheckItem("phoneCharged",     "Phone Charged",      cl?.PhoneCharged ?? false,      "bi-battery-charging"); }
+                                @{ CheckItem("boothClean",       "Booth Clean",        cl?.BoothClean ?? false,        "bi-stars"); }
+                            </div>
+                            <div class="mt-2">
+                                <input type="text" name="notes" class="form-control form-control-sm"
+                                       placeholder="Notes (optional)" value="@cl?.Notes" />
+                            </div>
+                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-save me-1"></i>Save
+                                </button>
+                                @if (cl != null)
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>@cl.SubmittedByName
+                                        · @cl.SubmittedAt.ToLocalTime().ToString("h:mm tt")
+                                    </small>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

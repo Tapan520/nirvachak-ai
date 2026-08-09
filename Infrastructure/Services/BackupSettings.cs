@@ -12,6 +12,7 @@ public class BackupSettings
     private bool _isEnabled = true;
     private int  _retentionDays = 7;
     private string _scheduleHour = "02"; // 2 AM UTC
+    private string? _cloudWebhookUrl = null;
 
     public BackupSettings(ILogger<BackupSettings> logger)
     {
@@ -43,6 +44,13 @@ public class BackupSettings
         set { _scheduleHour = value; Save(); }
     }
 
+    /// <summary>Optional webhook URL to POST the backup file to (e.g. Make/Zapier/n8n).</summary>
+    public string? CloudWebhookUrl
+    {
+        get => _cloudWebhookUrl;
+        set { _cloudWebhookUrl = value; Save(); }
+    }
+
     /// <summary>Timestamp of the last successful backup.</summary>
     public DateTime? LastBackupAt { get; set; }
 
@@ -61,12 +69,13 @@ public class BackupSettings
             if (!File.Exists(_settingsFile)) return;
             var json = File.ReadAllText(_settingsFile);
             var data = System.Text.Json.JsonSerializer.Deserialize<BackupSettingsData>(json);
-            if (data == null) return;
-            _isEnabled     = data.IsEnabled;
-            _retentionDays = data.RetentionCount;
-            _scheduleHour  = data.ScheduleHour ?? "02";
-            LastBackupAt   = data.LastBackupAt;
-            LastBackupFile = data.LastBackupFile;
+        if (data == null) return;
+            _isEnabled       = data.IsEnabled;
+            _retentionDays   = data.RetentionCount;
+            _scheduleHour    = data.ScheduleHour ?? "02";
+            _cloudWebhookUrl = data.CloudWebhookUrl;
+            LastBackupAt     = data.LastBackupAt;
+            LastBackupFile   = data.LastBackupFile;
         }
         catch (Exception ex)
         {
@@ -86,7 +95,8 @@ public class BackupSettings
                 RetentionCount = _retentionDays,
                 ScheduleHour   = _scheduleHour,
                 LastBackupAt   = LastBackupAt,
-                LastBackupFile = LastBackupFile
+                LastBackupFile = LastBackupFile,
+                CloudWebhookUrl = _cloudWebhookUrl
             };
             var json = System.Text.Json.JsonSerializer.Serialize(data,
                 new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
@@ -100,10 +110,11 @@ public class BackupSettings
 
     private class BackupSettingsData
     {
-        public bool     IsEnabled      { get; set; } = true;
-        public int      RetentionCount { get; set; } = 7;
-        public string?  ScheduleHour   { get; set; } = "02";
-        public DateTime? LastBackupAt  { get; set; }
-        public string?  LastBackupFile { get; set; }
+        public bool     IsEnabled       { get; set; } = true;
+        public int      RetentionCount  { get; set; } = 7;
+        public string?  ScheduleHour    { get; set; } = "02";
+        public DateTime? LastBackupAt   { get; set; }
+        public string?  LastBackupFile  { get; set; }
+        public string?  CloudWebhookUrl { get; set; }
     }
 }

@@ -134,13 +134,22 @@ else
 </div>
 
 <!-- Priority Chase List: Favour voters not yet voted -->
-<div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between">
+<div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <span>
             <i class="bi bi-person-exclamation me-2 text-danger"></i>
             <strong>Chase List</strong> — Favour Voters Not Yet Voted
         </span>
-        <span class="badge bg-danger">@Model.NotYetVotedFavour.Count pending</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger">@Model.NotYetVotedFavour.Count pending</span>
+            @if (Model.ExotelConfigured && Model.SmsBlastCount > 0)
+            {
+                <button type="button" class="btn btn-sm btn-warning"
+                        data-bs-toggle="modal" data-bs-target="#smsBlastModal">
+                    <i class="bi bi-send-fill me-1"></i>SMS Blast (@Model.SmsBlastCount)
+                </button>
+            }
+        </div>
     </div>
     <div class="card-body p-0">
         @if (!Model.NotYetVotedFavour.Any())
@@ -185,6 +194,43 @@ else
         }
     </div>
 </div>
+
+@* SMS Blast Modal *@
+@if (Model.ExotelConfigured && Model.SmsBlastCount > 0)
+{
+<div class="modal fade" id="smsBlastModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-send-fill me-2 text-warning"></i>SMS Blast to Favour Voters</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="SmsBlast">
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        This will send an SMS to <strong>@Model.SmsBlastCount</strong> Favour voters who have not voted yet.
+                        Standard Exotel SMS charges apply.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message <span class="text-muted fw-normal">(leave blank for default)</span></label>
+                        <textarea name="customMessage" class="form-control" rows="3"
+                                  placeholder="Default: 'Dear voter, polling is underway... Please exercise your right to vote today!'"></textarea>
+                        <div class="form-text">Max 160 characters recommended for standard SMS.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"
+                            onclick="return confirm('Send SMS to @Model.SmsBlastCount voters?')">
+                        <i class="bi bi-send-fill me-1"></i>Send SMS Blast
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+}
 
 @section Scripts {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>

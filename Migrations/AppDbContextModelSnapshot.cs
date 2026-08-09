@@ -420,6 +420,63 @@ namespace Nirvachak_AI.Migrations
                     b.ToTable("Booths");
                 });
 
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.BoothChecklist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AgentPresent").HasColumnType("INTEGER");
+                    b.Property<bool>("BannerDisplayed").HasColumnType("INTEGER");
+                    b.Property<bool>("BoothClean").HasColumnType("INTEGER");
+                    b.Property<int>("BoothNumber").HasColumnType("INTEGER");
+                    b.Property<int>("ConstituencyId").HasColumnType("INTEGER");
+                    b.Property<string>("Notes").HasColumnType("TEXT");
+                    b.Property<bool>("PhoneCharged").HasColumnType("INTEGER");
+                    b.Property<DateTime>("SubmittedAt").HasColumnType("TEXT");
+                    b.Property<string>("SubmittedByName").HasColumnType("TEXT");
+                    b.Property<string>("SubmittedByUserId").HasColumnType("TEXT");
+                    b.Property<bool>("TransportArranged").HasColumnType("INTEGER");
+                    b.Property<DateTime?>("UpdatedAt").HasColumnType("TEXT");
+                    b.Property<bool>("VoterListPrinted").HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConstituencyId", "BoothNumber").IsUnique();
+
+                    b.ToTable("BoothChecklists");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.UserPushToken", b =>
+                {
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<string>("DeviceId").HasColumnType("TEXT");
+                    b.Property<string>("ExpoPushToken").IsRequired().HasColumnType("TEXT");
+                    b.Property<string>("Platform").HasColumnType("TEXT");
+                    b.Property<DateTime>("RegisteredAt").HasColumnType("TEXT");
+                    b.Property<DateTime>("LastSeenAt").HasColumnType("TEXT");
+                    b.Property<string>("UserId").IsRequired().HasColumnType("TEXT");
+                    b.HasKey("Id");
+                    b.HasIndex("UserId");
+                    b.HasIndex("ExpoPushToken").IsUnique();
+                    b.ToTable("UserPushTokens");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.VolunteerLocation", b =>
+                {
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
+                    b.Property<double?>("AccuracyMeters").HasColumnType("REAL");
+                    b.Property<int?>("ConstituencyId").HasColumnType("INTEGER");
+                    b.Property<double>("Latitude").HasColumnType("REAL");
+                    b.Property<double>("Longitude").HasColumnType("REAL");
+                    b.Property<DateTime>("UpdatedAt").HasColumnType("TEXT");
+                    b.Property<string>("UserId").IsRequired().HasColumnType("TEXT");
+                    b.Property<string>("UserName").IsRequired().HasColumnType("TEXT");
+                    b.HasKey("Id");
+                    b.HasIndex("UserId").IsUnique();
+                    b.ToTable("VolunteerLocations");
+                });
+
             modelBuilder.Entity("Nirvachak_AI.Domain.Entities.BoothShiftAssignment", b =>
                 {
                     b.Property<int>("Id")
@@ -698,6 +755,12 @@ namespace Nirvachak_AI.Migrations
                     b.Property<string>("IssuesRaised")
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
@@ -869,6 +932,9 @@ namespace Nirvachak_AI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PayeeName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReceiptPhotoPath")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("VoucherNumber")
@@ -1582,6 +1648,9 @@ namespace Nirvachak_AI.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("HouseholdId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("ImportedAt")
                         .HasColumnType("TEXT");
 
@@ -1628,6 +1697,8 @@ namespace Nirvachak_AI.Migrations
                     b.HasIndex("LastContactedAt");
 
                     b.HasIndex("Name");
+
+                    b.HasIndex("HouseholdId");
 
                     b.HasIndex("Sentiment");
 
@@ -1922,6 +1993,17 @@ namespace Nirvachak_AI.Migrations
                 {
                     b.HasOne("Nirvachak_AI.Domain.Entities.Constituency", "Constituency")
                         .WithMany("Booths")
+                        .HasForeignKey("ConstituencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Constituency");
+                });
+
+            modelBuilder.Entity("Nirvachak_AI.Domain.Entities.BoothChecklist", b =>
+                {
+                    b.HasOne("Nirvachak_AI.Domain.Entities.Constituency", "Constituency")
+                        .WithMany()
                         .HasForeignKey("ConstituencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

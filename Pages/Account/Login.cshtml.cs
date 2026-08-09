@@ -47,7 +47,7 @@ public class LoginModel : PageModel
         if (!ModelState.IsValid) return Page();
 
         var result = await _signInManager.PasswordSignInAsync(
-            Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
@@ -58,6 +58,11 @@ public class LoginModel : PageModel
                     constituencyId: user.ConstituencyId);
 
             return LocalRedirect(returnUrl ?? "/Dashboard/Index");
+        }
+
+        if (result.RequiresTwoFactor)
+        {
+            return RedirectToPage("/Account/TwoFactorLogin", new { returnUrl });
         }
 
         await _audit.LogAsync("unknown", Input.Email, "LoginFailed", "Session",

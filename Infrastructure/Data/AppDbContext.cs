@@ -54,6 +54,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<RapidResponseItem> RapidResponseItems => Set<RapidResponseItem>();
     public DbSet<BudgetPlan> BudgetPlans => Set<BudgetPlan>();
     public DbSet<ElectionResult> ElectionResults => Set<ElectionResult>();
+    public DbSet<BoothChecklist> BoothChecklists => Set<BoothChecklist>();
+    public DbSet<UserPushToken> UserPushTokens => Set<UserPushToken>();
+    public DbSet<VolunteerLocation> VolunteerLocations => Set<VolunteerLocation>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -66,6 +69,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<Voter>().HasIndex(v => v.VoterId);
         builder.Entity<Voter>().HasIndex(v => new { v.ConstituencyId, v.BoothNumber });
         builder.Entity<Voter>().HasIndex(v => v.Name);
+        builder.Entity<Voter>().HasIndex(v => v.HouseholdId);
         // ── Performance indexes for analytics, sentiment & contact filtering ──
         builder.Entity<Voter>().HasIndex(v => v.Sentiment);
         builder.Entity<Voter>().HasIndex(v => v.LastContactedAt);
@@ -170,5 +174,20 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<BudgetPlan>()
             .Property(b => b.PlannedAmount)
             .HasColumnType("decimal(18,2)");
+
+        builder.Entity<BoothChecklist>()
+            .HasIndex(c => new { c.ConstituencyId, c.BoothNumber })
+            .IsUnique();
+
+        builder.Entity<UserPushToken>()
+            .HasIndex(t => t.UserId);
+
+        builder.Entity<UserPushToken>()
+            .HasIndex(t => t.ExpoPushToken)
+            .IsUnique();
+
+        builder.Entity<VolunteerLocation>()
+            .HasIndex(l => l.UserId)
+            .IsUnique();
     }
 }

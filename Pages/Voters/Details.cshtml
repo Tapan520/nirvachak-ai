@@ -161,9 +161,46 @@
                     {
                         <div class="col-12"><strong>Notes:</strong> @Model.Voter.Notes</div>
                     }
+                    @if (!string.IsNullOrEmpty(Model.Voter.HouseholdId))
+                    {
+                        <div class="col-12">
+                            <strong>Household ID:</strong>
+                            <span class="font-monospace badge bg-light text-dark border">@Model.Voter.HouseholdId</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
+
+        @* Household members *@
+        @if (Model.HouseholdMembers.Any())
+        {
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-people-fill me-2 text-info"></i>
+                Household Members <span class="badge bg-info ms-1">@Model.HouseholdMembers.Count</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Name</th><th>EPIC</th><th>Age/Gender</th><th>Sentiment</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var m in Model.HouseholdMembers)
+                        {
+                            <tr>
+                                <td class="fw-semibold small">@m.Name</td>
+                                <td class="font-monospace small">@m.VoterId</td>
+                                <td class="small">@m.Age / @m.Gender</td>
+                                <td><span class="badge badge-@m.Sentiment.ToString().ToLower()">@m.Sentiment</span></td>
+                                <td><a asp-page="/Voters/Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-eye"></i></a></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        }
 
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">

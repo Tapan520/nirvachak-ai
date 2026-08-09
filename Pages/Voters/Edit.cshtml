@@ -76,6 +76,14 @@
                             <label asp-for="Voter!.Notes" class="form-label fw-semibold">Notes</label>
                             <textarea asp-for="Voter!.Notes" class="form-control" rows="2"></textarea>
                         </div>
+                        <div class="col-12">
+                            <label asp-for="Voter!.HouseholdId" class="form-label fw-semibold">
+                                Household ID <span class="text-muted fw-normal">(optional — link family members)</span>
+                            </label>
+                            <input asp-for="Voter!.HouseholdId" class="form-control font-monospace"
+                                   placeholder="e.g. ADDR-123-B or leave blank" />
+                            <div class="form-text">Voters sharing the same Household ID will be grouped as a family on their profile page.</div>
+                        </div>
                     </div>
                     <div class="mt-3 d-flex gap-2">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Update</button>

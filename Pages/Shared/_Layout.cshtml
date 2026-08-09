@@ -184,6 +184,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/ElectionDay/Checklist") ? "active" : "")" asp-page="/ElectionDay/Checklist">
+                                <i class="bi bi-clipboard2-check me-2"></i> Booth Checklist
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/Index">
                                 <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
                             </a>
@@ -372,11 +377,16 @@
                         @currentUser?.FullName
                         <br/><span class="text-muted" style="font-size:0.7rem;">@currentUser?.Role</span>
                     </div>
-                    <form method="post" asp-page="/Account/Logout">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Logout">
-                            <i class="bi bi-box-arrow-right"></i>
-                        </button>
-                    </form>
+                    <div class="d-flex gap-1">
+                        <a asp-page="/Account/ManageTwoFactor" class="btn btn-sm btn-outline-info" title="Two-Factor Authentication">
+                            <i class="bi bi-shield-lock"></i>
+                        </a>
+                        <form method="post" asp-page="/Account/Logout">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Logout">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>

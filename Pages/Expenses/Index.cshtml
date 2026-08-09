@@ -111,6 +111,13 @@
        target="_blank" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-printer me-1"></i>Print Report
     </a>
+    <a asp-page="/Reports/EcPdf"
+       asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
+       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+       target="_blank" class="btn btn-outline-dark btn-sm">
+        <i class="bi bi-file-earmark-pdf me-1"></i>EC PDF Report
+    </a>
 </div>
 
 <div class="card">
@@ -118,7 +125,7 @@
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
-                    <tr><th>Date</th><th>Description</th><th>Category</th><th>Constituency</th><th>Payee</th><th>Amount</th><th>EC</th><th>Voucher</th></tr>
+                    <tr><th>Date</th><th>Description</th><th>Category</th><th>Constituency</th><th>Payee</th><th>Amount</th><th>EC</th><th>Voucher</th><th>Receipt</th></tr>
                 </thead>
                 <tbody>
                 @foreach (var e in Model.Expenses)
@@ -149,7 +156,7 @@
                         <tr>
                             <td colspan="5" class="fw-bold text-end">Total:</td>
                             <td class="fw-bold">&#8377;@Model.TotalAmount.ToString("N0")</td>
-                            <td colspan="2"></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tfoot>
                 }

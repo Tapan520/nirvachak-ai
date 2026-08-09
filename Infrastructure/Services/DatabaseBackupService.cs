@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using System.Net.Http.Json;
 
 namespace Nirvachak_AI.Infrastructure.Services;
 
@@ -12,6 +13,7 @@ public class DatabaseBackupService : BackgroundService
     private readonly ILogger<DatabaseBackupService> _logger;
     private readonly IWebHostEnvironment _env;
     private readonly BackupSettings _settings;
+    private readonly IHttpClientFactory _httpFactory;
 
     // Poll every minute to check if it's time to run the scheduled backup.
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
@@ -19,11 +21,13 @@ public class DatabaseBackupService : BackgroundService
     public DatabaseBackupService(
         ILogger<DatabaseBackupService> logger,
         IWebHostEnvironment env,
-        BackupSettings settings)
+        BackupSettings settings,
+        IHttpClientFactory httpFactory)
     {
-        _logger   = logger;
-        _env      = env;
-        _settings = settings;
+        _logger      = logger;
+        _env         = env;
+        _settings    = settings;
+        _httpFactory = httpFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -102,6 +106,10 @@ public class DatabaseBackupService : BackgroundService
             _settings.LastError      = null;
 
             PruneOldBackups(backupDir);
+
+            // Upload to cloud webhook if configured
+            if (!string.IsNullOrWhiteSpace(_settings.CloudWebhookUrl))
+                await UploadToWebhookAsync(backupFile);
         }
         catch (Exception ex)
         {
@@ -129,5 +137,33 @@ public class DatabaseBackupService : BackgroundService
         return raw.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
             ? raw["Data Source=".Length..].Trim()
             : raw.Trim();
+    }
+
+    private async Task UploadToWebhookAsync(string backupFile)
+    {
+        try
+        {
+            var fileBytes  = await File.ReadAllBytesAsync(backupFile);
+            var b64        = Convert.ToBase64String(fileBytes);
+            var fileName   = Path.GetFileName(backupFile);
+            var payload    = new
+            {
+                fileName,
+                fileSizeBytes = fileBytes.Length,
+                timestamp     = DateTime.UtcNow.ToString("o"),
+                contentBase64 = b64
+            };
+            var client = _httpFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(60);
+            var response = await client.PostAsJsonAsync(_settings.CloudWebhookUrl, payload);
+            if (response.IsSuccessStatusCode)
+                _logger.LogInformation("[Backup] ?? Cloud upload succeeded ? {Url}", _settings.CloudWebhookUrl);
+            else
+                _logger.LogWarning("[Backup] ?? Cloud upload returned {Status}", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Backup] ?? Cloud upload failed.");
+        }
     }
 }

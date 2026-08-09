@@ -23,6 +23,7 @@ public class Voter
     public ElectionDayStatus ElectionDayStatus { get; set; } = ElectionDayStatus.NotVoted;
     public string? Notes { get; set; }
     public string? PhotoPath { get; set; }
+    public string? HouseholdId { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime ImportedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastContactedAt { get; set; }

@@ -27,6 +27,7 @@ public class BackupModel : PageModel
     public bool         IsEnabled      { get; set; }
     public int          RetentionCount { get; set; }
     public string       ScheduleHour   { get; set; } = "02";
+    public string?      CloudWebhookUrl { get; set; }
     public DateTime?    LastBackupAt   { get; set; }
     public string?      LastBackupFile { get; set; }
     public string?      LastError      { get; set; }
@@ -45,11 +46,14 @@ public class BackupModel : PageModel
     }
 
     // ?? Save Settings ????????????????????????????????????????????
-    public IActionResult OnPostSaveSettings(string scheduleHour, int retentionCount)
+    public IActionResult OnPostSaveSettings(string scheduleHour, int retentionCount, string? cloudWebhookUrl)
     {
-        _settings.ScheduleHour   = scheduleHour;
-        _settings.RetentionCount = retentionCount;
-        TempData["Message"] = $"? Settings saved — daily backup at {scheduleHour}:00 UTC, keeping last {retentionCount} files.";
+        _settings.ScheduleHour    = scheduleHour;
+        _settings.RetentionCount  = retentionCount;
+        _settings.CloudWebhookUrl = string.IsNullOrWhiteSpace(cloudWebhookUrl) ? null : cloudWebhookUrl.Trim();
+        var msg = $"\u2705 Settings saved — daily backup at {scheduleHour}:00 UTC, keeping last {retentionCount} files.";
+        if (!string.IsNullOrWhiteSpace(_settings.CloudWebhookUrl)) msg += " \u2601\ufe0f Cloud webhook configured.";
+        TempData["Message"] = msg;
         return RedirectToPage();
     }
 
@@ -93,12 +97,13 @@ public class BackupModel : PageModel
     // ?? Helpers ??????????????????????????????????????????????????
     private void LoadViewModel()
     {
-        IsEnabled      = _settings.IsEnabled;
-        RetentionCount = _settings.RetentionCount;
-        ScheduleHour   = _settings.ScheduleHour;
-        LastBackupAt   = _settings.LastBackupAt;
-        LastBackupFile = _settings.LastBackupFile;
-        LastError      = _settings.LastError;
+        IsEnabled       = _settings.IsEnabled;
+        RetentionCount  = _settings.RetentionCount;
+        ScheduleHour    = _settings.ScheduleHour;
+        CloudWebhookUrl = _settings.CloudWebhookUrl;
+        LastBackupAt    = _settings.LastBackupAt;
+        LastBackupFile  = _settings.LastBackupFile;
+        LastError       = _settings.LastError;
 
         var dbPath    = ResolveDbPath();
         var backupDir = Path.Combine(Path.GetDirectoryName(dbPath) ?? "/data", "backups");

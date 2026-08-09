@@ -39,6 +39,8 @@ import TransportScreen from '../screens/TransportScreen';
 import VoterSlipsScreen from '../screens/VoterSlipsScreen';
 import AdminScreen from '../screens/AdminScreen';
 import WinProbabilityScreen from '../screens/WinProbabilityScreen';
+import WhatsAppOutreachScreen from '../screens/WhatsAppOutreachScreen';
+import VolunteerMapScreen from '../screens/VolunteerMapScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -153,6 +155,10 @@ export default function AppNavigator() {
             <Stack.Screen name="Admin" component={AdminScreen}
               options={{ headerShown: false }} />
             <Stack.Screen name="WinProbability" component={WinProbabilityScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="WhatsAppOutreach" component={WhatsAppOutreachScreen}
+              options={{ headerShown: true, title: 'WhatsApp Outreach', headerTintColor: '#25D366' }} />
+            <Stack.Screen name="VolunteerMap" component={VolunteerMapScreen}
               options={{ headerShown: false }} />
           </>
         ) : (

@@ -20,14 +20,16 @@ var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? (isProduction ? "/data/election.db" : "Data Source=election.db");
 
-// Production volume warning — logs if DATABASE_PATH was not explicitly set.
+// Log the active database path on every startup so it is visible in Railway deploy logs.
+Console.ForegroundColor = ConsoleColor.Cyan;
+Console.WriteLine($"[DB] Active database path: {dbPath}");
 if (isProduction && Environment.GetEnvironmentVariable("DATABASE_PATH") == null)
 {
     Console.ForegroundColor = ConsoleColor.Yellow;
     Console.WriteLine("[WARNING] DATABASE_PATH env var is not set. Defaulting to /data/election.db.");
     Console.WriteLine("[WARNING] Ensure a Railway Volume is mounted at /data for data persistence.");
-    Console.ResetColor();
 }
+Console.ResetColor();
 
 // Ensure the directory exists (important for Railway volume path /data/)
 var dbFile = dbPath.Replace("Data Source=", "").Trim();

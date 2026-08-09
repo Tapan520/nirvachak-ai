@@ -15,8 +15,14 @@ public static class SeedService
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Apply all pending EF migrations
+        // Apply all pending EF migrations (schema-only, never drops data)
         await db.Database.MigrateAsync();
+
+        // ── Safety log: print user count so it is visible in Railway deploy logs ──
+        var totalUsers = await userManager.Users.CountAsync();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"[SEED] Database connected. Total users in DB: {totalUsers}");
+        Console.ResetColor();
 
         foreach (var role in Enum.GetNames<UserRole>())
         {
@@ -109,10 +115,25 @@ public static class SeedService
 
         // Seed each default account independently — never use Users.Any() as the guard
         // because SuperAdmin is already seeded above, making Users.Any() always true.
+        // IMPORTANT: Only seed demo accounts if no real (non-demo) users exist yet.
+        // This prevents overwriting or interfering with users created in the Admin panel.
+        var demoEmails = new[] { "admin@election.com", "manager@election.com", "worker@election.com", "superadmin@nirvachak.ai" };
+        var hasRealUsers = await userManager.Users
+            .AnyAsync(u => !demoEmails.Contains(u.Email));
+
+        if (hasRealUsers)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("[SEED] Real users detected — skipping demo user seeding to protect existing accounts.");
+            Console.ResetColor();
+        }
+
         if (db.Constituencies.Any())
         {
             var constituency = db.Constituencies.First();
 
+            if (!hasRealUsers)
+            {
             if (await userManager.FindByEmailAsync("admin@election.com") == null)
             {
                 var admin = new AppUser
@@ -161,6 +182,7 @@ public static class SeedService
                 var r3 = await userManager.CreateAsync(worker, "Worker@123");
                 if (r3.Succeeded) await userManager.AddToRoleAsync(worker, nameof(UserRole.FieldWorker));
             }
+            } // end !hasRealUsers
         }
 
         // ── Transport Vehicles ────────────────────────────────────────────────

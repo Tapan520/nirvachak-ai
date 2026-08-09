@@ -83,14 +83,20 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteLogAsync(int logId)
     {
-        if (!User.IsInRole(nameof(UserRole.SuperAdmin))) return Forbid();
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
+        if (!isSuperAdmin && !isAdmin) return Forbid();
 
+        var currentUser = await _userManager.GetUserAsync(User);
         var log = await _db.AuditLogs.FindAsync(logId);
         if (log != null)
         {
+            // Admin can only delete logs that belong to their constituency
+            if (!isSuperAdmin && log.ConstituencyId != currentUser?.ConstituencyId)
+                return Forbid();
+
             _db.AuditLogs.Remove(log);
             await _db.SaveChangesAsync();
-            var currentUser = await _userManager.GetUserAsync(User);
             await _audit.LogAsync(
                 currentUser!.Id, currentUser.FullName,
                 "DeleteAuditLog", "AuditLog", logId.ToString(),
@@ -109,9 +115,16 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteAllLogsAsync()
     {
-        if (!User.IsInRole(nameof(UserRole.SuperAdmin))) return Forbid();
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
+        if (!isSuperAdmin && !isAdmin) return Forbid();
+
+        var currentUser = await _userManager.GetUserAsync(User);
 
         IQueryable<AuditLog> auditQ = _db.AuditLogs;
+        // Admin can only delete logs scoped to their own constituency
+        if (!isSuperAdmin && currentUser?.ConstituencyId != null)
+            auditQ = auditQ.Where(a => a.ConstituencyId == currentUser.ConstituencyId);
         if (!string.IsNullOrEmpty(AuditUserFilter))   auditQ = auditQ.Where(a => a.UserName == AuditUserFilter);
         if (!string.IsNullOrEmpty(AuditActionFilter)) auditQ = auditQ.Where(a => a.Action == AuditActionFilter);
         if (AuditDateFrom.HasValue) auditQ = auditQ.Where(a => a.CreatedAt >= AuditDateFrom.Value.ToUniversalTime());
@@ -122,7 +135,6 @@ public class IndexModel : PageModel
         _db.AuditLogs.RemoveRange(logsToDelete);
         await _db.SaveChangesAsync();
 
-        var currentUser = await _userManager.GetUserAsync(User);
         await _audit.LogAsync(
             currentUser!.Id, currentUser.FullName,
             "DeleteAuditLogs", "AuditLog", null,

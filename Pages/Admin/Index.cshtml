@@ -108,7 +108,7 @@
                 <a href="?" class="btn btn-sm btn-outline-secondary">Clear</a>
             }
         </form>
-        @if (User.IsInRole("SuperAdmin"))
+        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
         {
             <form method="post" asp-page-handler="DeleteAllLogs"
                   onsubmit="return confirm('Delete all matching audit log records? This cannot be undone.');">
@@ -126,7 +126,7 @@
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-sm mb-0">
-                <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th>@if (User.IsInRole("SuperAdmin")) { <th></th> }</tr></thead>
+                <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th>@if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) { <th></th> }</tr></thead>
                 <tbody>
                 @foreach (var log in Model.AuditLogs)
                 {
@@ -136,7 +136,7 @@
                         <td class="small"><span class="badge bg-secondary">@log.Action</span></td>
                         <td class="small">@log.EntityType @log.EntityId</td>
                         <td class="small text-muted">@(log.Details?.Length > 80 ? log.Details[..80] + "…" : log.Details)</td>
-                        @if (User.IsInRole("SuperAdmin"))
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
                             <td>
                                 <form method="post" asp-page-handler="DeleteLog"
@@ -152,7 +152,7 @@
                 }
                 @if (!Model.AuditLogs.Any())
                 {
-                    <tr><td colspan="@(User.IsInRole("SuperAdmin") ? 6 : 5)" class="text-center text-muted py-3 small">No audit logs match the filter.</td></tr>
+                    <tr><td colspan="@(User.IsInRole("SuperAdmin") || User.IsInRole("Admin") ? 6 : 5)" class="text-center text-muted py-3 small">No audit logs match the filter.</td></tr>
                 }
                 </tbody>
             </table>

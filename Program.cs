@@ -151,6 +151,7 @@ builder.Services.AddScoped<PredictiveAnalyticsService>();
 builder.Services.AddScoped<WinProbabilityService>();
 builder.Services.AddScoped<IExotelService, ExotelService>();
 builder.Services.AddScoped<PushNotificationService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 // ?? Background Services ??????????????????????????????????????
 builder.Services.AddSingleton<BackupSettings>();
@@ -231,6 +232,8 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AllowAnonymousToPage("/Account/Login");
     options.Conventions.AllowAnonymousToPage("/Account/TwoFactorLogin");
     options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
+    options.Conventions.AllowAnonymousToPage("/Account/ForgotPassword");
+    options.Conventions.AllowAnonymousToPage("/Account/ResetPassword");
     options.Conventions.AllowAnonymousToFolder("/Survey");
 });
 

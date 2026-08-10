@@ -292,87 +292,70 @@ app.MapGet("/health", () =>
 }).AllowAnonymous();
 
 // ?? Database Schema Initialisation ??????????????????????????
-// Fresh install  → EnsureCreatedAsync() builds the full schema directly from the
-//                  current EF model in one atomic step, then stamps all migration
-//                  IDs into __EFMigrationsHistory so MigrateAsync never tries to
-//                  re-apply them.
-// Existing DB    → MigrateAsync() applies only the pending incremental migrations.
-// This avoids the known SQLite issue where a mid-run process kill can leave
-// __EFMigrationsHistory fully populated but the actual ALTER TABLE SQLs uncommitted.
+// Strategy (SAFE — never deletes existing data):
+//   Fresh install (no DB file) → EnsureCreatedAsync() builds full schema, then
+//                                 stamps all migration IDs so MigrateAsync is a no-op.
+//   Existing DB               → MigrateAsync() safely applies only pending migrations
+//                                 (adds columns / tables) without touching existing data.
+//
+// ⚠️  IMPORTANT: We intentionally do NOT delete the DB file on schema mismatch.
+//     A missing column just means a pending migration — MigrateAsync handles it safely.
+//     Deleting the DB would wipe all production data on Railway on every redeploy.
 using (var dbInitScope = app.Services.CreateScope())
 {
     var initDb = dbInitScope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    // Detect corrupt DB: file exists but is missing a column that must be present
-    // after all migrations have run. If corrupt, delete and recreate from scratch.
     bool dbExists = File.Exists(dbFile);
-    bool isCorrupt = false;
 
-    if (dbExists)
+    if (!dbExists)
     {
-        try
-        {
-            // Quick schema integrity check — try to read from the Voters table with HouseholdId
-            await initDb.Database.ExecuteSqlRawAsync("SELECT HouseholdId FROM Voters LIMIT 1;");
-        }
-        catch (Microsoft.Data.Sqlite.SqliteException)
-        {
-            isCorrupt = true;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("[DB] Corrupt/stale database detected (missing columns). Deleting and recreating.");
-            Console.ResetColor();
-            initDb.Database.GetDbConnection().Close();
-        }
-    }
-
-    if (!dbExists || isCorrupt)
-    {
-        if (isCorrupt)
-        {
-            // Dispose context so the file lock is released before deleting
-            dbInitScope.ServiceProvider.GetRequiredService<AppDbContext>()
-                .Database.GetDbConnection().Dispose();
-            GC.Collect();
-            await Task.Delay(200);
-            if (File.Exists(dbFile)) File.Delete(dbFile);
-            if (File.Exists(dbFile + "-shm")) File.Delete(dbFile + "-shm");
-            if (File.Exists(dbFile + "-wal")) File.Delete(dbFile + "-wal");
-        }
-
+        // ── Brand-new installation ─────────────────────────────────────────
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("[DB] Creating fresh schema via EnsureCreated.");
+        Console.WriteLine("[DB] No database found — creating fresh schema via EnsureCreated.");
         Console.ResetColor();
 
-        // Recreate context with a fresh connection after deletion
-        using var freshScope = app.Services.CreateScope();
-        var freshDb = freshScope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        // Creates ALL tables/columns/indexes from the current EF model in one atomic step.
-        await freshDb.Database.EnsureCreatedAsync();
+        // Creates ALL tables/columns/indexes from the current EF model in one step.
+        await initDb.Database.EnsureCreatedAsync();
 
         // Stamp every known migration as applied so future MigrateAsync calls are no-ops.
-        await freshDb.Database.ExecuteSqlRawAsync(@"
+        await initDb.Database.ExecuteSqlRawAsync(@"
             CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
                 ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
                 ""ProductVersion"" TEXT NOT NULL
             );");
 
-        foreach (var migrationId in freshDb.Database.GetMigrations())
+        foreach (var migrationId in initDb.Database.GetMigrations())
         {
-            await freshDb.Database.ExecuteSqlRawAsync(
+            await initDb.Database.ExecuteSqlRawAsync(
                 $"INSERT OR IGNORE INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('{migrationId}', '8.0.11');");
         }
 
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("[DB] Schema created and all migrations stamped successfully.");
+        Console.WriteLine("[DB] Fresh schema created and all migrations stamped successfully.");
         Console.ResetColor();
     }
     else
     {
+        // ── Existing database — apply pending migrations SAFELY ────────────
+        // MigrateAsync() only adds missing tables/columns — it never deletes data.
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("[DB] Existing healthy database — applying any pending migrations.");
+        Console.WriteLine("[DB] Existing database found — applying any pending migrations (data preserved).");
         Console.ResetColor();
-        await initDb.Database.MigrateAsync();
+
+        try
+        {
+            await initDb.Database.MigrateAsync();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("[DB] Migrations applied successfully.");
+            Console.ResetColor();
+        }
+        catch (Exception ex)
+        {
+            // Log the migration error but do NOT delete the DB — data is too valuable.
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"[DB] Migration failed: {ex.Message}");
+            Console.WriteLine("[DB] The application will continue with the existing schema.");
+            Console.ResetColor();
+        }
     }
 }
 

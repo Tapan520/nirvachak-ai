@@ -44,7 +44,7 @@ public class MobileController : ApiBaseController
     {
         var userId    = GetUserId();
         var userName  = GetUserFullName();
-        var cId       = GetConstituencyId() ?? 0;
+        var cId       = GetConstituencyId();
         var syncedAt  = DateTime.UtcNow;
 
         int visitsAdded   = 0;
@@ -118,7 +118,7 @@ public class MobileController : ApiBaseController
     {
         var userId   = GetUserId();
         var userName = GetUserFullName();
-        var cId      = GetConstituencyId() ?? 0;
+        var cId      = GetConstituencyId();
 
         var voter = await _db.Voters.FindAsync(req.VoterId);
         if (voter == null) return NotFound(new { error = "Voter not found" });
@@ -200,7 +200,7 @@ public class MobileController : ApiBaseController
         var userId   = GetUserId();
         var userName = GetUserFullName();
         var cId      = GetConstituencyId();
-        await UpsertVolunteerLocationAsync(userId, userName, cId ?? 0,
+        await UpsertVolunteerLocationAsync(userId, userName, cId,
             req.Latitude, req.Longitude, req.AccuracyMeters);
         await _db.SaveChangesAsync();
         return Ok(new { success = true });

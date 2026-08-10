@@ -134,20 +134,33 @@
                         <td class="small">@e.ExpenseDate.ToString("dd MMM yy")</td>
                         <td>@e.Description</td>
                         <td><span class="badge bg-info text-dark">@e.Category</span></td>
-                        <td>@(e.Constituency?.Name ?? "�")</td>
-                        <td>@(e.PayeeName ?? "�")</td>
-                        <td class="fw-bold">?@e.Amount.ToString("N0")</td>
+                        <td>@(e.Constituency?.Name ?? "—")</td>
+                        <td>@(e.PayeeName ?? "—")</td>
+                        <td class="fw-bold">&#8377;@e.Amount.ToString("N0")</td>
                         <td>
                             <span class="badge @(e.IsECCompliant ? "bg-success" : "bg-danger")">
-                                @(e.IsECCompliant ? "?" : "?")
+                                @(e.IsECCompliant ? "✓" : "✗")
                             </span>
                         </td>
-                        <td class="small font-monospace">@(e.VoucherNumber ?? "�")</td>
+                        <td class="small font-monospace">@(e.VoucherNumber ?? "—")</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(e.ReceiptPhotoPath))
+                            {
+                                <a href="@e.ReceiptPhotoPath" target="_blank"
+                                   class="btn btn-sm btn-outline-secondary py-0 px-1" title="View receipt">
+                                    <i class="bi bi-paperclip"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
                     </tr>
                 }
                 @if (!Model.Expenses.Any())
                 {
-                    <tr><td colspan="8" class="text-center text-muted py-4">No expenses recorded.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">No expenses recorded.</td></tr>
                 }
                 </tbody>
                 @if (Model.Expenses.Any())

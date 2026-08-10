@@ -37,9 +37,13 @@ public class CreateModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        if (user?.Role != UserRole.SuperAdmin)
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
+
+        if (!ModelState.IsValid) return Page();
+        if (!IsAdmin)
             Event.ConstituencyId = user?.ConstituencyId ?? 1;
         Event.OrganizedByUserId = user?.Id;
         Event.OrganizedByName = user?.FullName;

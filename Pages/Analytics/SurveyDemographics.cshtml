@@ -312,6 +312,7 @@
                 <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportCompletedCsv"
                    asp-route-FilterBooth="@Model.FilterBooth"
                    asp-route-FilterWard="@Model.FilterWard"
+                   asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
                    class="btn btn-sm btn-outline-success">
                     <i class="bi bi-download me-1"></i>Download CSV
                 </a>
@@ -441,6 +442,7 @@
                 <a asp-page="/Analytics/SurveyDemographics" asp-page-handler="ExportPendingCsv"
                    asp-route-FilterBooth="@Model.FilterBooth"
                    asp-route-FilterWard="@Model.FilterWard"
+                   asp-route-SelectedConstituencyId="@Model.SelectedConstituencyId"
                    class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-download me-1"></i>Download CSV
                 </a>

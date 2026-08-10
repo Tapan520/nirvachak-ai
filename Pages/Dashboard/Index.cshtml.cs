@@ -283,7 +283,12 @@ public class IndexModel : PageModel
             .Include(a => a.Acknowledgements)
             .Where(a => a.IsActive && (a.ExpiresAt == null || a.ExpiresAt > now)
                 && (a.ConstituencyId == null || a.ConstituencyId == user.ConstituencyId || IsAdmin)
-                && (a.TargetRoles == "All" || a.TargetRoles.Contains(roleStr) || a.CreatedByUserId == user.Id))
+                && (a.TargetRoles == "All"
+                    || a.TargetRoles == roleStr
+                    || a.TargetRoles.StartsWith(roleStr + ",")
+                    || a.TargetRoles.EndsWith("," + roleStr)
+                    || a.TargetRoles.Contains("," + roleStr + ",")
+                    || a.CreatedByUserId == user.Id))
             .OrderByDescending(a => a.IsPinned).ThenByDescending(a => a.CreatedAt)
             .Take(20).ToListAsync();
 

@@ -15,9 +15,6 @@ public static class SeedService
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Apply all pending EF migrations (schema-only, never drops data)
-        await db.Database.MigrateAsync();
-
         // ── Safety log: print user count so it is visible in Railway deploy logs ──
         var totalUsers = await userManager.Users.CountAsync();
         Console.ForegroundColor = ConsoleColor.Green;

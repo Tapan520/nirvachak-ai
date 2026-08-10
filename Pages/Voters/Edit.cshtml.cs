@@ -7,6 +7,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Voters;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class EditModel : PageModel
 {
     private readonly AppDbContext _db;

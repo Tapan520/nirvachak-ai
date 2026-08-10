@@ -137,7 +137,13 @@ public class IndexModel : PageModel
             currentUser.ConstituencyId);
 
         TempData["Message"] = $"{count} audit log record(s) deleted.";
-        return RedirectToPage();
+        return RedirectToPage(new
+        {
+            AuditUserFilter,
+            AuditActionFilter,
+            AuditDateFrom = AuditDateFrom?.ToString("yyyy-MM-dd"),
+            AuditDateTo   = AuditDateTo?.ToString("yyyy-MM-dd")
+        });
     }
 
     public async Task<IActionResult> OnPostToggleAsync(string userId)

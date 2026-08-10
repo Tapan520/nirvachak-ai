@@ -85,7 +85,6 @@ public class IndexModel : PageModel
             return RedirectToPage();
         }
         var user = await _userManager.GetUserAsync(User);
-        var cId = user?.ConstituencyId ?? 1;
         var voter = await _db.Voters.FindAsync(voterId);
         if (voter != null)
         {
@@ -95,12 +94,15 @@ public class IndexModel : PageModel
                 return RedirectToPage();
             }
             await _electionDayService.MarkVotedAsync(voterId);
+            // Use the voter's own ConstituencyId for the booth lookup — using user?.ConstituencyId
+            // would be wrong for a SuperAdmin who is viewing a different constituency.
+            var cId = voter.ConstituencyId;
             var booth = await _db.Booths.FirstOrDefaultAsync(b => b.BoothNumber == voter.BoothNumber && b.ConstituencyId == cId);
             if (booth != null)
                 await ElectionDayHub.BroadcastTurnoutUpdate(_hub, cId, booth.BoothNumber, booth.VotedCount, booth.TotalVoters);
         TempData["Message"] = $"Voter {voter.Name} marked as voted.";
         }
-        return RedirectToPage();
+        return RedirectToPage(new { ConstituencyFilter });
     }
 
     public async Task<IActionResult> OnPostSmsBlastAsync(string? customMessage)

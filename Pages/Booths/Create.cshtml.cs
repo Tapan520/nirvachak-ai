@@ -8,6 +8,7 @@ using Nirvachak_AI.Infrastructure.Data;
 
 namespace Nirvachak_AI.Pages.Booths;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -41,6 +42,9 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
+        IsAdmin = user?.Role == UserRole.SuperAdmin;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
         if (!ModelState.IsValid) return Page();
         if (user?.Role != UserRole.SuperAdmin)
             Booth.ConstituencyId = user?.ConstituencyId ?? 1;

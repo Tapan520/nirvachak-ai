@@ -113,9 +113,9 @@ else if (Model.SelectedConstituency != null)
                     if (favourPct >= 60)      { cellBg = $"rgba(47,158,68,{0.2 + favourPct / 200:F2})"; textCol = "#1a5c2e"; }
                     else if (favourPct >= 40) { cellBg = "rgba(255,212,59,0.35)";                         textCol = "#7d5a00"; }
                     else                      { cellBg = $"rgba(224,49,49,{0.15 + againstPct / 200:F2})"; textCol = "#7d0000"; }
-                    <div class="text-center rounded p-2 border" style="width:90px; background:@cellBg; cursor:default;"
-                         title="Booth @row.BoothNumber: @row.Total voters | Favour: @row.Favour | Against: @row.Against | Floating: @row.Floating">
-                        <div class="fw-bold" style="font-size:1rem; color:@textCol">B@row.BoothNumber</div>
+                    <div class="text-center rounded p-2 border" style="min-width:110px; max-width:130px; background:@cellBg; cursor:default;"
+                         title="Booth @(row.BoothNumber): @row.Total voters | Favour: @row.Favour | Against: @row.Against | Floating: @row.Floating">
+                        <div class="fw-bold text-nowrap" style="font-size:0.95rem; color:@textCol">Booth&nbsp;@(row.BoothNumber)</div>
                         <div style="font-size:0.72rem; color:@textCol">
                             <div>✅ @row.Favour <span class="text-muted">(@((int)favourPct)%)</span></div>
                             <div>❌ @row.Against</div>

@@ -107,7 +107,7 @@ public class ChecklistModel : PageModel
         }
 
         await _db.SaveChangesAsync();
-        TempData["Message"] = $"? Booth {boothNumber} checklist saved.";
+        TempData["Message"] = $"Booth {boothNumber} checklist saved successfully.";
         return RedirectToPage(new { ConstituencyFilter = cId });
     }
 }

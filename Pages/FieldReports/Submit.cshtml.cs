@@ -23,9 +23,14 @@ public class SubmitModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
-        Report.WorkerUserId = user?.Id ?? string.Empty;
-        Report.WorkerName = user?.FullName ?? string.Empty;
-        Report.ConstituencyId = user?.ConstituencyId ?? 1;
+        if (user?.ConstituencyId == null)
+        {
+            ModelState.AddModelError(string.Empty, "Your account is not assigned to a constituency. Please contact the administrator.");
+            return Page();
+        }
+        Report.WorkerUserId = user.Id;
+        Report.WorkerName = user.FullName;
+        Report.ConstituencyId = user.ConstituencyId.Value;
         Report.Status = FieldReportStatus.Submitted;
         Report.CreatedAt = DateTime.UtcNow;
         _db.FieldReports.Add(Report);

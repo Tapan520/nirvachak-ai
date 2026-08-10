@@ -72,9 +72,13 @@ public class IndexModel : PageModel
         }
 
         // Must target this role OR be authored by this user
+        // Use exact word-boundary matching to avoid 'Admin' matching 'SuperAdmin' as substring.
         query = query.Where(a =>
             a.TargetRoles == "All" ||
-            a.TargetRoles.Contains(roleStr) ||
+            a.TargetRoles == roleStr ||
+            a.TargetRoles.StartsWith(roleStr + ",") ||
+            a.TargetRoles.EndsWith("," + roleStr) ||
+            a.TargetRoles.Contains("," + roleStr + ",") ||
             a.CreatedByUserId == user.Id);
 
         if (!string.IsNullOrEmpty(Category) && Enum.TryParse<AnnouncementCategory>(Category, out var cat))

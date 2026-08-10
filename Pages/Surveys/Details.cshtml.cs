@@ -9,6 +9,7 @@ using SurveyEntity = Nirvachak_AI.Domain.Entities.Survey;
 
 namespace Nirvachak_AI.Pages.Surveys;
 
+[Microsoft.AspNetCore.Authorization.Authorize]
 public class DetailsModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -20,7 +21,7 @@ public class DetailsModel : PageModel
         _userManager = userManager;
     }
 
-    private static readonly UserRole[] ManageRoles = [UserRole.Admin, UserRole.CampaignManager, UserRole.Candidate];
+    private static readonly UserRole[] ManageRoles = [UserRole.SuperAdmin, UserRole.Admin, UserRole.CampaignManager, UserRole.Candidate];
 
     public SurveyEntity Survey { get; set; } = null!;
     public Dictionary<int, int> RatingBreakdown { get; set; } = new();

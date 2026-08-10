@@ -41,9 +41,12 @@ public class CreateModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
         var isSuperAdmin = user?.Role == UserRole.SuperAdmin;
+        IsAdmin = isSuperAdmin;
+        if (IsAdmin)
+            Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
+        if (!ModelState.IsValid) return Page();
 
         Survey.ConstituencyId = isSuperAdmin && SelectedConstituencyId.HasValue
             ? SelectedConstituencyId.Value

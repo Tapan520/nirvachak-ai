@@ -34,9 +34,13 @@ public class CreateBroadcastModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
         int? cId = user?.ConstituencyId;
+        var templates = await _db.MessageTemplates.Where(t => !cId.HasValue || t.ConstituencyId == cId).ToListAsync();
+        TemplateItems = new SelectList(templates, "Id", "Title");
+        EstimatedCount = await _db.Voters.CountAsync(v => !v.IsDeleted && v.MobileNumber != null && (!cId.HasValue || v.ConstituencyId == cId));
+
+        if (!ModelState.IsValid) return Page();
 
         var voterQ = _db.Voters.Where(v => !v.IsDeleted && v.MobileNumber != null);
         if (cId.HasValue) voterQ = voterQ.Where(v => v.ConstituencyId == cId);

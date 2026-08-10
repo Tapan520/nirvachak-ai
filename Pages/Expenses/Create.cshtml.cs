@@ -51,8 +51,14 @@ public class CreateModel : PageModel
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
-        if (!ModelState.IsValid) return Page();
         var isAdmin = user?.Role == UserRole.SuperAdmin;
+        IsAdmin = isAdmin;
+        if (IsAdmin)
+        {
+            var constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
+            ConstituencyList = new SelectList(constituencies, "Id", "Name");
+        }
+        if (!ModelState.IsValid) return Page();
 
         if (isAdmin && SelectedConstituencyId.HasValue)
             Expense.ConstituencyId = SelectedConstituencyId.Value;

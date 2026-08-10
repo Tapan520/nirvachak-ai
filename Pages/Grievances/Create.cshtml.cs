@@ -45,11 +45,17 @@ public class CreateModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid) return Page();
         var user = await _userManager.GetUserAsync(User);
         if (user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent)
             return Forbid();
         var isAdmin = user?.Role == UserRole.SuperAdmin;
+        IsAdmin = isAdmin;
+        if (IsAdmin)
+        {
+            var constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
+            ConstituencyList = new SelectList(constituencies, "Id", "Name");
+        }
+        if (!ModelState.IsValid) return Page();
 
         if (isAdmin && SelectedConstituencyId.HasValue)
             Grievance.ConstituencyId = SelectedConstituencyId.Value;

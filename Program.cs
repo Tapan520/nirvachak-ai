@@ -167,11 +167,11 @@ builder.Services.AddHttpClient("exotel", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Named HTTP client for Resend email API
-builder.Services.AddHttpClient("brevo", c =>
+// Named HTTP client for Mailjet email API
+builder.Services.AddHttpClient("mailjet", c =>
 {
     c.Timeout = TimeSpan.FromSeconds(30);
-    c.BaseAddress = new Uri("https://api.brevo.com");
+    c.BaseAddress = new Uri("https://api.mailjet.com");
 });
 
 // Session (used for survey rate-limiting on public pages)

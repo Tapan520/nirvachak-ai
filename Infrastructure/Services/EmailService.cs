@@ -10,13 +10,14 @@ public interface IEmailService
 }
 
 /// <summary>
-/// Email service using Brevo (https://brevo.com) HTTP API.
+/// Email service using Mailjet HTTP API (https://mailjet.com).
 /// Uses port 443 (HTTPS) — works on Railway where all SMTP ports are blocked.
-/// Free tier: 300 emails/day, sends to ANY email address, no domain verification needed.
+/// Free tier: 200 emails/day, sends to ANY email address, no domain verification needed.
 /// Configure via Railway environment variables:
-///   Brevo__ApiKey   = xkeysib-xxxx   (your Brevo API key)
-///   Brevo__From     = tapchauhan2001@gmail.com  (your verified sender email in Brevo)
-///   Brevo__FromName = Nirvachak AI
+///   Mailjet__ApiKey    = your-mailjet-api-key
+///   Mailjet__SecretKey = your-mailjet-secret-key
+///   Mailjet__From      = tapchauhan2001@gmail.com  (your verified sender email)
+///   Mailjet__FromName  = Nirvachak AI
 /// </summary>
 public class SmtpEmailService : IEmailService
 {
@@ -34,22 +35,29 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
-        var apiKey   = _config["Brevo:ApiKey"]   ?? _config["Brevo__ApiKey"];
-        var from     = _config["Brevo:From"]     ?? _config["Brevo__From"];
-        var fromName = _config["Brevo:FromName"] ?? _config["Brevo__FromName"] ?? "Nirvachak AI";
+        var apiKey    = _config["Mailjet:ApiKey"]    ?? _config["Mailjet__ApiKey"];
+        var secretKey = _config["Mailjet:SecretKey"] ?? _config["Mailjet__SecretKey"];
+        var from      = _config["Mailjet:From"]      ?? _config["Mailjet__From"];
+        var fromName  = _config["Mailjet:FromName"]  ?? _config["Mailjet__FromName"] ?? "Nirvachak AI";
 
-        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(from))
+        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(secretKey) || string.IsNullOrWhiteSpace(from))
         {
-            _logger.LogWarning("[Email] Brevo not configured. Skipping email to {Email}. Subject: {Subject}", toEmail, subject);
+            _logger.LogWarning("[Email] Mailjet not configured. Skipping email to {Email}. Subject: {Subject}", toEmail, subject);
             return;
         }
 
         var payload = new
         {
-            sender  = new { name = fromName, email = from },
-            to      = new[] { new { name = toName, email = toEmail } },
-            subject = subject,
-            htmlContent = htmlBody
+            Messages = new[]
+            {
+                new
+                {
+                    From    = new { Email = from, Name = fromName },
+                    To      = new[] { new { Email = toEmail, Name = toName } },
+                    Subject = subject,
+                    HTMLPart = htmlBody
+                }
+            }
         };
 
         var json    = JsonSerializer.Serialize(payload);
@@ -57,19 +65,18 @@ public class SmtpEmailService : IEmailService
 
         try
         {
-            var client = _httpClientFactory.CreateClient("brevo");
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Add("api-key", apiKey);
-            client.DefaultRequestHeaders.Accept.Add(
-                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            var client = _httpClientFactory.CreateClient("mailjet");
+            var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{apiKey}:{secretKey}"));
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", credentials);
 
-            var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+            var response = await client.PostAsync("https://api.mailjet.com/v3.1/send", content);
             var body     = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("[Email] Brevo API error {Status}: {Body}", response.StatusCode, body);
-                throw new InvalidOperationException($"Brevo API returned {response.StatusCode}: {body}");
+                _logger.LogError("[Email] Mailjet API error {Status}: {Body}", response.StatusCode, body);
+                throw new InvalidOperationException($"Mailjet API returned {response.StatusCode}: {body}");
             }
 
             _logger.LogInformation("[Email] Sent '{Subject}' to {Email}", subject, toEmail);

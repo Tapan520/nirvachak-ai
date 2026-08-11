@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -255,7 +256,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Railway terminates SSL at the load balancer — only redirect in local dev
+// Railway terminates SSL at the load balancer — trust forwarded headers so
+// Request.Scheme and Request.Host reflect the public HTTPS URL.
+// KnownNetworks/KnownProxies are cleared so headers from Railway's non-loopback
+// proxy are accepted (otherwise ASP.NET Core ignores them by default).
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
+// Only redirect in local dev (Railway handles HTTPS at the load balancer)
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 app.UseStaticFiles();

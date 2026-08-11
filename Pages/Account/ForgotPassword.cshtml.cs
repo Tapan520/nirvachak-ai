@@ -56,7 +56,13 @@ public class ForgotPasswordModel : PageModel
         {
             var token      = await _userManager.GeneratePasswordResetTokenAsync(user);
             var encodedToken = HttpUtility.UrlEncode(token);
-            var baseUrl    = $"{Request.Scheme}://{Request.Host}";
+            // Prefer AppBaseUrl config so the link is always the public production URL.
+            // Falls back to Request.Scheme + Request.Host (works locally and with ForwardedHeaders).
+            var configBaseUrl = HttpContext.RequestServices
+                .GetService<IConfiguration>()!["AppBaseUrl"];
+            var baseUrl    = !string.IsNullOrWhiteSpace(configBaseUrl)
+                ? configBaseUrl.TrimEnd('/')
+                : $"{Request.Scheme}://{Request.Host}";
             var resetLink  = $"{baseUrl}/Account/ResetPassword?email={HttpUtility.UrlEncode(user.Email)}&token={encodedToken}";
 
             var html = $@"

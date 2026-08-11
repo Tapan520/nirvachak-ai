@@ -48,7 +48,7 @@ public class SmtpEmailService : IEmailService
             : SecureSocketOptions.StartTls;
 
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.From.Add(new MailboxAddress(fromName, fromEmail!));
         message.To.Add(new MailboxAddress(toName, toEmail));
         message.Subject = subject;
         message.Body = new TextPart("html") { Text = htmlBody };

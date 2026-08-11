@@ -28,6 +28,7 @@ public class ForgotPasswordModel : PageModel
 
     public bool   EmailSent    { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? DebugInfo    { get; set; }
 
     public class InputModel
     {
@@ -89,7 +90,10 @@ public class ForgotPasswordModel : PageModel
         catch (Exception ex)
         {
             _logger.LogError(ex, "[ForgotPassword] Failed to send reset email to {Email}", user.Email);
-            // Still show success to avoid revealing account existence
+            EmailSent    = false;
+            ErrorMessage = $"[DEBUG] SMTP Error: {ex.GetType().Name} — {ex.Message}";
+            if (ex.InnerException != null)
+                ErrorMessage += $" | Inner: {ex.InnerException.Message}";
         }
 
         return Page();

@@ -127,11 +127,9 @@
             {
                 <div class="card-body text-center text-muted py-3 small">
                     <i class="bi bi-inbox me-1"></i>Voter has not completed the self-survey yet.
-                    @if (Model.Voter != null && !string.IsNullOrEmpty(Model.Voter.MobileNumber))
+                    @if (!string.IsNullOrEmpty(Model.WhatsAppSurveyUrl))
                     {
-                        var surveyUrl = $"{Request.Scheme}://{Request.Host}/Survey";
-                        var msg = Uri.EscapeDataString($"Dear {Model.Voter.Name}, please fill in this quick voter survey and claim your reward: {surveyUrl}");
-                        <a href="https://wa.me/91@(Model.Voter.MobileNumber)?text=@msg" target="_blank"
+                        <a href="@Model.WhatsAppSurveyUrl" target="_blank"
                            class="btn btn-sm btn-success ms-2 py-0">
                             <i class="bi bi-whatsapp me-1"></i>Send Survey Link
                         </a>

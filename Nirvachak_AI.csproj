@@ -21,7 +21,7 @@
     </PackageReference>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="ClosedXML" Version="0.102.3" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="6.0.3">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -28,6 +28,7 @@ public class DetailsModel : PageModel
     public VoterConsent? ConsentRecord { get; set; }
     public bool SurveyCompleted { get; set; }
     public List<Voter> HouseholdMembers { get; set; } = new();
+    public string? WhatsAppSurveyUrl { get; set; }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -43,6 +44,13 @@ public class DetailsModel : PageModel
         SurveyProfile  = await _db.VoterProfiles.FirstOrDefaultAsync(p => p.VoterId == id);
         ConsentRecord  = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == id);
         SurveyCompleted = await _db.SurveyCompletions.AnyAsync(s => s.VoterId == id);
+
+        if (!string.IsNullOrEmpty(Voter.MobileNumber))
+        {
+            var surveyUrl = $"{Request.Scheme}://{Request.Host}/Survey";
+            var msg = Uri.EscapeDataString($"Dear {Voter.Name}, please fill in this quick voter survey and claim your reward: {surveyUrl}");
+            WhatsAppSurveyUrl = $"https://wa.me/91{Voter.MobileNumber}?text={msg}";
+        }
 
         // Load household members if this voter belongs to a household
         if (!string.IsNullOrEmpty(Voter.HouseholdId))

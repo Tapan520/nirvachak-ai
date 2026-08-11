@@ -1,6 +1,6 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace Nirvachak_AI.Infrastructure.Services;
 
@@ -10,56 +10,64 @@ public interface IEmailService
 }
 
 /// <summary>
-/// SMTP email service using MailKit. Configure via appsettings.json or environment variables:
-///   Smtp:Host, Smtp:Port, Smtp:User, Smtp:Pass, Smtp:From, Smtp:FromName
-/// Works with Gmail (port 587 STARTTLS or port 465 SSL), Outlook, SendGrid, Brevo, Mailgun etc.
+/// Email service using Resend HTTP API (https://resend.com).
+/// Uses port 443 (HTTPS) — works on Railway where all SMTP ports (25/465/587) are blocked.
+/// Configure via Railway environment variables:
+///   Resend__ApiKey   = re_xxxxxxxxxxxx   (your Resend API key)
+///   Resend__From     = onboarding@resend.dev  (or your verified sender)
+///   Resend__FromName = Nirvachak AI
 /// </summary>
 public class SmtpEmailService : IEmailService
 {
     private readonly IConfiguration _config;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<SmtpEmailService> _logger;
 
-    public SmtpEmailService(IConfiguration config, ILogger<SmtpEmailService> logger)
+    public SmtpEmailService(IConfiguration config, IHttpClientFactory httpClientFactory,
+        ILogger<SmtpEmailService> logger)
     {
-        _config = config;
-        _logger = logger;
+        _config            = config;
+        _httpClientFactory = httpClientFactory;
+        _logger            = logger;
     }
 
     public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
-        var host      = _config["Smtp:Host"]     ?? _config["Smtp__Host"]     ?? _config["SMTP_HOST"];
-        var portStr   = _config["Smtp:Port"]     ?? _config["Smtp__Port"]     ?? _config["SMTP_PORT"] ?? "587";
-        var user      = _config["Smtp:User"]     ?? _config["Smtp__User"]     ?? _config["SMTP_USER"];
-        var pass      = _config["Smtp:Pass"]     ?? _config["Smtp__Pass"]     ?? _config["SMTP_PASS"];
-        var fromEmail = _config["Smtp:From"]     ?? _config["Smtp__From"]     ?? _config["SMTP_FROM"] ?? user;
-        var fromName  = _config["Smtp:FromName"] ?? _config["Smtp__FromName"] ?? _config["SMTP_FROM_NAME"] ?? "Nirvachak AI";
+        var apiKey   = _config["Resend:ApiKey"]   ?? _config["Resend__ApiKey"];
+        var from     = _config["Resend:From"]     ?? _config["Resend__From"]     ?? "onboarding@resend.dev";
+        var fromName = _config["Resend:FromName"] ?? _config["Resend__FromName"] ?? "Nirvachak AI";
 
-        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
-            _logger.LogWarning("[Email] SMTP not configured. Skipping email to {Email}. Subject: {Subject}", toEmail, subject);
+            _logger.LogWarning("[Email] Resend API key not configured. Skipping email to {Email}. Subject: {Subject}", toEmail, subject);
             return;
         }
 
-        var port = int.TryParse(portStr, out var p) ? p : 587;
+        var payload = new
+        {
+            from    = $"{fromName} <{from}>",
+            to      = new[] { toEmail },
+            subject = subject,
+            html    = htmlBody
+        };
 
-        // Port 465 = implicit SSL, Port 587/25 = Auto (lets MailKit negotiate STARTTLS or plain)
-        var socketOptions = port == 465
-            ? SecureSocketOptions.SslOnConnect
-            : SecureSocketOptions.Auto;
-
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(fromName, fromEmail!));
-        message.To.Add(new MailboxAddress(toName, toEmail));
-        message.Subject = subject;
-        message.Body = new TextPart("html") { Text = htmlBody };
+        var json    = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         try
         {
-            using var client = new SmtpClient();
-            await client.ConnectAsync(host, port, socketOptions);
-            await client.AuthenticateAsync(user, pass);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            var client = _httpClientFactory.CreateClient("resend");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+
+            var response = await client.PostAsync("https://api.resend.com/emails", content);
+            var body     = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("[Email] Resend API error {Status}: {Body}", response.StatusCode, body);
+                throw new InvalidOperationException($"Resend API returned {response.StatusCode}: {body}");
+            }
 
             _logger.LogInformation("[Email] Sent '{Subject}' to {Email}", subject, toEmail);
         }

@@ -167,6 +167,13 @@ builder.Services.AddHttpClient("exotel", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Named HTTP client for Resend email API
+builder.Services.AddHttpClient("resend", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(30);
+    c.BaseAddress = new Uri("https://api.resend.com");
+});
+
 // Session (used for survey rate-limiting on public pages)
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();

@@ -42,10 +42,10 @@ public class SmtpEmailService : IEmailService
 
         var port = int.TryParse(portStr, out var p) ? p : 587;
 
-        // Port 465 = implicit SSL, Port 587/25 = STARTTLS
+        // Port 465 = implicit SSL, Port 587/25 = Auto (lets MailKit negotiate STARTTLS or plain)
         var socketOptions = port == 465
             ? SecureSocketOptions.SslOnConnect
-            : SecureSocketOptions.StartTls;
+            : SecureSocketOptions.Auto;
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(fromName, fromEmail!));

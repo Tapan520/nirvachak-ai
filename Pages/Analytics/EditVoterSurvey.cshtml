@@ -234,29 +234,6 @@
                     </div>
 
                     @* Optional consents *@
-                    @{
-                        void ConsentRow(string fieldId, string label, string desc, string aspFor)
-                        {
-                            <div class="p-3 border-bottom">
-                                <div class="d-flex align-items-start gap-3">
-                                    <div class="form-check form-switch mt-1">
-                                        <input class="form-check-input" type="checkbox" role="switch"
-                                               id="@fieldId" name="@aspFor"
-                                               value="true"
-                                               @(aspFor == "ConsentCampaignOutreach"    && M.ConsentCampaignOutreach    ? "checked" : "")
-                                               @(aspFor == "ConsentWhatsApp"            && M.ConsentWhatsApp            ? "checked" : "")
-                                               @(aspFor == "ConsentSchemeNotifications" && M.ConsentSchemeNotifications ? "checked" : "")
-                                               @(aspFor == "ConsentAnalytics"           && M.ConsentAnalytics           ? "checked" : "") />
-                                    </div>
-                                    <div>
-                                        <label class="form-check-label fw-semibold small" for="@fieldId">@label</label>
-                                        <p class="text-muted small mb-0 mt-1">@desc</p>
-                                    </div>
-                                </div>
-                            </div>;
-                        }
-                    }
-                    @* Use asp-for switches for the optional consents *@
                     <div class="p-3 border-bottom">
                         <div class="d-flex align-items-start gap-3">
                             <div class="form-check form-switch mt-1">

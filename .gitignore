@@ -132,3 +132,5 @@ desktop.ini
 .vscode/settings.json
 .vscode/launch.json
 *.code-workspace
+
+appsettings.Development.json

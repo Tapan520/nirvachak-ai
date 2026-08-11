@@ -1,5 +1,6 @@
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace Nirvachak_AI.Infrastructure.Services;
 
@@ -9,9 +10,9 @@ public interface IEmailService
 }
 
 /// <summary>
-/// SMTP email service. Configure via Railway environment variables:
-///   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_FROM_NAME
-/// Works with Gmail, Outlook, SendGrid, Brevo, Mailgun etc.
+/// SMTP email service using MailKit. Configure via appsettings.json or environment variables:
+///   Smtp:Host, Smtp:Port, Smtp:User, Smtp:Pass, Smtp:From, Smtp:FromName
+/// Works with Gmail (port 587 STARTTLS or port 465 SSL), Outlook, SendGrid, Brevo, Mailgun etc.
 /// </summary>
 public class SmtpEmailService : IEmailService
 {
@@ -26,12 +27,12 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
     {
-        var host     = _config["Smtp__Host"] ?? _config["SMTP_HOST"];
-        var portStr  = _config["Smtp__Port"] ?? _config["SMTP_PORT"] ?? "587";
-        var user     = _config["Smtp__User"] ?? _config["SMTP_USER"];
-        var pass     = _config["Smtp__Pass"] ?? _config["SMTP_PASS"];
-        var fromEmail= _config["Smtp__From"] ?? _config["SMTP_FROM"] ?? user;
-        var fromName = _config["Smtp__FromName"] ?? _config["SMTP_FROM_NAME"] ?? "Nirvachak AI";
+        var host      = _config["Smtp:Host"]     ?? _config["Smtp__Host"]     ?? _config["SMTP_HOST"];
+        var portStr   = _config["Smtp:Port"]     ?? _config["Smtp__Port"]     ?? _config["SMTP_PORT"] ?? "587";
+        var user      = _config["Smtp:User"]     ?? _config["Smtp__User"]     ?? _config["SMTP_USER"];
+        var pass      = _config["Smtp:Pass"]     ?? _config["Smtp__Pass"]     ?? _config["SMTP_PASS"];
+        var fromEmail = _config["Smtp:From"]     ?? _config["Smtp__From"]     ?? _config["SMTP_FROM"] ?? user;
+        var fromName  = _config["Smtp:FromName"] ?? _config["Smtp__FromName"] ?? _config["SMTP_FROM_NAME"] ?? "Nirvachak AI";
 
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
         {
@@ -39,29 +40,27 @@ public class SmtpEmailService : IEmailService
             return;
         }
 
-        var port    = int.TryParse(portStr, out var p) ? p : 587;
-        var enableSsl = port != 25;
+        var port = int.TryParse(portStr, out var p) ? p : 587;
 
-        using var client = new SmtpClient(host, port)
-        {
-            Credentials    = new NetworkCredential(user, pass),
-            EnableSsl      = enableSsl,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            Timeout        = 15_000
-        };
+        // Port 465 = implicit SSL, Port 587/25 = STARTTLS
+        var socketOptions = port == 465
+            ? SecureSocketOptions.SslOnConnect
+            : SecureSocketOptions.StartTls;
 
-        using var message = new MailMessage
-        {
-            From       = new MailAddress(fromEmail!, fromName),
-            Subject    = subject,
-            Body       = htmlBody,
-            IsBodyHtml = true
-        };
-        message.To.Add(new MailAddress(toEmail, toName));
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(new MailboxAddress(toName, toEmail));
+        message.Subject = subject;
+        message.Body = new TextPart("html") { Text = htmlBody };
 
         try
         {
-            await client.SendMailAsync(message);
+            using var client = new SmtpClient();
+            await client.ConnectAsync(host, port, socketOptions);
+            await client.AuthenticateAsync(user, pass);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
             _logger.LogInformation("[Email] Sent '{Subject}' to {Email}", subject, toEmail);
         }
         catch (Exception ex)

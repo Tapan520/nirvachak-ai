@@ -328,8 +328,10 @@ using (var dbInitScope = app.Services.CreateScope())
 
         foreach (var migrationId in initDb.Database.GetMigrations())
         {
+#pragma warning disable EF1002 // Migration IDs come from EF's own GetMigrations() — value is safe
             await initDb.Database.ExecuteSqlRawAsync(
                 $"INSERT OR IGNORE INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('{migrationId}', '8.0.11');");
+#pragma warning restore EF1002
         }
 
         Console.ForegroundColor = ConsoleColor.Green;

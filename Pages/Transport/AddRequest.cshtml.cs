@@ -16,7 +16,7 @@ public class AddRequestModel : PageModel
     private readonly UserManager<AppUser> _userManager;
     public AddRequestModel(AppDbContext db, UserManager<AppUser> userManager) { _db = db; _userManager = userManager; }
 
-    [BindProperty] public VoterTransportRequest Request { get; set; } = new();
+    [BindProperty] public new VoterTransportRequest Request { get; set; } = new();
     [BindProperty(SupportsGet = true)] public string? SearchVoter { get; set; }
     [BindProperty(SupportsGet = true)] public int? SelectedConstituencyId { get; set; }
     public List<Voter> SearchResults { get; set; } = new();

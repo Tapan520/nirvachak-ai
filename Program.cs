@@ -168,10 +168,10 @@ builder.Services.AddHttpClient("exotel", c =>
 });
 
 // Named HTTP client for Resend email API
-builder.Services.AddHttpClient("resend", c =>
+builder.Services.AddHttpClient("brevo", c =>
 {
     c.Timeout = TimeSpan.FromSeconds(30);
-    c.BaseAddress = new Uri("https://api.resend.com");
+    c.BaseAddress = new Uri("https://api.brevo.com");
 });
 
 // Session (used for survey rate-limiting on public pages)

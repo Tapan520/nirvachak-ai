@@ -1,206 +1,83 @@
-# SMTP Email Setup Guide for Forgot Password Feature
+# Email Setup Guide for Forgot Password Feature
 
-## ? What Was Configured
+## What Was Configured
 
-The forgot password email functionality is now ready to use. The following files were updated:
+The forgot password email uses HTTP-based APIs (no SMTP).
+Both **Resend** and **Mailjet** are supported. The first one configured is used automatically.
 
-1. **`appsettings.json`** - Added SMTP section (for production deployment)
-2. **`appsettings.Development.json`** - Added SMTP config for local development
-3. **`Infrastructure/Services/EmailService.cs`** - Updated to read from both JSON and environment variables
-
----
-
-## ?? Quick Start (Local Development)
-
-### Option 1: Gmail (Recommended for Testing)
-
-1. **Enable 2-Step Verification** on your Google account:
-   - Go to: https://myaccount.google.com/security
-
-2. **Create an App Password**:
-   - Go to: https://myaccount.google.com/apppasswords
-   - Generate a new app password for "Mail"
-   - Copy the 16-character password (no spaces)
-
-3. **Edit `appsettings.Development.json`**:
-   ```json
-   "Smtp": {
-     "Host": "smtp.gmail.com",
-     "Port": "587",
-     "User": "your-actual-email@gmail.com",
-     "Pass": "abcd efgh ijkl mnop",  // Your 16-char app password (remove spaces)
-     "From": "your-actual-email@gmail.com",
-     "FromName": "Nirvachak AI"
-   }
-   ```
-
-4. **Run the application**:
-   ```bash
-   dotnet run
-   ```
-
-5. **Test the feature**:
-   - Navigate to: https://localhost:7237/Account/Login
-   - Click "Forgot Password?"
-   - Enter a valid email address from your test database
-   - Check your inbox (and spam folder)
+Files involved:
+- `Infrastructure/Services/EmailService.cs` — dual-provider email service
+- `Program.cs` — HTTP clients registered for both providers
 
 ---
 
-### Option 2: Outlook/Hotmail
+## Provider Priority
 
-```json
-"Smtp": {
-  "Host": "smtp-mail.outlook.com",
-  "Port": "587",
-  "User": "your-email@outlook.com",
-  "Pass": "your-password",
-  "From": "your-email@outlook.com",
-  "FromName": "Nirvachak AI"
-}
-```
+1. **Resend** — used if `Resend__ApiKey` is set
+2. **Mailjet** — used if `Mailjet__ApiKey` and `Mailjet__SecretKey` are both set
+3. Neither configured — emails are skipped (a warning is logged)
 
 ---
 
-### Option 3: SendGrid (Professional - Free 100 emails/day)
+## Production Deployment (Railway)
 
-1. Sign up at: https://sendgrid.com/
-2. Create an API Key
-3. Verify a sender email address
+Set environment variables in your Railway service. Only one provider needs to be configured.
 
-```json
-"Smtp": {
-  "Host": "smtp.sendgrid.net",
-  "Port": "587",
-  "User": "apikey",
-  "Pass": "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "From": "verified-sender@yourdomain.com",
-  "FromName": "Nirvachak AI"
-}
-```
+### Option 1: Resend (Recommended — Free 3,000 emails/month)
 
----
+Sign up at: https://resend.com, create an API Key, and verify your sender domain.
 
-### Option 4: Brevo (formerly Sendinblue - Free 300 emails/day)
+    Resend__ApiKey   = re_xxxxxxxxxxxxxxxxxxxx
+    Resend__From     = noreply@yourdomain.com
+    Resend__FromName = Nirvachak AI
+    AppBaseUrl       = https://your-production-domain.com
 
-1. Sign up at: https://www.brevo.com/
-2. Get SMTP credentials from Settings ? SMTP & API
-3. Verify a sender email
+> For quick testing without a verified domain, use `onboarding@resend.dev` as the From address.
 
-```json
-"Smtp": {
-  "Host": "smtp-relay.brevo.com",
-  "Port": "587",
-  "User": "your-brevo-login-email@example.com",
-  "Pass": "your-brevo-smtp-key",
-  "From": "verified-sender@yourdomain.com",
-  "FromName": "Nirvachak AI"
-}
-```
+### Option 2: Mailjet (Free 200 emails/day)
+
+Sign up at: https://mailjet.com, get API Key + Secret Key from Settings -> API Keys.
+
+    Mailjet__ApiKey    = your-mailjet-api-key
+    Mailjet__SecretKey = your-mailjet-secret-key
+    Mailjet__From      = tapchauhan2001@gmail.com
+    Mailjet__FromName  = Nirvachak AI
+    AppBaseUrl         = https://your-production-domain.com
+
+Both providers use HTTPS (port 443) — they work on Railway where all SMTP ports are blocked.
 
 ---
 
-## ?? Production Deployment (Railway/Docker)
+## Log Messages
 
-For production, **DO NOT** put credentials in `appsettings.json`. Use environment variables instead:
+No provider configured:
 
-### Railway Environment Variables
-```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-production-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-production-email@gmail.com
-SMTP_FROM_NAME=Nirvachak AI
-AppBaseUrl=https://your-production-domain.com
-```
+    [Email] No email provider configured (Resend or Mailjet). Skipping email to user@example.com
 
-### Docker Environment Variables
-```bash
-docker run -e SMTP_HOST=smtp.gmail.com \
-           -e SMTP_PORT=587 \
-           -e SMTP_USER=your-email@gmail.com \
-           -e SMTP_PASS=your-app-password \
-           -e SMTP_FROM=your-email@gmail.com \
-           -e AppBaseUrl=https://yourdomain.com \
-           your-image-name
-```
+Resend success:
+
+    [Email][Resend] Sent 'Reset Your Password - Nirvachak AI' to user@example.com
+
+Mailjet success:
+
+    [Email][Mailjet] Sent 'Reset Your Password - Nirvachak AI' to user@example.com
+
+Failed:
+
+    [Email][Resend] Failed to send 'Reset Your Password' to user@example.com
 
 ---
 
-## ?? Troubleshooting
+## Troubleshooting
 
-### Email not sending?
-
-1. **Check the logs**:
-   ```
-   [Email] SMTP not configured. Skipping email...
-   ```
-   ? Fill in all required fields in `appsettings.Development.json`
-
-2. **Gmail "Less secure app" error**:
-   ? Use App Password, NOT your regular Gmail password
-
-3. **Connection timeout**:
-   - Verify your firewall allows port 587
-   - Try port 465 with SSL
-   - Check if your ISP blocks SMTP
-
-4. **Email goes to spam**:
-   - Use a verified sender domain (SendGrid/Brevo)
-   - Add SPF/DKIM records to your domain
-
-### How to verify it's working?
-
-Check the console logs when you submit the forgot password form:
-
-? **Success**:
-```
-[Email] Sent 'Reset Your Password - Nirvachak AI' to user@example.com
-```
-
-? **Not configured**:
-```
-[Email] SMTP not configured. Skipping email to user@example.com
-```
-
-? **Failed**:
-```
-[Email] Failed to send 'Reset Your Password' to user@example.com
-System.Net.Mail.SmtpException: ...
-```
+- **Resend 403**: Domain not verified — use `onboarding@resend.dev` as the From address for testing
+- **Mailjet 401**: Invalid API key or secret — double-check Railway env vars
+- **Email in spam**: Add SPF/DKIM DNS records for your domain (both providers have guides)
 
 ---
 
-## ?? Security Notes
+## Security Notes
 
-- ?? **NEVER** commit `appsettings.Development.json` with real credentials to Git
-- ?? Add `appsettings.Development.json` to `.gitignore` if not already present
-- ? Use environment variables for production deployments
-- ? Gmail App Passwords are safer than using your main password
-- ? Rotate SMTP credentials periodically
-
----
-
-## ?? Email Template
-
-The password reset email contains:
-- A secure reset link valid for a limited time
-- Instructions on how to reset the password
-- A warning not to share the link
-- Support contact information
-
-The link format: `https://localhost:7237/Account/ResetPassword?email=user@example.com&token=...`
-
----
-
-## ? Build Status
-
-**Build succeeded!** ?  
-The project compiles successfully with the SMTP configuration in place.
-
-```
-Build succeeded with 4 warning(s) in 75.2s
-```
-
-*Warnings are pre-existing and unrelated to SMTP changes.*
+- NEVER commit API keys to Git
+- Use Railway environment variables for all credentials
+- Rotate API keys periodically from your provider dashboard

@@ -418,10 +418,10 @@
         <i class="bi bi-info-circle-fill fs-5 mt-1 flex-shrink-0"></i>
         <div>
             Share the survey link with voters below via <strong>WhatsApp</strong> or <strong>Email</strong>.
-            The link takes them directly to the voter self-survey form.
-            Survey URL: <code id="surveyUrl">@Model.SurveyBaseUrl</code>
+            The link takes them directly to the voter self-survey form <strong>with their EPIC ID pre-filled</strong>.
+            Base Survey URL: <code id="surveyUrl">@Model.SurveyBaseUrl</code>
             <button class="btn btn-xs btn-outline-secondary ms-2 py-0 px-2 small"
-                    onclick="navigator.clipboard.writeText('@Model.SurveyBaseUrl');this.textContent='? Copied'">
+                    onclick="navigator.clipboard.writeText('@Model.SurveyBaseUrl');this.textContent='✓ Copied'">
                 <i class="bi bi-clipboard me-1"></i>Copy
             </button>
         </div>
@@ -473,25 +473,26 @@
                     }
                     @foreach (var v in Model.PendingVoters)
                     {
-                        var surveyLink   = Model.SurveyBaseUrl;
+                        @* Include EPIC ID in survey link so voter doesn't need to type it *@
+                        var surveyLinkWithEpic = $"{Model.SurveyBaseUrl}?epic={Uri.EscapeDataString(v.VoterEpic)}";
                         var voterGreet   = Uri.EscapeDataString(
-                            $"Dear {v.Name}, please fill in this quick voter survey and claim your reward coupon: {surveyLink}");
+                            $"Dear {v.Name}, please fill in this quick voter survey and claim your reward coupon: {surveyLinkWithEpic}");
                         var waLink       = $"https://wa.me/91{v.MobileNumber?.Trim()}?text={voterGreet}";
                         var emailSubject = Uri.EscapeDataString("Complete Your Voter Survey & Claim Your Reward");
                         var emailBody    = Uri.EscapeDataString(
-                            $"Dear {v.Name},\n\nPlease complete the voter survey at the link below and receive a reward coupon as a thank-you:\n\n{surveyLink}\n\nThank you.");
+                            $"Dear {v.Name},\n\nPlease complete the voter survey at the link below and receive a reward coupon as a thank-you:\n\n{surveyLinkWithEpic}\n\nThank you.");
                         var emailLink    = $"mailto:?subject={emailSubject}&body={emailBody}";
 
                         <tr>
                             <td class="fw-semibold small">@v.Name</td>
                             <td class="font-monospace small">@v.VoterEpic</td>
                             <td class="text-center"><span class="badge bg-secondary">@v.BoothNumber</span></td>
-                            <td class="text-center small">@(v.WardNumber ?? "�")</td>
+                            <td class="text-center small">@(v.WardNumber ?? "—")</td>
                             <td class="small">
                                 @if (!string.IsNullOrEmpty(v.MobileNumber))
                                 { <span class="font-monospace">@v.MobileNumber</span> }
                                 else
-                                { <span class="text-muted">�</span> }
+                                { <span class="text-muted">—</span> }
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1">
@@ -515,8 +516,8 @@
                                         <i class="bi bi-envelope-fill"></i>
                                     </a>
                                     <button class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                            title="Copy link"
-                                            onclick="navigator.clipboard.writeText('@surveyLink');this.innerHTML='<i class=\'bi bi-check2\'></i>'">
+                                            title="Copy link with EPIC ID"
+                                            onclick="navigator.clipboard.writeText('@surveyLinkWithEpic');this.innerHTML='<i class=\'bi bi-check2\'></i>'">
                                         <i class="bi bi-clipboard"></i>
                                     </button>
                                 </div>

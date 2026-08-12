@@ -167,6 +167,13 @@ builder.Services.AddHttpClient("exotel", c =>
     c.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Named HTTP client for Resend email API
+builder.Services.AddHttpClient("resend", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(30);
+    c.BaseAddress = new Uri("https://api.resend.com");
+});
+
 // Named HTTP client for Mailjet email API
 builder.Services.AddHttpClient("mailjet", c =>
 {
@@ -299,18 +306,33 @@ app.MapPost("/Survey/{**slug}", () => Results.Ok())
    .WithDisplayName("Survey-POST-RateLimit");
 
 // ?? Health Check ???????????????????????????????????????????
-app.MapGet("/health", () =>
+app.MapGet("/health", async (AppDbContext db) =>
 {
+    var startTime = DateTime.UtcNow;
     var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/data/election.db";
     var dbExists = File.Exists(dbPath);
     var dbSize = dbExists ? new FileInfo(dbPath).Length : 0;
+    
+    // Quick DB query test to measure response time
+    var dbQueryStart = DateTime.UtcNow;
+    var voterCount = await db.Voters.CountAsync();
+    var dbQueryMs = (DateTime.UtcNow - dbQueryStart).TotalMilliseconds;
+    
+    var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+    var memoryMB = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
+    
     return Results.Ok(new
     {
         status  = "ok",
         time    = DateTime.UtcNow,
+        responseTimeMs = Math.Round(responseTime, 2),
         db      = dbPath,
         dbReady = dbExists,
-        dbBytes = dbSize
+        dbSizeMB = Math.Round(dbSize / 1024.0 / 1024.0, 2),
+        dbQueryMs = Math.Round(dbQueryMs, 2),
+        voterCount,
+        memoryUsageMB = Math.Round(memoryMB, 2),
+        performance = dbQueryMs < 100 ? "good" : dbQueryMs < 500 ? "acceptable" : "slow"
     });
 }).AllowAnonymous();
 
@@ -402,3 +424,4 @@ var wwwroot = app.Environment.WebRootPath
 PwaIconGenerator.EnsureIconsExist(wwwroot);
 
 app.Run();
+

@@ -47,7 +47,7 @@ public class DetailsModel : PageModel
 
         if (!string.IsNullOrEmpty(Voter.MobileNumber))
         {
-            var surveyUrl = $"{Request.Scheme}://{Request.Host}/Survey";
+            var surveyUrl = $"{Request.Scheme}://{Request.Host}/Survey?epic={Uri.EscapeDataString(Voter.VoterId)}";
             var msg = Uri.EscapeDataString($"Dear {Voter.Name}, please fill in this quick voter survey and claim your reward: {surveyUrl}");
             WhatsAppSurveyUrl = $"https://wa.me/91{Voter.MobileNumber}?text={msg}";
         }

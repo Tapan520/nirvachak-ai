@@ -1,0 +1,251 @@
+@page
+@model Nirvachak_AI.Pages.Leaderboard.IndexModel
+@{
+    ViewData["Title"] = "Field Team Leaderboard";
+}
+
+@* ?? Header & filters ???????????????????????????????????????????? *@
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-trophy-fill me-2 text-warning"></i>Field Team Leaderboard</h4>
+        <p class="text-muted small mb-0">
+            Ranked by visits, calls &amp; Favour conversions &mdash; <strong>@Model.PeriodLabel</strong>.
+            Score = Visits×2 + Calls×1 + Favour Conversions×3.
+        </p>
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+        @* Period toggle *@
+        <div class="btn-group btn-group-sm" role="group">
+            <a href="?Period=today@(Model.SelectedConstituencyId.HasValue ? $"&SelectedConstituencyId={Model.SelectedConstituencyId}" : "")"
+               class="btn @(Model.Period == "today"   ? "btn-primary" : "btn-outline-secondary")">Today</a>
+            <a href="?Period=week@(Model.SelectedConstituencyId.HasValue ? $"&SelectedConstituencyId={Model.SelectedConstituencyId}" : "")"
+               class="btn @(Model.Period == "week"    ? "btn-primary" : "btn-outline-secondary")">This Week</a>
+            <a href="?Period=month@(Model.SelectedConstituencyId.HasValue ? $"&SelectedConstituencyId={Model.SelectedConstituencyId}" : "")"
+               class="btn @(Model.Period == "month"   ? "btn-primary" : "btn-outline-secondary")">This Month</a>
+            <a href="?Period=alltime@(Model.SelectedConstituencyId.HasValue ? $"&SelectedConstituencyId={Model.SelectedConstituencyId}" : "")"
+               class="btn @(Model.Period == "alltime" ? "btn-primary" : "btn-outline-secondary")">All Time</a>
+        </div>
+        @if (Model.IsAdmin && Model.Constituencies.Any())
+        {
+            <select name="SelectedConstituencyId" class="form-select form-select-sm" style="min-width:170px" onchange="this.form.submit()">
+                <option value="">-- All Constituencies --</option>
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                }
+            </select>
+            <input type="hidden" name="Period" value="@Model.Period" />
+        }
+    </form>
+</div>
+
+@if (!Model.Rows.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 d-block mb-3 opacity-25"></i>
+            <p class="mb-0">No field worker activity found for <strong>@Model.PeriodLabel</strong>.</p>
+        </div>
+    </div>
+    return;
+}
+
+@* ?? Podium: Top 3 ??????????????????????????????????????????????? *@
+@if (Model.Rows.Count >= 1)
+{
+    <div class="row g-3 mb-4 justify-content-center">
+        @* Silver (2nd) *@
+        @if (Model.Silver != null)
+        {
+            <div class="col-md-3 order-md-1 order-2 d-flex align-items-end">
+                <div class="card border-0 shadow-sm w-100 text-center" style="border-top: 4px solid #adb5bd !important;">
+                    <div class="card-body pb-3 pt-4">
+                        <div class="mb-2" style="font-size:2.5rem">??</div>
+                        <div class="fw-bold">@Model.Silver.FullName</div>
+                        <div class="small text-muted mb-2">@Model.Silver.Role</div>
+                        <div class="fs-3 fw-bold text-secondary">@Model.Silver.TotalScore</div>
+                        <div class="small text-muted">pts</div>
+                        <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap" style="font-size:0.75rem">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Silver.VisitsThisPeriod visits</span>
+                            <span class="badge bg-success bg-opacity-10 text-success">@Model.Silver.FavourConversions favour</span>
+                        </div>
+                        @if (Model.Silver.UserId == Model.CurrentUserId)
+                        {
+                            <span class="badge bg-info mt-1">You</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Gold (1st) *@
+        @if (Model.Gold != null)
+        {
+            <div class="col-md-4 order-md-2 order-1 d-flex align-items-end">
+                <div class="card border-0 shadow w-100 text-center" style="border-top: 4px solid #f59f00 !important;">
+                    <div class="card-body pb-3 pt-4">
+                        <div class="mb-2" style="font-size:3rem">??</div>
+                        <div class="fw-bold fs-5">@Model.Gold.FullName</div>
+                        <div class="small text-muted mb-2">@Model.Gold.Role</div>
+                        <div class="fs-2 fw-bold text-warning">@Model.Gold.TotalScore</div>
+                        <div class="small text-muted">pts</div>
+                        <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap" style="font-size:0.75rem">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Gold.VisitsThisPeriod visits</span>
+                            <span class="badge bg-success bg-opacity-10 text-success">@Model.Gold.FavourConversions favour</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@Model.Gold.CallsThisPeriod calls</span>
+                        </div>
+                        @if (Model.Gold.UserId == Model.CurrentUserId)
+                        {
+                            <span class="badge bg-info mt-1">You</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Bronze (3rd) *@
+        @if (Model.Bronze != null)
+        {
+            <div class="col-md-3 order-md-3 order-3 d-flex align-items-end">
+                <div class="card border-0 shadow-sm w-100 text-center" style="border-top: 4px solid #cd7f32 !important;">
+                    <div class="card-body pb-3 pt-4">
+                        <div class="mb-2" style="font-size:2.5rem">??</div>
+                        <div class="fw-bold">@Model.Bronze.FullName</div>
+                        <div class="small text-muted mb-2">@Model.Bronze.Role</div>
+                        <div class="fs-3 fw-bold" style="color:#cd7f32">@Model.Bronze.TotalScore</div>
+                        <div class="small text-muted">pts</div>
+                        <div class="mt-2 d-flex justify-content-center gap-2 flex-wrap" style="font-size:0.75rem">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">@Model.Bronze.VisitsThisPeriod visits</span>
+                            <span class="badge bg-success bg-opacity-10 text-success">@Model.Bronze.FavourConversions favour</span>
+                        </div>
+                        @if (Model.Bronze.UserId == Model.CurrentUserId)
+                        {
+                            <span class="badge bg-info mt-1">You</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@* ?? Full ranked table ??????????????????????????????????????????? *@
+<div class="card shadow-sm border-0">
+    <div class="card-header fw-semibold small d-flex align-items-center gap-2">
+        <i class="bi bi-list-ol me-1 text-warning"></i>
+        Full Rankings &mdash; @Model.PeriodLabel
+        <span class="badge bg-secondary ms-1">@Model.Rows.Count workers</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width:50px">Rank</th>
+                        <th>Worker</th>
+                        <th class="text-center">
+                            <i class="bi bi-door-open text-primary me-1"></i>Visits
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-telephone-fill text-info me-1"></i>Calls
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-hand-thumbs-up-fill text-success me-1"></i>Favour
+                        </th>
+                        <th class="text-center">Score</th>
+                        <th class="text-center">All-Time Visits</th>
+                        <th>Last Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @{int rank = 0;}
+                @foreach (var r in Model.Rows)
+                {
+                    rank++;
+                    var isCurrentUser = r.UserId == Model.CurrentUserId;
+                    var rankBadge     = rank == 1 ? "??" : rank == 2 ? "??" : rank == 3 ? "??" : rank.ToString();
+                    var rowClass      = isCurrentUser ? "table-info" : "";
+                    // Score bar: max score as denominator
+                    var maxScore      = Model.Rows.Max(x => x.TotalScore);
+                    var barPct        = maxScore > 0 ? (int)Math.Round((double)r.TotalScore / maxScore * 100) : 0;
+
+                    <tr class="@rowClass">
+                        <td class="text-center fw-bold">
+                            @if (rank <= 3)
+                            {
+                                <span style="font-size:1.1rem">@rankBadge</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">@rankBadge</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-semibold small">
+                                @r.FullName
+                                @if (isCurrentUser)
+                                {
+                                    <span class="badge bg-info ms-1 small">You</span>
+                                }
+                            </div>
+                            <div class="text-muted" style="font-size:0.7rem">
+                                @r.Role
+                                @if (!string.IsNullOrEmpty(r.AssignedBooths))
+                                {
+                                    <span class="ms-1">· Booths @r.AssignedBooths</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">@r.VisitsThisPeriod</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info bg-opacity-10 text-info fw-semibold">@r.CallsThisPeriod</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success bg-opacity-10 text-success fw-semibold">@r.FavourConversions</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="fw-bold @(rank == 1 ? "text-warning" : rank == 2 ? "text-secondary" : rank == 3 ? "" : "")">
+                                @r.TotalScore
+                            </div>
+                            <div class="progress mt-1" style="height:4px;width:60px;margin:0 auto">
+                                <div class="progress-bar bg-warning" style="width:@barPct%"></div>
+                            </div>
+                        </td>
+                        <td class="text-center small text-muted">@r.TotalVisitsAllTime</td>
+                        <td class="small text-muted">
+                            @if (r.LastActivityAt.HasValue)
+                            {
+                                var diff = DateTime.UtcNow - r.LastActivityAt.Value;
+                                if (diff.TotalMinutes < 60)
+                                {
+                                    <span class="text-success">@((int)diff.TotalMinutes)m ago</span>
+                                }
+                                else if (diff.TotalHours < 24)
+                                {
+                                    <span class="text-success">@((int)diff.TotalHours)h ago</span>
+                                }
+                                else
+                                {
+                                    @r.LastActivityAt.Value.ToLocalTime().ToString("dd MMM, h:mm tt")
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No activity</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        Scoring: <strong>Visits × 2</strong> + <strong>Calls × 1</strong> + <strong>Favour Conversions × 3</strong>.
+        Only FieldWorker, BoothAgent and CampaignManager roles are ranked.
+        Period resets at midnight on the first day of each week/month.
+    </div>
+</div>

@@ -1,0 +1,304 @@
+@page
+@model Nirvachak_AI.Pages.BoothHeatMap.IndexModel
+@{
+    ViewData["Title"] = "Booth Heat Map";
+    var overallCoverage = Model.TotalVoters > 0
+        ? (int)Math.Round((double)Model.TotalContacted / Model.TotalVoters * 100)
+        : 0;
+    var overallFavour = Model.TotalVoters > 0
+        ? (int)Math.Round((double)Model.TotalFavour / Model.TotalVoters * 100)
+        : 0;
+}
+
+@* ?? Header ?????????????????????????????????????????????????????? *@
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-map-fill me-2 text-primary"></i>Booth Heat Map</h4>
+        <p class="text-muted small mb-0">
+            Coverage status per booth — ?? Weak (&lt;30%) · ?? Moderate (30–69%) · ?? Strong (?70%)
+        </p>
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+        @if (Model.IsAdmin && Model.Constituencies.Any())
+        {
+            <select name="SelectedConstituencyId" class="form-select form-select-sm" style="min-width:170px" onchange="this.form.submit()">
+                <option value="">-- All Constituencies --</option>
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                }
+            </select>
+        }
+        <input type="hidden" name="SelectedConstituencyId" value="@Model.SelectedConstituencyId" />
+        <select name="SortBy" class="form-select form-select-sm" style="min-width:170px" onchange="this.form.submit()">
+            <option value="booth"          selected="@(Model.SortBy == "booth")">Sort: Booth Number</option>
+            <option value="heat"           selected="@(Model.SortBy == "heat")">Sort: Weakest First ??</option>
+            <option value="coverage_asc"   selected="@(Model.SortBy == "coverage_asc")">Sort: Coverage ?</option>
+            <option value="coverage_desc"  selected="@(Model.SortBy == "coverage_desc")">Sort: Coverage ?</option>
+            <option value="favour_desc"    selected="@(Model.SortBy == "favour_desc")">Sort: Most Favour ?</option>
+        </select>
+    </form>
+</div>
+
+@* ?? Summary stat cards ?????????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-danger">@Model.RedBooths</div>
+                <div class="small text-muted">?? Weak Booths</div>
+                <span class="badge bg-danger bg-opacity-10 text-danger small">&lt;30% coverage</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-warning">@Model.YellowBooths</div>
+                <div class="small text-muted">?? Moderate Booths</div>
+                <span class="badge bg-warning bg-opacity-10 text-warning small">30–69%</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-success">@Model.GreenBooths</div>
+                <div class="small text-muted">?? Strong Booths</div>
+                <span class="badge bg-success bg-opacity-10 text-success small">?70% coverage</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-primary">@overallCoverage%</div>
+                <div class="small text-muted">Overall Coverage</div>
+                <span class="badge bg-primary bg-opacity-10 text-primary small">@Model.TotalContacted / @Model.TotalVoters</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-success">@overallFavour%</div>
+                <div class="small text-muted">Overall Favour</div>
+                <span class="badge bg-success bg-opacity-10 text-success small">@Model.TotalFavour voters</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3 px-2">
+                <div class="fs-3 fw-bold text-warning">@Model.TotalSwing</div>
+                <div class="small text-muted">Floating + Against</div>
+                <span class="badge bg-warning bg-opacity-10 text-warning small">need attention</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Booths.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-geo-alt fs-1 d-block mb-3 opacity-25"></i>
+            <p class="mb-0">No booths found. Please add booths under Management ? Booths.</p>
+        </div>
+    </div>
+    return;
+}
+
+@* ?? Alert: Red booths ??????????????????????????????????????????? *@
+@if (Model.RedBooths > 0)
+{
+    var redList = Model.Booths.Where(b => b.HeatColor == "danger").Take(5).ToList();
+    <div class="alert alert-danger d-flex align-items-start gap-2 mb-3 py-2">
+        <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0 mt-1"></i>
+        <div>
+            <strong>@Model.RedBooths booth(s) need urgent attention</strong> — coverage below 30%:
+            @foreach (var rb in redList)
+            {
+                <span class="badge bg-danger ms-1">Booth @rb.BoothNumber (@rb.CoveragePercent%)</span>
+            }
+            @if (Model.RedBooths > 5) { <span class="text-muted small ms-1">and @(Model.RedBooths - 5) more</span> }
+        </div>
+    </div>
+}
+
+@* ?? Visual heat map grid ???????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    @foreach (var b in Model.Booths)
+    {
+        var borderStyle  = $"border-top: 4px solid var(--bs-{b.HeatColor}) !important;";
+        var agentDisplay = string.IsNullOrEmpty(b.AssignedAgentName) ? "Unassigned" : b.AssignedAgentName;
+        var agentColor   = string.IsNullOrEmpty(b.AssignedAgentName) ? "text-danger" : "text-success";
+
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="@borderStyle">
+                <div class="card-body p-3">
+                    @* Booth header *@
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="badge bg-secondary me-1">Booth @b.BoothNumber</span>
+                            @if (!string.IsNullOrEmpty(b.WardNumber))
+                            {
+                                <span class="badge bg-light text-dark border">Ward @b.WardNumber</span>
+                            }
+                        </div>
+                        <span class="badge bg-@b.HeatColor">
+                            <i class="bi @b.HeatIcon me-1"></i>@b.HeatLabel
+                        </span>
+                    </div>
+
+                    <div class="small fw-semibold text-truncate mb-2" title="@b.BoothName">@b.BoothName</div>
+
+                    @* Coverage bar *@
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted">Coverage</span>
+                        <span class="fw-bold text-@b.HeatColor">@b.CoveragePercent%</span>
+                    </div>
+                    <div class="progress mb-3" style="height:8px">
+                        <div class="progress-bar bg-@b.HeatColor" style="width:@b.CoveragePercent%"></div>
+                    </div>
+
+                    @* Sentiment mini-bars *@
+                    @if (b.TotalVoters > 0)
+                    {
+                        var fPct = (int)Math.Round((double)b.FavourVoters  / b.TotalVoters * 100);
+                        var aPct = (int)Math.Round((double)b.AgainstVoters / b.TotalVoters * 100);
+                        var lPct = (int)Math.Round((double)b.FloatingVoters/ b.TotalVoters * 100);
+
+                        <div class="d-flex gap-1 mb-2" style="height:6px; border-radius:4px; overflow:hidden">
+                            @if (fPct > 0) { <div class="bg-success" style="width:@fPct%"></div> }
+                            @if (lPct > 0) { <div class="bg-warning" style="width:@lPct%"></div> }
+                            @if (aPct > 0) { <div class="bg-danger"  style="width:@aPct%"></div> }
+                            <div class="bg-light flex-grow-1"></div>
+                        </div>
+                    }
+
+                    @* Stats grid *@
+                    <div class="row g-1 text-center mb-2" style="font-size:0.72rem">
+                        <div class="col-4">
+                            <div class="fw-bold text-success">@b.FavourVoters</div>
+                            <div class="text-muted">Favour</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-warning">@b.FloatingVoters</div>
+                            <div class="text-muted">Floating</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-danger">@b.AgainstVoters</div>
+                            <div class="text-muted">Against</div>
+                        </div>
+                    </div>
+
+                    @* Footer: agent + this week visits *@
+                    <div class="d-flex justify-content-between align-items-center" style="font-size:0.72rem">
+                        <span class="@agentColor text-truncate" title="@agentDisplay">
+                            <i class="bi bi-person-fill me-1"></i>@agentDisplay
+                        </span>
+                        <span class="text-muted">
+                            <i class="bi bi-door-open me-1"></i>@b.VisitsThisWeek this wk
+                        </span>
+                    </div>
+                </div>
+                <div class="card-footer py-1 px-3 text-end" style="font-size:0.7rem">
+                    <span class="text-muted">@b.ContactedVoters / @b.TotalVoters contacted</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* ?? Detail table ???????????????????????????????????????????????? *@
+<div class="card shadow-sm border-0">
+    <div class="card-header fw-semibold small d-flex align-items-center gap-2">
+        <i class="bi bi-table me-1 text-primary"></i>Detailed Booth Breakdown
+        <span class="badge bg-secondary ms-1">@Model.Booths.Count booths</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Booth</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center">Contacted</th>
+                        <th style="min-width:140px">Coverage</th>
+                        <th class="text-center text-success">Favour</th>
+                        <th class="text-center text-warning">Floating</th>
+                        <th class="text-center text-danger">Against</th>
+                        <th class="text-center">Wk Visits</th>
+                        <th>Agent</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var b in Model.Booths)
+                {
+                    <tr>
+                        <td>
+                            <span class="fw-semibold small">Booth @b.BoothNumber</span>
+                            @if (!string.IsNullOrEmpty(b.WardNumber))
+                            {
+                                <span class="text-muted small"> · Ward @b.WardNumber</span>
+                            }
+                            <div class="text-muted" style="font-size:0.7rem">@b.BoothName</div>
+                        </td>
+                        <td class="text-center small">@b.TotalVoters</td>
+                        <td class="text-center small">@b.ContactedVoters</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height:8px">
+                                    <div class="progress-bar bg-@b.HeatColor" style="width:@b.CoveragePercent%"></div>
+                                </div>
+                                <span class="small fw-bold text-@b.HeatColor" style="min-width:38px">@b.CoveragePercent%</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success bg-opacity-10 text-success">@b.FavourVoters</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-warning bg-opacity-10 text-warning">@b.FloatingVoters</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-danger bg-opacity-10 text-danger">@b.AgainstVoters</span>
+                        </td>
+                        <td class="text-center small">
+                            @if (b.VisitsThisWeek > 0)
+                            {
+                                <span class="text-primary fw-semibold">@b.VisitsThisWeek</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">0</span>
+                            }
+                        </td>
+                        <td class="small">
+                            @if (!string.IsNullOrEmpty(b.AssignedAgentName))
+                            {
+                                <span class="text-success">@b.AssignedAgentName</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Unassigned</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-@b.HeatColor">
+                                <i class="bi @b.HeatIcon me-1"></i>@b.HeatLabel
+                            </span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        ?? Weak = coverage &lt;30% · ?? Moderate = 30–69% · ?? Strong = ?70%.
+        "Wk Visits" = door-to-door visits logged this calendar week.
+    </div>
+</div>

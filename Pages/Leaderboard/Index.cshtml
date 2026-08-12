@@ -158,12 +158,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                @{int rank = 0;}
+                @{
+                    int rank = 0;
+                    int displayRank = 0;
+                    int? prevScore = null;
+                }
                 @foreach (var r in Model.Rows)
                 {
                     rank++;
+                    if (prevScore == null || r.TotalScore != prevScore)
+                    {
+                        displayRank = rank;
+                    }
+                    prevScore = r.TotalScore;
                     var isCurrentUser = r.UserId == Model.CurrentUserId;
-                    var rankBadge     = rank == 1 ? "??" : rank == 2 ? "??" : rank == 3 ? "??" : rank.ToString();
+                    var rankBadge     = displayRank == 1 ? "🥇" : displayRank == 2 ? "🥈" : displayRank == 3 ? "🥉" : displayRank.ToString();
                     var rowClass      = isCurrentUser ? "table-info" : "";
                     // Score bar: max score as denominator
                     var maxScore      = Model.Rows.Max(x => x.TotalScore);
@@ -171,7 +180,7 @@
 
                     <tr class="@rowClass">
                         <td class="text-center fw-bold">
-                            @if (rank <= 3)
+                            @if (displayRank <= 3)
                             {
                                 <span style="font-size:1.1rem">@rankBadge</span>
                             }
@@ -206,7 +215,7 @@
                             <span class="badge bg-success bg-opacity-10 text-success fw-semibold">@r.FavourConversions</span>
                         </td>
                         <td class="text-center">
-                            <div class="fw-bold @(rank == 1 ? "text-warning" : rank == 2 ? "text-secondary" : rank == 3 ? "" : "")">
+                            <div class="fw-bold @(displayRank == 1 ? "text-warning" : displayRank == 2 ? "text-secondary" : displayRank == 3 ? "" : "")">
                                 @r.TotalScore
                             </div>
                             <div class="progress mt-1" style="height:4px;width:60px;margin:0 auto">

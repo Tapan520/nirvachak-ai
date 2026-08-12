@@ -65,7 +65,7 @@
                 @{
                     bool votersOpen      = currentPage.StartsWith("/Voters") || currentPage == "/VoterSlips/Index";
                     bool campaignOpen    = currentPage.StartsWith("/PhoneBanking") || currentPage.StartsWith("/Influencers") || currentPage.StartsWith("/Competitor") || currentPage.StartsWith("/Campaign") || currentPage.StartsWith("/Volunteers");
-                    bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/Reports");
+                        bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/SwingVoters") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/Reports");
                     bool electionOpsOpen = currentPage.StartsWith("/PannaPramukh") || currentPage.StartsWith("/BoothShifts") || currentPage.StartsWith("/RapidResponse") || currentPage.StartsWith("/Broadcast") || currentPage.StartsWith("/Budget") || currentPage.StartsWith("/Results") || currentPage.StartsWith("/FieldReports");
                     bool managementOpen  = currentPage.StartsWith("/Admin") || currentPage.StartsWith("/Booths");
                 }
@@ -203,6 +203,11 @@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/WinProbability") ? "active" : "")" asp-page="/WinProbability/Index">
                                 <i class="bi bi-trophy-fill me-2"></i> Win Probability
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/SwingVoters") ? "active" : "")" asp-page="/SwingVoters/Index">
+                                <i class="bi bi-arrow-left-right me-2 text-warning"></i> Swing Voters
                             </a>
                         </li>
                         }

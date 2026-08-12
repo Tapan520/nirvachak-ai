@@ -1,0 +1,256 @@
+@page
+@model Nirvachak_AI.Pages.SwingVoters.IndexModel
+@using Nirvachak_AI.Domain.Enums
+@{
+    ViewData["Title"] = "Swing Voter Intelligence";
+}
+
+@* ?? Summary Cards ??????????????????????????????????????????????? *@
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0"><i class="bi bi-arrow-left-right me-2 text-warning"></i>Swing Voter Intelligence</h4>
+        <p class="text-muted small mb-0">Voters who were previously marked <strong>Favour</strong> but have since swung to <strong>Floating</strong> or <strong>Against</strong>. High-priority re-engagement targets.</p>
+    </div>
+    @* Filters *@
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+        @if (Model.IsAdmin && Model.Constituencies.Any())
+        {
+            <select name="SelectedConstituencyId" class="form-select form-select-sm" style="min-width:170px" onchange="this.form.submit()">
+                <option value="">-- All Constituencies --</option>
+                @foreach (var c in Model.Constituencies)
+                {
+                    <option value="@c.Id" selected="@(Model.SelectedConstituencyId == c.Id)">@c.Name</option>
+                }
+            </select>
+        }
+        @if (Model.AvailableWards.Any())
+        {
+            <select name="FilterWard" class="form-select form-select-sm" style="min-width:130px" onchange="this.form.submit()">
+                <option value="">All Wards</option>
+                @foreach (var w in Model.AvailableWards)
+                {
+                    <option value="@w" selected="@(Model.FilterWard == w)">Ward @w</option>
+                }
+            </select>
+        }
+        @if (Model.AvailableBooths.Any())
+        {
+            <select name="FilterBooth" class="form-select form-select-sm" style="min-width:130px" onchange="this.form.submit()">
+                <option value="">All Booths</option>
+                @foreach (var b in Model.AvailableBooths)
+                {
+                    <option value="@b" selected="@(Model.FilterBooth == b)">Booth @b</option>
+                }
+            </select>
+        }
+        <select name="FilterSentiment" class="form-select form-select-sm" style="min-width:130px" onchange="this.form.submit()">
+            <option value="">All Swing</option>
+            <option value="Against"  selected="@(Model.FilterSentiment == "Against")">?? Against Only</option>
+            <option value="Floating" selected="@(Model.FilterSentiment == "Floating")">?? Floating Only</option>
+        </select>
+        @if (Model.FilterBooth.HasValue || !string.IsNullOrEmpty(Model.FilterWard) || !string.IsNullOrEmpty(Model.FilterSentiment) || Model.SelectedConstituencyId.HasValue)
+        {
+            <a href="?" class="btn btn-sm btn-outline-secondary">Clear</a>
+        }
+    </form>
+</div>
+
+@* ?? Stat cards ?????????????????????????????????????????????????? *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-warning">@Model.TotalSwing</div>
+                <div class="small text-muted">Total Swing Voters</div>
+                <span class="badge bg-warning bg-opacity-10 text-warning small">need re-engagement</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-danger">@Model.CriticalSwing</div>
+                <div class="small text-muted">Swung to Against</div>
+                <span class="badge bg-danger bg-opacity-10 text-danger small">critical — act now</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-warning">@Model.FloatingSwing</div>
+                <div class="small text-muted">Swung to Floating</div>
+                <span class="badge bg-warning bg-opacity-10 text-warning small">at risk — re-engage</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-3">
+                @{
+                    var withMobile = Model.SwingVoters.Count(v => !string.IsNullOrEmpty(v.MobileNumber));
+                }
+                <div class="fs-2 fw-bold text-info">@withMobile</div>
+                <div class="small text-muted">Have Mobile Number</div>
+                <span class="badge bg-info bg-opacity-10 text-info small">can contact directly</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.SwingVoters.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-emoji-smile fs-1 d-block mb-3 text-success opacity-50"></i>
+            <h5 class="text-success">No Swing Voters Detected!</h5>
+            <p class="small mb-0">All previously-Favour voters are still showing Favour sentiment. Great work! ??</p>
+        </div>
+    </div>
+    return;
+}
+
+@* ?? Alert banner ???????????????????????????????????????????????? *@
+@if (Model.CriticalSwing > 0)
+{
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3 py-2">
+        <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+        <span><strong>@Model.CriticalSwing voter(s)</strong> have swung to <strong>Against</strong> — assign your best field workers to re-engage them immediately.</span>
+    </div>
+}
+
+@* ?? Voter Table ????????????????????????????????????????????????? *@
+<div class="card shadow-sm border-0">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-semibold small">
+            <i class="bi bi-arrow-left-right me-2 text-warning"></i>
+            Swing Voters
+            <span class="badge bg-warning text-dark ms-1">@Model.SwingVoters.Count</span>
+        </span>
+        <input type="text" id="swingSearch" class="form-control form-control-sm" style="max-width:240px"
+               placeholder="Search name / EPIC / ward..." oninput="filterTable(this.value)" />
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0" id="swingTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Voter</th>
+                        <th class="text-center">Booth</th>
+                        <th class="text-center">Ward / Panna</th>
+                        <th class="text-center">Current</th>
+                        <th class="text-center">Favour Visits</th>
+                        <th>Last Visit</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var v in Model.SwingVoters)
+                {
+                    var sentimentClass = v.CurrentSentiment == VoterSentiment.Against ? "danger" : "warning";
+                    var sentimentIcon  = v.CurrentSentiment == VoterSentiment.Against ? "bi-hand-thumbs-down-fill" : "bi-arrow-left-right";
+                    var surveyLink     = $"{Model.SurveyBaseUrl}?epic={Uri.EscapeDataString(v.VoterId)}";
+                    var waMsg          = Uri.EscapeDataString($"Dear {v.Name}, we value your support. Our team would love to reconnect with you and address any concerns. Please feel free to reach out!");
+                    var waLink         = string.IsNullOrEmpty(v.MobileNumber) ? "#" : $"https://wa.me/91{v.MobileNumber.Trim()}?text={waMsg}";
+                    var searchData     = $"{v.Name} {v.VoterId} {v.WardNumber} {v.BoothNumber} {v.PannaNumber}".ToLower();
+
+                    <tr data-searchable="@searchData">
+                        <td>
+                            <div class="fw-semibold small">@v.Name</div>
+                            <div class="font-monospace text-muted" style="font-size:0.72rem">@v.VoterId</div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">@v.BoothNumber</span>
+                        </td>
+                        <td class="text-center small text-muted">
+                            @(v.WardNumber ?? "—")
+                            @if (!string.IsNullOrEmpty(v.PannaNumber))
+                            {
+                                <span class="text-muted"> / @v.PannaNumber</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-@sentimentClass">
+                                <i class="bi @sentimentIcon me-1"></i>@v.CurrentSentiment
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                <i class="bi bi-check2 me-1"></i>@v.FavourVisitCount × Favour
+                            </span>
+                            <div class="text-muted" style="font-size:0.7rem">@v.TotalVisitCount total visits</div>
+                        </td>
+                        <td class="small">
+                            @if (v.LastVisitedAt.HasValue)
+                            {
+                                <div>@v.LastVisitedAt.Value.ToLocalTime().ToString("dd MMM yy")</div>
+                                <div class="text-muted" style="font-size:0.7rem">@v.LastWorkerName</div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                <a asp-page="/Voters/Details" asp-route-id="@v.Id"
+                                   class="btn btn-sm btn-outline-primary py-0 px-2" title="View Profile">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @if (!string.IsNullOrEmpty(v.MobileNumber))
+                                {
+                                    <a href="@waLink" target="_blank"
+                                       class="btn btn-sm btn-success py-0 px-2" title="WhatsApp Re-engage">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </a>
+                                    <a href="tel:@v.MobileNumber"
+                                       class="btn btn-sm btn-outline-secondary py-0 px-2" title="Call">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2" disabled title="No mobile number">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </button>
+                                }
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                        title="Copy survey link"
+                                        onclick="navigator.clipboard.writeText('@surveyLink');this.innerHTML='<i class=\'bi bi-check2\'></i>'">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div id="swingNoResults" class="text-center text-muted py-3 small d-none">
+                <i class="bi bi-search me-1"></i>No matching voters found.
+            </div>
+        </div>
+    </div>
+    <div class="card-footer text-muted small d-flex justify-content-between align-items-center">
+        <span>Showing <span id="visibleCount">@Model.SwingVoters.Count</span> of @Model.SwingVoters.Count swing voter(s)</span>
+        <span class="text-muted">Tip: Use WhatsApp ?? or Call ?? to re-engage. A single visit can convert a swing voter back.</span>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function filterTable(query) {
+        const q      = query.toLowerCase().trim();
+        const rows   = document.querySelectorAll('#swingTable tbody tr[data-searchable]');
+        let   visible = 0;
+        rows.forEach(row => {
+            const match = !q || row.dataset.searchable.includes(q);
+            row.classList.toggle('d-none', !match);
+            if (match) visible++;
+        });
+        const noRes = document.getElementById('swingNoResults');
+        const count = document.getElementById('visibleCount');
+        if (noRes) noRes.classList.toggle('d-none', visible > 0 || rows.length === 0);
+        if (count) count.textContent = visible;
+    }
+</script>
+}

@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.BoothHeatMap.IndexModel
 @{
     ViewData["Title"] = "Booth Heat Map";
@@ -15,7 +15,7 @@
     <div>
         <h4 class="mb-0"><i class="bi bi-map-fill me-2 text-primary"></i>Booth Heat Map</h4>
         <p class="text-muted small mb-0">
-            Coverage status per booth — ?? Weak (&lt;30%) · ?? Moderate (30–69%) · ?? Strong (?70%)
+            Coverage status per booth &mdash; <span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill"></i> Weak</span> (&lt;30%) &mdash; <span class="text-warning fw-semibold"><i class="bi bi-exclamation-circle-fill"></i> Moderate</span> (30&ndash;69%) &mdash; <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill"></i> Strong</span> (&ge;70%)
         </p>
     </div>
     <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
@@ -32,10 +32,10 @@
         <input type="hidden" name="SelectedConstituencyId" value="@Model.SelectedConstituencyId" />
         <select name="SortBy" class="form-select form-select-sm" style="min-width:170px" onchange="this.form.submit()">
             <option value="booth"          selected="@(Model.SortBy == "booth")">Sort: Booth Number</option>
-            <option value="heat"           selected="@(Model.SortBy == "heat")">Sort: Weakest First ??</option>
-            <option value="coverage_asc"   selected="@(Model.SortBy == "coverage_asc")">Sort: Coverage ?</option>
-            <option value="coverage_desc"  selected="@(Model.SortBy == "coverage_desc")">Sort: Coverage ?</option>
-            <option value="favour_desc"    selected="@(Model.SortBy == "favour_desc")">Sort: Most Favour ?</option>
+        <option value="heat"           selected="@(Model.SortBy == "heat")">Sort: Weakest First ?</option>
+        <option value="coverage_asc"   selected="@(Model.SortBy == "coverage_asc")">Sort: Coverage ?</option>
+        <option value="coverage_desc"  selected="@(Model.SortBy == "coverage_desc")">Sort: Coverage ?</option>
+        <option value="favour_desc"    selected="@(Model.SortBy == "favour_desc")">Sort: Most Favour ?</option>
         </select>
     </form>
 </div>
@@ -46,7 +46,7 @@
         <div class="card text-center border-0 shadow-sm h-100">
             <div class="card-body py-3 px-2">
                 <div class="fs-3 fw-bold text-danger">@Model.RedBooths</div>
-                <div class="small text-muted">?? Weak Booths</div>
+                <div class="small text-muted"><i class="bi bi-x-circle-fill text-danger me-1"></i>Weak Booths</div>
                 <span class="badge bg-danger bg-opacity-10 text-danger small">&lt;30% coverage</span>
             </div>
         </div>
@@ -55,8 +55,8 @@
         <div class="card text-center border-0 shadow-sm h-100">
             <div class="card-body py-3 px-2">
                 <div class="fs-3 fw-bold text-warning">@Model.YellowBooths</div>
-                <div class="small text-muted">?? Moderate Booths</div>
-                <span class="badge bg-warning bg-opacity-10 text-warning small">30–69%</span>
+                <div class="small text-muted"><i class="bi bi-exclamation-circle-fill text-warning me-1"></i>Moderate Booths</div>
+                <span class="badge bg-warning bg-opacity-10 text-warning small">30â€“69%</span>
             </div>
         </div>
     </div>
@@ -64,7 +64,7 @@
         <div class="card text-center border-0 shadow-sm h-100">
             <div class="card-body py-3 px-2">
                 <div class="fs-3 fw-bold text-success">@Model.GreenBooths</div>
-                <div class="small text-muted">?? Strong Booths</div>
+                <div class="small text-muted"><i class="bi bi-check-circle-fill text-success me-1"></i>Strong Booths</div>
                 <span class="badge bg-success bg-opacity-10 text-success small">?70% coverage</span>
             </div>
         </div>
@@ -116,7 +116,7 @@
     <div class="alert alert-danger d-flex align-items-start gap-2 mb-3 py-2">
         <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0 mt-1"></i>
         <div>
-            <strong>@Model.RedBooths booth(s) need urgent attention</strong> — coverage below 30%:
+            <strong>@Model.RedBooths booth(s) need urgent attention</strong> â€” coverage below 30%:
             @foreach (var rb in redList)
             {
                 <span class="badge bg-danger ms-1">Booth @rb.BoothNumber (@rb.CoveragePercent%)</span>
@@ -242,7 +242,7 @@
                             <span class="fw-semibold small">Booth @b.BoothNumber</span>
                             @if (!string.IsNullOrEmpty(b.WardNumber))
                             {
-                                <span class="text-muted small"> · Ward @b.WardNumber</span>
+                                <span class="text-muted small"> Â· Ward @b.WardNumber</span>
                             }
                             <div class="text-muted" style="font-size:0.7rem">@b.BoothName</div>
                         </td>
@@ -298,7 +298,8 @@
     </div>
     <div class="card-footer text-muted small">
         <i class="bi bi-info-circle me-1"></i>
-        ?? Weak = coverage &lt;30% · ?? Moderate = 30–69% · ?? Strong = ?70%.
+        <i class="bi bi-x-circle-fill text-danger me-1"></i>Weak = coverage &lt;30% &mdash; <i class="bi bi-exclamation-circle-fill text-warning me-1"></i>Moderate = 30&ndash;69% &mdash; <i class="bi bi-check-circle-fill text-success me-1"></i>Strong = &ge;70%.
         "Wk Visits" = door-to-door visits logged this calendar week.
     </div>
 </div>
+

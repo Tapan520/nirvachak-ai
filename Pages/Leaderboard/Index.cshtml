@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Leaderboard.IndexModel
 @{
     ViewData["Title"] = "Field Team Leaderboard";
@@ -10,7 +10,7 @@
         <h4 class="mb-0"><i class="bi bi-trophy-fill me-2 text-warning"></i>Field Team Leaderboard</h4>
         <p class="text-muted small mb-0">
             Ranked by visits, calls &amp; Favour conversions &mdash; <strong>@Model.PeriodLabel</strong>.
-            Score = Visits×2 + Calls×1 + Favour Conversions×3.
+            Score = Visits&times;2 + Calls&times;1 + Favour Conversions&times;3.
         </p>
     </div>
     <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
@@ -60,7 +60,7 @@
             <div class="col-md-3 order-md-1 order-2 d-flex align-items-end">
                 <div class="card border-0 shadow-sm w-100 text-center" style="border-top: 4px solid #adb5bd !important;">
                     <div class="card-body pb-3 pt-4">
-                        <div class="mb-2" style="font-size:2.5rem">??</div>
+                        <div class="mb-2"><i class="bi bi-award-fill" style="font-size:2.5rem;color:#adb5bd"></i></div>
                         <div class="fw-bold">@Model.Silver.FullName</div>
                         <div class="small text-muted mb-2">@Model.Silver.Role</div>
                         <div class="fs-3 fw-bold text-secondary">@Model.Silver.TotalScore</div>
@@ -84,7 +84,7 @@
             <div class="col-md-4 order-md-2 order-1 d-flex align-items-end">
                 <div class="card border-0 shadow w-100 text-center" style="border-top: 4px solid #f59f00 !important;">
                     <div class="card-body pb-3 pt-4">
-                        <div class="mb-2" style="font-size:3rem">??</div>
+                        <div class="mb-2"><i class="bi bi-trophy-fill" style="font-size:3rem;color:#f59f00"></i></div>
                         <div class="fw-bold fs-5">@Model.Gold.FullName</div>
                         <div class="small text-muted mb-2">@Model.Gold.Role</div>
                         <div class="fs-2 fw-bold text-warning">@Model.Gold.TotalScore</div>
@@ -109,7 +109,7 @@
             <div class="col-md-3 order-md-3 order-3 d-flex align-items-end">
                 <div class="card border-0 shadow-sm w-100 text-center" style="border-top: 4px solid #cd7f32 !important;">
                     <div class="card-body pb-3 pt-4">
-                        <div class="mb-2" style="font-size:2.5rem">??</div>
+                        <div class="mb-2"><i class="bi bi-award-fill" style="font-size:2.5rem;color:#cd7f32"></i></div>
                         <div class="fw-bold">@Model.Bronze.FullName</div>
                         <div class="small text-muted mb-2">@Model.Bronze.Role</div>
                         <div class="fs-3 fw-bold" style="color:#cd7f32">@Model.Bronze.TotalScore</div>
@@ -192,7 +192,7 @@
                                 @r.Role
                                 @if (!string.IsNullOrEmpty(r.AssignedBooths))
                                 {
-                                    <span class="ms-1">· Booths @r.AssignedBooths</span>
+                                    <span class="ms-1">Â· Booths @r.AssignedBooths</span>
                                 }
                             </div>
                         </td>
@@ -244,8 +244,9 @@
     </div>
     <div class="card-footer text-muted small">
         <i class="bi bi-info-circle me-1"></i>
-        Scoring: <strong>Visits × 2</strong> + <strong>Calls × 1</strong> + <strong>Favour Conversions × 3</strong>.
+        Scoring: <strong>Visits &times; 2</strong> + <strong>Calls &times; 1</strong> + <strong>Favour Conversions &times; 3</strong>.
         Only FieldWorker, BoothAgent and CampaignManager roles are ranked.
         Period resets at midnight on the first day of each week/month.
     </div>
 </div>
+

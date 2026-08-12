@@ -161,6 +161,7 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<DatabaseBackupServ
 builder.Services.AddHostedService<ExpenseBudgetAlertService>();
 builder.Services.AddHostedService<SwingVoterAlertService>();
 builder.Services.AddHostedService<DailyBriefingService>();
+builder.Services.AddHostedService<NoonAlertService>();
 
 // Named HTTP client for Exotel (30 s timeout)
 builder.Services.AddHttpClient("exotel", c =>

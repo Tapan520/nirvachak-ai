@@ -140,8 +140,15 @@ else
             <i class="bi bi-person-exclamation me-2 text-danger"></i>
             <strong>Chase List</strong> — Favour Voters Not Yet Voted
         </span>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-danger">@Model.NotYetVotedFavour.Count pending</span>
+            @if (Model.SmsBlastCount > 0)
+            {
+                <button type="button" class="btn btn-sm btn-success"
+                        data-bs-toggle="modal" data-bs-target="#waBlastModal">
+                    <i class="bi bi-whatsapp me-1"></i>WhatsApp All (@Model.SmsBlastCount)
+                </button>
+            }
             @if (Model.ExotelConfigured && Model.SmsBlastCount > 0)
             {
                 <button type="button" class="btn btn-sm btn-warning"
@@ -194,6 +201,66 @@ else
         }
     </div>
 </div>
+
+@* ── WhatsApp Bulk Blast Modal (zero-cost, no API needed) ──────────────── *@
+@if (Model.SmsBlastCount > 0)
+{
+    var waVoters = Model.NotYetVotedFavour.Where(v => !string.IsNullOrEmpty(v.MobileNumber)).ToList();
+<div class="modal fade" id="waBlastModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background:#25d366">
+                <h5 class="modal-title"><i class="bi bi-whatsapp me-2"></i>WhatsApp Blast &mdash; @waVoters.Count Unvoted Favour Voters</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Opens <strong>WhatsApp</strong> with a pre-filled message per voter &mdash; <strong>zero API cost</strong>.
+                    Use <em>Open All</em> to send in sequence, or <em>Copy Numbers</em> for a group message.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Message <span class="text-muted">(use [Name] as placeholder)</span></label>
+                    <textarea id="waMessage" class="form-control form-control-sm" rows="3">Dear [Name], today is election day! Please cast your vote at your nearest polling booth before 6:00 PM. Your vote is your voice — every vote counts!</textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold text-muted">@waVoters.Count voters with mobile numbers</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyAllWANumbers()"><i class="bi bi-clipboard me-1"></i>Copy Numbers</button>
+                </div>
+                <div id="waCopyDone" class="small text-success mb-1 d-none"><i class="bi bi-check-circle me-1"></i>Copied!</div>
+                <div style="max-height:280px;overflow-y:auto;border:1px solid #dee2e6;border-radius:6px">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width:30px"><input type="checkbox" id="waSelectAll" checked class="form-check-input" /></th>
+                                <th>Name</th><th>Booth</th><th>Mobile</th><th class="text-center">Send</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var v in waVoters)
+                        {
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input wa-chk" checked data-num="@v.MobileNumber" data-name="@v.Name" /></td>
+                                <td class="small fw-semibold">@v.Name</td>
+                                <td><span class="badge bg-secondary">@v.BoothNumber</span></td>
+                                <td class="small font-monospace">@v.MobileNumber</td>
+                                <td class="text-center">
+                                    <button onclick="waOpenOne('@v.MobileNumber','@v.Name')" class="btn btn-sm btn-success py-0 px-2"><i class="bi bi-whatsapp"></i></button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="waOpenAll()"><i class="bi bi-whatsapp me-1"></i>Open All in WhatsApp</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
 
 @* SMS Blast Modal *@
 @if (Model.ExotelConfigured && Model.SmsBlastCount > 0)
@@ -257,5 +324,37 @@ else
             errEl.classList.add('d-none');
         }
     });
+
+    // ── WhatsApp Blast helpers ─────────────────────────────
+    function waBuildMsg(name) {
+        const tpl = document.getElementById('waMessage') ? document.getElementById('waMessage').value : 'Dear [Name], please vote today!';
+        return encodeURIComponent(tpl.replace('[Name]', name));
+    }
+    function waOpenOne(mobile, name) {
+        window.open('https://wa.me/91' + mobile + '?text=' + waBuildMsg(name), '_blank');
+    }
+    let _waIdx = 0, _waQ = [];
+    function waOpenAll() {
+        _waQ = [];
+        document.querySelectorAll('.wa-chk:checked').forEach(function(cb) { _waQ.push({n: cb.dataset.num, name: cb.dataset.name}); });
+        if (!_waQ.length) { alert('No voters selected.'); return; }
+        if (!confirm('Open ' + _waQ.length + ' WhatsApp windows? Allow pop-ups if prompted.')) return;
+        _waIdx = 0; waSendNext();
+    }
+    function waSendNext() {
+        if (_waIdx >= _waQ.length) return;
+        var v = _waQ[_waIdx++];
+        window.open('https://wa.me/91' + v.n + '?text=' + waBuildMsg(v.name), '_blank');
+        if (_waIdx < _waQ.length) setTimeout(waSendNext, 1200);
+    }
+    function copyAllWANumbers() {
+        var nums = []; document.querySelectorAll('.wa-chk:checked').forEach(function(cb) { nums.push(cb.dataset.num); });
+        if (!nums.length) { alert('No voters selected.'); return; }
+        navigator.clipboard.writeText(nums.join('\n')).then(function() {
+            var el = document.getElementById('waCopyDone'); if (el) { el.classList.remove('d-none'); setTimeout(function() { el.classList.add('d-none'); }, 3000); }
+        });
+    }
+    var waAll = document.getElementById('waSelectAll');
+    if (waAll) waAll.addEventListener('change', function() { document.querySelectorAll('.wa-chk').forEach(function(cb) { cb.checked = waAll.checked; }); });
 </script>
 }

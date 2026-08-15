@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Competitor.IndexModel
 @{
     ViewData["Title"] = "Competitor Intelligence";
@@ -104,7 +104,7 @@
                         <td>@a.ActivityTitle</td>
                         <td><span class="badge bg-light text-dark border">@a.ActivityType</span></td>
                         <td>@a.Location</td>
-                        <td>@(a.EstimatedCrowd.HasValue ? a.EstimatedCrowd.Value.ToString("N0") : "—")</td>
+                        <td>@(a.EstimatedCrowd.HasValue ? a.EstimatedCrowd.Value.ToString("N0") : "-")</td>
                         <td><span class="badge bg-@badge">@a.ThreatLevel</span></td>
                         <td>
                             <a asp-page="./Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Edit</a>

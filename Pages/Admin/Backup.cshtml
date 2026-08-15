@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Admin.BackupModel
 @{
     ViewData["Title"] = "Database Backup Management";
@@ -124,7 +124,7 @@
                             {
                                 var val = h.ToString("D2");
                                 <option value="@val" selected="@(Model.ScheduleHour == val)">
-                                    @val:00 UTC (@(h == 2 ? "recommended — low traffic" : h + ":00"))
+                                    @val:00 UTC (@(h == 2 ? "recommended - low traffic" : h + ":00"))
                                 </option>
                             }
                         </select>

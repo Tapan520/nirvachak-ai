@@ -87,7 +87,7 @@ else
                     @foreach (var v in Model.TodayVoters)
                     {
                         <option value="@v.Id" data-name="@v.Name" data-epic="@v.VoterId">
-                            [@v.VoterId] @v.Name � Booth @v.BoothNumber (@v.ElectionDayStatus)
+                            [@v.VoterId] @v.Name - Booth @v.BoothNumber (@v.ElectionDayStatus)
                         </option>
                     }
                 </select>

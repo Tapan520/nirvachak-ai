@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Reports.EcPdfModel
 @{
     ViewData["Title"] = "EC Compliance Expense Report";
@@ -8,7 +8,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>EC Expense Report — @Model.ConstituencyName</title>
+    <title>EC Expense Report - @Model.ConstituencyName</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; background: #fff; }
@@ -68,8 +68,8 @@
             <h2 style="font-size:10pt;">Candidate: @Model.CandidateName &nbsp;|&nbsp; Party: @Model.PartyName</h2>
         }
         <div class="report-meta">
-            <span>Election Date: @(Model.ElectionDate?.ToString("dd MMMM yyyy") ?? "—")</span>
-            <span>Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "All") – @(Model.DateTo?.ToString("dd MMM yyyy") ?? "All")</span>
+            <span>Election Date: @(Model.ElectionDate?.ToString("dd MMMM yyyy") ?? "-")</span>
+            <span>Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "All") - @(Model.DateTo?.ToString("dd MMM yyyy") ?? "All")</span>
             <span>Generated: @Model.GeneratedAt.ToString("dd MMM yyyy, hh:mm tt")</span>
         </div>
     </div>
@@ -134,8 +134,8 @@
                 <td style="white-space:nowrap">@e.ExpenseDate.ToString("dd/MM/yy")</td>
                 <td>@e.Description</td>
                 <td>@e.Category</td>
-                <td>@(e.PayeeName ?? "—")</td>
-                <td style="font-family:monospace">@(e.VoucherNumber ?? "—")</td>
+                <td>@(e.PayeeName ?? "-")</td>
+                <td style="font-family:monospace">@(e.VoucherNumber ?? "-")</td>
                 <td style="text-align:right">@e.Amount.ToString("N2")</td>
                 <td class="@(e.IsECCompliant ? "ec-yes" : "ec-no")">@(e.IsECCompliant ? "?" : "?")</td>
             </tr>
@@ -173,7 +173,7 @@
     </div>
 
     <div class="footer">
-        <span>Nirvachak AI — Confidential Campaign Document</span>
+        <span>Nirvachak AI - Confidential Campaign Document</span>
         <span>Page 1 of 1</span>
     </div>
 </div>

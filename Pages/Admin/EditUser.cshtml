@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Admin.EditUserModel
 @{
     ViewData["Title"] = "Edit User";
@@ -9,14 +9,14 @@
         <div class="card shadow-sm">
             <div class="card-header">
                 <i class="bi bi-pencil-square me-2"></i>Edit User
-                <span class="text-muted ms-1 small">— @Model.Input.FullName</span>
+                <span class="text-muted ms-1 small">- @Model.Input.FullName</span>
             </div>
             <div class="card-body">
                 <form method="post" autocomplete="off">
                     <input type="hidden" asp-for="UserId" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
 
-                    @* Section 1 — Basic Information *@
+                    @* Section 1 - Basic Information *@
                     <h6 class="text-muted text-uppercase small fw-semibold mb-3">
                         <i class="bi bi-person me-1"></i>Basic Information
                     </h6>
@@ -47,7 +47,7 @@
                         </div>
                     </div>
 
-                    @* Section 2 — Change Password (optional) *@
+                    @* Section 2 - Change Password (optional) *@
                     <hr class="my-3" />
                     <h6 class="text-muted text-uppercase small fw-semibold mb-1">
                         <i class="bi bi-shield-lock me-1"></i>Change Password
@@ -83,7 +83,7 @@
                         </div>
                     </div>
 
-                    @* Section 3 — Role & Constituency (Admin / SuperAdmin only) *@
+                    @* Section 3 - Role & Constituency (Admin / SuperAdmin only) *@
                     @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
                     {
                         <hr class="my-3" />
@@ -100,13 +100,13 @@
                             <div class="col-md-6">
                                 <label asp-for="Input.ConstituencyId" class="form-label fw-semibold">Constituency</label>
                                 <select asp-for="Input.ConstituencyId" asp-items="Model.ConstituencyItems" class="form-select">
-                                    <option value="">— None —</option>
+                                    <option value="">- None -</option>
                                 </select>
                             </div>
                         </div>
                     }
 
-                    @* Section 4 — Assignment & Status *@
+                    @* Section 4 - Assignment & Status *@
                     <hr class="my-3" />
                     <h6 class="text-muted text-uppercase small fw-semibold mb-3">
                         <i class="bi bi-pin-map me-1"></i>Assignment &amp; Status

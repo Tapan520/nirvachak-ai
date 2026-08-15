@@ -38,7 +38,7 @@
                         <td><span class="badge bg-secondary">@c.Code</span></td>
                         <td><span class="badge bg-info text-dark">@c.ElectionType</span></td>
                         <td class="small">@c.State / @c.District</td>
-                        <td class="small">@(c.CandidateName ?? "�") @(!string.IsNullOrEmpty(c.PartyName) ? $"({c.PartyName})" : "")</td>
+                        <td class="small">@(c.CandidateName ?? "-") @(!string.IsNullOrEmpty(c.PartyName) ? $"({c.PartyName})" : "")</td>
                         <td class="small">@c.ElectionDate.ToString("dd MMM yyyy")</td>
                         <td class="text-center">@(Model.WardCounts.GetValueOrDefault(c.Id, 0))</td>
                         <td class="text-center">@(Model.VoterCounts.GetValueOrDefault(c.Id, 0))</td>

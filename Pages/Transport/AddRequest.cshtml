@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Transport.AddRequestModel
 @{ ViewData["Title"] = "Add Transport Request"; }
 
@@ -33,7 +33,7 @@
 <div class="card border-0 shadow-sm mb-3" style="max-width:700px">
     <div class="card-body">
         <form method="get" class="d-flex gap-2">
-            <input type="text" name="SearchVoter" class="form-control" placeholder="Search voter by name, EPIC or mobile…" value="@Model.SearchVoter" />
+            <input type="text" name="SearchVoter" class="form-control" placeholder="Search voter by name, EPIC or mobile-" value="@Model.SearchVoter" />
             <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
         </form>
         @if (Model.SearchResults.Any())

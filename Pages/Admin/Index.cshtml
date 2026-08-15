@@ -42,8 +42,8 @@
                                 @u.Role
                             </span>
                         </td>
-                        <td class="small">@(u.Constituency?.Name ?? "�")</td>
-                        <td class="small">@(u.AssignedWard ?? "�")</td>
+                        <td class="small">@(u.Constituency?.Name ?? "-")</td>
+                        <td class="small">@(u.AssignedWard ?? "-")</td>
                         <td class="small">@(u.AssignedBoothNumbers ?? "All")</td>
                         <td>
                             <span class="badge @(u.IsActive ? "bg-success" : "bg-secondary")">

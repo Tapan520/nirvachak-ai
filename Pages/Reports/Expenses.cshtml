@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Reports.ExpensesModel
 @{
     ViewData["Title"] = "Expense Report";
@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Expense Report — @Model.ConstituencyName</title>
+    <title>Expense Report - @Model.ConstituencyName</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
@@ -80,7 +80,7 @@
                     Constituency: <strong>@(string.IsNullOrEmpty(Model.ConstituencyName) ? "All" : Model.ConstituencyName)</strong>
                     @if (Model.DateFrom.HasValue || Model.DateTo.HasValue)
                     {
-                        <span>&nbsp;|&nbsp; Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "—") to @(Model.DateTo?.ToString("dd MMM yyyy") ?? "—")</span>
+                        <span>&nbsp;|&nbsp; Period: @(Model.DateFrom?.ToString("dd MMM yyyy") ?? "-") to @(Model.DateTo?.ToString("dd MMM yyyy") ?? "-")</span>
                     }
                     &nbsp;|&nbsp; Generated: @Model.GeneratedAt.ToString("dd MMM yyyy, h:mm tt")
                 </div>
@@ -183,8 +183,8 @@
                 <td class="text-nowrap">@e.ExpenseDate.ToString("dd MMM yy")</td>
                 <td>@e.Description</td>
                 <td><span class="badge bg-info text-dark">@e.Category</span></td>
-                <td>@(e.PayeeName ?? "—")</td>
-                <td class="font-monospace small">@(e.VoucherNumber ?? "—")</td>
+                <td>@(e.PayeeName ?? "-")</td>
+                <td class="font-monospace small">@(e.VoucherNumber ?? "-")</td>
                 <td class="text-end fw-bold">@e.Amount.ToString("N2")</td>
                 <td class="text-center">
                     @if (e.IsECCompliant)

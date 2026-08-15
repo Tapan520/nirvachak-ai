@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Admin.Rewards.IndexModel
 @{
     ViewData["Title"] = "Reward & Coupon Config";
@@ -44,7 +44,7 @@
                     var isExpired = r.ExpiryDate < DateTime.Now;
                     <tr>
                         <td class="fw-semibold">@r.Title</td>
-                        <td>@(r.PartnerBrand ?? "—")</td>
+                        <td>@(r.PartnerBrand ?? "-")</td>
                         <td class="small @(isExpired ? "text-danger fw-semibold" : "")">
                             @r.ExpiryDate.ToString("dd MMM yyyy")
                             @if (isExpired) { <span class="badge bg-danger ms-1">Expired</span> }

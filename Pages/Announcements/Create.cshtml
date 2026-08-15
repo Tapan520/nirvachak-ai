@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @using Nirvachak_AI.Domain.Enums
 @using Nirvachak_AI.Pages.Announcements
 @model Nirvachak_AI.Pages.Announcements.CreateModel
@@ -82,7 +82,7 @@
                         <div class="mb-3">
                             <label asp-for="Input.ConstituencyId" class="form-label fw-semibold">Constituency</label>
                             <select asp-for="Input.ConstituencyId" class="form-select">
-                                <option value="">— All Constituencies —</option>
+                                <option value="">- All Constituencies -</option>
                                 @foreach (var c in Model.Constituencies)
                                 {
                                     <option value="@c.Id">@c.Name</option>
@@ -106,7 +106,7 @@
                                 Require read acknowledgement
                             </label>
                         </div>
-                        <div class="form-text">Recipients must click "Acknowledge" — recorded in audit log.</div>
+                        <div class="form-text">Recipients must click "Acknowledge" - recorded in audit log.</div>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -127,7 +127,7 @@
     const categoryHints = {
         0: "Rally schedules, padyatra routes, event timings. Auto-expires after the event.",
         1: "?? Booth incidents, EVM issues, urgent alerts. Will be PINNED at top of all dashboards.",
-        2: "EC rules, expense limits, model code updates. Recipients must acknowledge — logged in audit.",
+        2: "EC rules, expense limits, model code updates. Recipients must acknowledge - logged in audit.",
         3: "Morning briefings with voter contact targets and sector instructions.",
         4: "Candidate's personal motivational message or milestone celebration.",
         5: "Auto-triggered data nudge based on campaign metrics."

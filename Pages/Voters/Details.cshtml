@@ -144,12 +144,12 @@
                     <div class="col-6"><strong>EPIC No.:</strong> <span class="font-monospace">@Model.Voter.VoterId</span></div>
                     <div class="col-6"><strong>Age:</strong> @Model.Voter.Age</div>
                     <div class="col-6"><strong>Gender:</strong> @(Model.Voter.Gender == "M" ? "Male" : Model.Voter.Gender == "F" ? "Female" : "Other")</div>
-                    <div class="col-6"><strong>Father/Husband:</strong> @(Model.Voter.FatherHusbandName ?? "�")</div>
-                    <div class="col-6"><strong>Mobile:</strong> @(Model.Voter.MobileNumber ?? "�")</div>
+                    <div class="col-6"><strong>Father/Husband:</strong> @(Model.Voter.FatherHusbandName ?? "-")</div>
+                    <div class="col-6"><strong>Mobile:</strong> @(Model.Voter.MobileNumber ?? "-")</div>
                     <div class="col-12"><strong>Address:</strong> @Model.Voter.Address</div>
                     <div class="col-6"><strong>Booth No.:</strong> @Model.Voter.BoothNumber</div>
-                    <div class="col-6"><strong>Ward No.:</strong> @(Model.Voter.WardNumber ?? "�")</div>
-                    <div class="col-6"><strong>Panna No.:</strong> @(Model.Voter.PannaNumber ?? "�")</div>
+                    <div class="col-6"><strong>Ward No.:</strong> @(Model.Voter.WardNumber ?? "-")</div>
+                    <div class="col-6"><strong>Panna No.:</strong> @(Model.Voter.PannaNumber ?? "-")</div>
                     <div class="col-6"><strong>Election Day:</strong>
                         <span class="badge @(Model.Voter.ElectionDayStatus == ElectionDayStatus.Voted ? "bg-success" : "bg-light text-dark")">
                             @Model.Voter.ElectionDayStatus

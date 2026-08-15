@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Admin.Rewards.CreateModel
 @{
     ViewData["Title"] = "Create Reward";
@@ -19,7 +19,7 @@
                             <div class="col-12">
                                 <label asp-for="SelectedConstituencyId" class="form-label fw-semibold">Constituency *</label>
                                 <select asp-for="SelectedConstituencyId" class="form-select">
-                                    <option value="">— Select Constituency —</option>
+                                    <option value="">- Select Constituency -</option>
                                     @foreach (var c in Model.Constituencies)
                                     {
                                         <option value="@c.Id">@c.Name</option>

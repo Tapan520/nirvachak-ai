@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Transport.IndexModel
 @using Nirvachak_AI.Domain.Enums
 @{ ViewData["Title"] = "Voter Transport Management"; }
@@ -95,7 +95,7 @@
                 {
                     var badge = r.Status switch { TransportStatus.Pending => "warning", TransportStatus.Assigned => "info", TransportStatus.PickedUp => "primary", TransportStatus.Voted => "success", _ => "secondary" };
                     <tr>
-                        <td><strong>@r.Voter?.Name</strong><br/><small class="text-muted">@r.Voter?.VoterId · @r.Voter?.MobileNumber</small></td>
+                        <td><strong>@r.Voter?.Name</strong><br/><small class="text-muted">@r.Voter?.VoterId - @r.Voter?.MobileNumber</small></td>
                         <td><span class="badge bg-secondary">Booth @r.Voter?.BoothNumber</span></td>
                         <td><small>@r.PickupAddress</small><br/><small class="text-muted">@r.PickupNotes</small></td>
                         <td>@(r.Vehicle != null ? $"{r.Vehicle.DriverName} ({r.Vehicle.VehicleType})" : "-")</td>

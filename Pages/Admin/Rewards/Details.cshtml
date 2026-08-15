@@ -1,4 +1,4 @@
-@page "{id:int}"
+ï»¿@page "{id:int}"
 @model Nirvachak_AI.Pages.Admin.Rewards.DetailsModel
 @{
     ViewData["Title"] = "Reward Details";
@@ -82,7 +82,7 @@
             </div>
             <div class="col-md-3"><strong>Expiry:</strong> @Model.Reward.ExpiryDate.ToString("dd MMM yyyy")</div>
             <div class="col-md-3"><strong>Code Prefix:</strong> <code>@Model.Reward.CouponCodePrefix</code></div>
-            <div class="col-md-3"><strong>Constituency:</strong> @(Model.Reward.Constituency?.Name ?? "—")</div>
+            <div class="col-md-3"><strong>Constituency:</strong> @(Model.Reward.Constituency?.Name ?? "-")</div>
             @if (!string.IsNullOrEmpty(Model.Reward.Description))
             {
                 <div class="col-12"><strong>Description:</strong> @Model.Reward.Description</div>
@@ -123,9 +123,9 @@
                             else
                             { <span class="badge bg-light text-muted">Available</span> }
                         </td>
-                        <td class="small">@(c.IssuedToVoter?.Name ?? "—")</td>
-                        <td class="small">@(c.IssuedAt.HasValue ? c.IssuedAt.Value.ToString("dd MMM yy") : "—")</td>
-                        <td class="small">@(c.RedeemedAt.HasValue ? c.RedeemedAt.Value.ToString("dd MMM yy") : "—")</td>
+                        <td class="small">@(c.IssuedToVoter?.Name ?? "-")</td>
+                        <td class="small">@(c.IssuedAt.HasValue ? c.IssuedAt.Value.ToString("dd MMM yy") : "-")</td>
+                        <td class="small">@(c.RedeemedAt.HasValue ? c.RedeemedAt.Value.ToString("dd MMM yy") : "-")</td>
                         <td>
                             @if (c.IsIssued && !c.IsRedeemed)
                             {

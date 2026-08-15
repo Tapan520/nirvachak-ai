@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Influencers.IndexModel
 @{
     ViewData["Title"] = "Influencer Network";
@@ -78,10 +78,10 @@
                         <td><strong>@inf.Name</strong><br/><small class="text-muted">@inf.MobileNumber</small></td>
                         <td>@inf.Category</td>
                         <td>@inf.Community</td>
-                        <td>@(inf.EstimatedFollowers.HasValue ? inf.EstimatedFollowers.Value.ToString("N0") : "—")</td>
+                        <td>@(inf.EstimatedFollowers.HasValue ? inf.EstimatedFollowers.Value.ToString("N0") : "-")</td>
                         <td>@inf.Ward</td>
                         <td><span class="badge bg-@badge">@inf.Alignment</span></td>
-                        <td>@(inf.LastMetAt.HasValue ? inf.LastMetAt.Value.ToString("dd MMM yyyy") : "—")</td>
+                        <td>@(inf.LastMetAt.HasValue ? inf.LastMetAt.Value.ToString("dd MMM yyyy") : "-")</td>
                         <td><span class="text-muted small">@inf.LastMeetingOutcome</span></td>
                         <td>
                             <a asp-page="./Edit" asp-route-id="@inf.Id" class="btn btn-sm btn-outline-primary">Edit</a>

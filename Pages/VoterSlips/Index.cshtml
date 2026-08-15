@@ -67,7 +67,7 @@
     {
         <div class="alert alert-info py-2 mb-3 d-flex align-items-center gap-2">
             <i class="bi bi-info-circle-fill"></i>
-            <span>Showing <strong>@Model.Voters.Count</strong> slip(s) � <strong>@filterLabel</strong>.
+            <span>Showing <strong>@Model.Voters.Count</strong> slip(s) - <strong>@filterLabel</strong>.
             Use <strong>Print / PDF</strong> to print or save as PDF in
             <strong><span id="colCountLabel">3</span>-column</strong> layout.</span>
         </div>
@@ -78,7 +78,7 @@
 <div class="print-header" style="display:none">
     <table style="width:100%; font-size:8pt;">
         <tr>
-            <td style="font-weight:700; font-size:10pt;">Voter Slips � @filterLabel</td>
+            <td style="font-weight:700; font-size:10pt;">Voter Slips - @filterLabel</td>
             <td style="text-align:right; color:#555;">@DateTime.Now.ToString("dd MMM yyyy, hh:mm tt") &nbsp;|&nbsp; Total: @Model.Voters.Count</td>
         </tr>
     </table>
@@ -97,7 +97,7 @@
                         {
                             <div class="slip-local text-truncate" style="font-size:0.75rem">@v.NameLocal</div>
                         }
-                        <div class="text-muted small">S/O: @(v.FatherHusbandName ?? "�")</div>
+                        <div class="text-muted small">S/O: @(v.FatherHusbandName ?? "-")</div>
 
                         <div class="d-flex flex-wrap gap-x-2 mt-1" style="font-size:0.72rem; column-gap:0.6rem">
                             <span><span class="slip-label fw-semibold">EPIC:</span> <span class="font-monospace">@v.VoterId</span></span>
@@ -105,8 +105,8 @@
                         <div class="d-flex flex-wrap gap-x-2" style="font-size:0.72rem; column-gap:0.6rem">
                             <span><span class="slip-label fw-semibold">Booth:</span> @v.BoothNumber</span>
                             <span><span class="slip-label fw-semibold">Sr:</span> @v.SerialNumber</span>
-                            <span><span class="slip-label fw-semibold">Ward:</span> @(v.WardNumber ?? "�")</span>
-                            <span><span class="slip-label fw-semibold">Panna:</span> @(v.PannaNumber ?? "�")</span>
+                            <span><span class="slip-label fw-semibold">Ward:</span> @(v.WardNumber ?? "-")</span>
+                            <span><span class="slip-label fw-semibold">Panna:</span> @(v.PannaNumber ?? "-")</span>
                         </div>
                         <div class="slip-address text-muted text-truncate" style="font-size:0.65rem; margin-top:2px">@v.Address</div>
                     </div>
@@ -129,7 +129,7 @@
     }
 </div>
 
-@* Dynamic print-column style � updated by setColumns() before window.print() *@
+@* Dynamic print-column style - updated by setColumns() before window.print() *@
 <style id="printColStyle">
     @@media print {
         .slip-col {

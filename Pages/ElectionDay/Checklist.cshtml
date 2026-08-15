@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.ElectionDay.ChecklistModel
 @{
     ViewData["Title"] = "Booth Readiness Checklist";
@@ -73,9 +73,9 @@ else
                     <div class="card-header d-flex justify-content-between align-items-center py-2
                                 bg-@(isFullyReady ? "success" : cl != null ? "warning" : "light")
                                 @(isFullyReady || cl != null ? "text-white" : "")">
-                        @if (isFullyReady)   { <span class="fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Booth #@booth.BoothNumber — READY</span> }
-                        else if (cl != null) { <span class="fw-bold text-dark"><i class="bi bi-exclamation-circle-fill me-1"></i>Booth #@booth.BoothNumber — @checkedCount/6</span> }
-                        else                 { <span class="fw-bold"><i class="bi bi-dash-circle me-1"></i>Booth #@booth.BoothNumber — Not checked</span> }
+                        @if (isFullyReady)   { <span class="fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Booth #@booth.BoothNumber - READY</span> }
+                        else if (cl != null) { <span class="fw-bold text-dark"><i class="bi bi-exclamation-circle-fill me-1"></i>Booth #@booth.BoothNumber - @checkedCount/6</span> }
+                        else                 { <span class="fw-bold"><i class="bi bi-dash-circle me-1"></i>Booth #@booth.BoothNumber - Not checked</span> }
                         <small>@booth.BoothName</small>
                     </div>
                     <div class="card-body py-2">
@@ -116,7 +116,7 @@ else
                                 {
                                     <small class="text-muted">
                                         <i class="bi bi-person me-1"></i>@cl.SubmittedByName
-                                        · @cl.SubmittedAt.ToLocalTime().ToString("h:mm tt")
+                                        - @cl.SubmittedAt.ToLocalTime().ToString("h:mm tt")
                                     </small>
                                 }
                             </div>

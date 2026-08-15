@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Voters.CreateModel
 @{
     ViewData["Title"] = "Add Voter";
@@ -100,7 +100,7 @@
                                     <option value="">-- Select Booth --</option>
                                     @foreach (var b in Model.Booths)
                                     {
-                                        <option value="@b.BoothNumber">@b.BoothNumber – @b.BoothName</option>
+                                        <option value="@b.BoothNumber">@b.BoothNumber - @b.BoothName</option>
                                     }
                                 </select>
                             }
@@ -119,7 +119,7 @@
                                     <option value="">-- Select Ward --</option>
                                     @foreach (var w in Model.Wards)
                                     {
-                                        <option value="@w.WardNumber">@w.WardNumber – @w.WardName</option>
+                                        <option value="@w.WardNumber">@w.WardNumber - @w.WardName</option>
                                     }
                                 </select>
                             }

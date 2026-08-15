@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.FieldReports.IndexModel
 @using Nirvachak_AI.Domain.Enums
 @{ ViewData["Title"] = "Field Activity Reports"; }
@@ -29,7 +29,7 @@
             }
             @if (Model.IsManager)
             {
-                <div class="col-auto"><input type="text" name="WorkerFilter" class="form-control form-control-sm" placeholder="Filter by worker…" value="@Model.WorkerFilter" /></div>
+                <div class="col-auto"><input type="text" name="WorkerFilter" class="form-control form-control-sm" placeholder="Filter by worker-" value="@Model.WorkerFilter" /></div>
             }
             <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button></div>
             <div class="col-auto"><a asp-page="/FieldReports/Index" class="btn btn-sm btn-outline-secondary">Clear</a></div>

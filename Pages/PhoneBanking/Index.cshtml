@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.PhoneBanking.IndexModel
 @{
     ViewData["Title"] = "Phone Banking";
@@ -57,7 +57,7 @@
     <div class="col-lg-5">
         <div class="card shadow-sm h-100">
             <div class="card-header bg-light fw-semibold">
-                <i class="bi bi-list-check me-1"></i>Pending — Floating / Unknown Voters
+                <i class="bi bi-list-check me-1"></i>Pending - Floating / Unknown Voters
             </div>
             <div class="list-group list-group-flush" style="max-height:460px;overflow-y:auto">
                 @foreach (var v in Model.PendingCallVoters)
@@ -127,7 +127,7 @@
                                 <td>@c.CalledAt.ToLocalTime().ToString("HH:mm")</td>
                                 <td>@c.Voter?.Name</td>
                                 <td><span class="badge bg-@ob">@c.Outcome</span></td>
-                                <td>@(c.SentimentAfterCall.HasValue ? c.SentimentAfterCall.ToString() : "—")</td>
+                                <td>@(c.SentimentAfterCall.HasValue ? c.SentimentAfterCall.ToString() : "-")</td>
                                 <td class="text-muted small">@c.Notes</td>
                             </tr>
                         }

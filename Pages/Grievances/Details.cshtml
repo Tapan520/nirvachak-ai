@@ -17,9 +17,9 @@
                 <p>@Model.Grievance.Description</p>
                 <div class="row g-2 small">
                     <div class="col-6"><strong>Reported By:</strong> @(Model.Grievance.ReportedBy ?? "Anonymous")</div>
-                    <div class="col-6"><strong>Phone:</strong> @(Model.Grievance.ReporterPhone ?? "�")</div>
-                    <div class="col-6"><strong>Location:</strong> @(Model.Grievance.Location ?? "�")</div>
-                    <div class="col-6"><strong>Ward:</strong> @(Model.Grievance.Ward ?? "�")</div>
+                    <div class="col-6"><strong>Phone:</strong> @(Model.Grievance.ReporterPhone ?? "-")</div>
+                    <div class="col-6"><strong>Location:</strong> @(Model.Grievance.Location ?? "-")</div>
+                    <div class="col-6"><strong>Ward:</strong> @(Model.Grievance.Ward ?? "-")</div>
                     <div class="col-6"><strong>Date:</strong> @Model.Grievance.ReportedAt.ToString("dd MMM yyyy")</div>
                     <div class="col-6"><strong>Assigned To:</strong> @(Model.Grievance.AssignedToName ?? "Unassigned")</div>
                 </div>

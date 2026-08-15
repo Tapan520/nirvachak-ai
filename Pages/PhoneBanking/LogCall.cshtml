@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.PhoneBanking.LogCallModel
 @{
     ViewData["Title"] = "Log a Call";
@@ -22,7 +22,7 @@
                             @foreach (var v in Model.SearchResults)
                             {
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><strong>@v.Name</strong> — @v.MobileNumber <span class="badge bg-secondary">B-@v.BoothNumber</span></span>
+                                    <span><strong>@v.Name</strong> - @v.MobileNumber <span class="badge bg-secondary">B-@v.BoothNumber</span></span>
                                     <a asp-page="./LogCall" asp-route-voterId="@v.Id" class="btn btn-sm btn-success">Select</a>
                                 </li>
                             }
@@ -37,7 +37,7 @@
                 <h5 class="mb-0"><i class="bi bi-telephone-plus me-2"></i>Log Call
                     @if (Model.SelectedVoter != null)
                     {
-                        <span>— @Model.SelectedVoter.Name (@Model.SelectedVoter.MobileNumber)</span>
+                        <span>- @Model.SelectedVoter.Name (@Model.SelectedVoter.MobileNumber)</span>
                     }
                 </h5>
             </div>
@@ -64,7 +64,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Sentiment After Call</label>
                             <select asp-for="Call.SentimentAfterCall" asp-items="Html.GetEnumSelectList<Nirvachak_AI.Domain.Enums.VoterSentiment>()" class="form-select">
-                                <option value="">— No change —</option>
+                                <option value="">- No change -</option>
                             </select>
                         </div>
                         <div class="col-12">

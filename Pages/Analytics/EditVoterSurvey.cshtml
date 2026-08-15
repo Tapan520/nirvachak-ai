@@ -1,4 +1,4 @@
-@page
+ï»¿@page
 @model Nirvachak_AI.Pages.Analytics.EditVoterSurveyModel
 @{
     ViewData["Title"] = "Edit Voter Survey";
@@ -81,8 +81,8 @@
                                 {
                                     <div class="form-check form-check-inline m-0">
                                         <input class="form-check-input" type="radio"
-                                               asp-for="AgeBracket" value="@o" id="age_@o.Replace("–","-")" />
-                                        <label class="form-check-label small" for="age_@o.Replace("–","-")">@o</label>
+                                               asp-for="AgeBracket" value="@o" id="age_@o.Replace("-","-")" />
+                                        <label class="form-check-label small" for="age_@o.Replace("-","-")">@o</label>
                                     </div>
                                 }
                             </div>
@@ -178,7 +178,7 @@
                             </div>
                         </div>
 
-                        @* Primary Concerns — up to 3 *@
+                        @* Primary Concerns - up to 3 *@
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
                                 Top Concerns

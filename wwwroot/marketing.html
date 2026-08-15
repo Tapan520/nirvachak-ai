@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nirvachak AI - Win Every Election with Data</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;scroll-behavior:smooth}
+body{font-family:Inter,sans-serif;background:#fff;color:#212529}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;background:rgba(26,31,46,.96);backdrop-filter:blur(10px);z-index:100;padding:0 40px;display:flex;justify-content:space-between;align-items:center;height:64px}
+.nav-brand{font-size:1.3rem;font-weight:900;color:#fff}
+.nav-brand span{color:#74c0fc}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{color:#adb5bd;text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:#3b5bdb;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:.85rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s}
+.nav-cta:hover{background:#2f4fbf}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1a1f2e 0%,#2d3561 50%,#3b5bdb 100%);min-height:100vh;display:flex;align-items:center;padding:100px 40px 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-100px;right:-100px;width:600px;height:600px;background:radial-gradient(circle,rgba(116,192,252,.15),transparent 70%);border-radius:50%}
+.hero-content{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(116,192,252,.15);border:1px solid rgba(116,192,252,.3);border-radius:20px;padding:6px 16px;font-size:.78rem;color:#74c0fc;font-weight:600;margin-bottom:20px}
+.hero-badge .dot{width:8px;height:8px;background:#74c0fc;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-size:3rem;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-1.5px;margin-bottom:20px}
+h1 span{color:#74c0fc}
+.hero-sub{font-size:1.05rem;color:#adb5bd;line-height:1.7;margin-bottom:32px}
+.hero-sub strong{color:#fff}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{background:#3b5bdb;color:#fff;border:none;border-radius:10px;padding:14px 28px;font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
+.btn-primary:hover{background:#2f4fbf;transform:translateY(-2px)}
+.btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:10px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
+.btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.05)}
+.hero-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;backdrop-filter:blur(10px)}
+.hero-card .card-title{font-size:.75rem;font-weight:700;color:#74c0fc;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.metric:last-child{border-bottom:none}
+.metric .label{font-size:.85rem;color:#adb5bd}
+.metric .val{font-size:.95rem;font-weight:700;color:#fff}
+.badge-g{background:rgba(47,158,68,.2);color:#69db7c;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge-o{background:rgba(230,119,0,.2);color:#ffd43b;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700}
+.badge-b{background:rgba(59,91,219,.3);color:#74c0fc;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700}
+
+/* STATS BAR */
+.stats-bar{background:#f8f9fa;padding:40px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+.stat-item .num{font-size:2.2rem;font-weight:900;color:#3b5bdb}
+.stat-item .lbl{font-size:.82rem;color:#6c757d;margin-top:4px;font-weight:500}
+
+/* SHARED */
+.sec-badge{display:inline-block;background:#dbe4ff;color:#3b5bdb;border-radius:20px;padding:5px 14px;font-size:.75rem;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+h2{font-size:2rem;font-weight:800;color:#1a1f2e;margin-bottom:12px;letter-spacing:-.5px}
+.sec-sub{font-size:1rem;color:#6c757d;margin-bottom:40px;line-height:1.6;max-width:560px}
+.section{padding:80px 40px;max-width:1100px;margin:0 auto}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feat-card{background:#fff;border:1px solid #e9ecef;border-radius:16px;padding:24px;transition:all .25s}
+.feat-card:hover{border-color:#3b5bdb;box-shadow:0 8px 32px rgba(59,91,219,.12);transform:translateY(-4px)}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:#dbe4ff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px}
+.feat-card h3{font-size:.95rem;font-weight:700;color:#1a1f2e;margin-bottom:8px}
+.feat-card p{font-size:.82rem;color:#6c757d;line-height:1.6}
+
+/* HOW IT WORKS */
+.how-bg{background:linear-gradient(135deg,#f8f9ff,#fff);padding:80px 0}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative}
+.steps::before{content:'';position:absolute;top:32px;left:10%;right:10%;height:2px;background:linear-gradient(90deg,#3b5bdb,#74c0fc);z-index:0}
+.step{text-align:center;position:relative;z-index:1}
+.step-num{width:64px;height:64px;border-radius:50%;background:#3b5bdb;color:#fff;font-size:1.3rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 16px rgba(59,91,219,.3)}
+.step h3{font-size:.9rem;font-weight:700;color:#1a1f2e;margin-bottom:6px}
+.step p{font-size:.78rem;color:#6c757d;line-height:1.5}
+
+/* ROLES */
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.role-card{border-radius:12px;padding:20px;border:1px solid #e9ecef}
+.role-card .role-name{font-size:.88rem;font-weight:700;margin-bottom:6px}
+.role-card .role-desc{font-size:.75rem;color:#6c757d;line-height:1.5}
+.role-card .role-icon{font-size:1.6rem;margin-bottom:10px}
+
+/* PRICING */
+.pricing-sec{background:#1a1f2e;padding:80px 40px;text-align:center}
+.pricing-sec h2{color:#fff}
+.pricing-sec .sec-sub{color:#adb5bd;margin:0 auto 48px;text-align:center}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:900px;margin:0 auto}
+.plan-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;text-align:left;transition:all .25s}
+.plan-card:hover{transform:translateY(-4px)}
+.plan-card.popular{background:rgba(59,91,219,.2);border-color:#3b5bdb;position:relative}
+.pop-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#3b5bdb;color:#fff;border-radius:20px;padding:4px 16px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.plan-name{font-size:.8rem;font-weight:700;color:#74c0fc;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.plan-price{font-size:2rem;font-weight:900;color:#fff;margin-bottom:4px}
+.plan-price .curr{font-size:1rem;font-weight:600;color:#adb5bd}
+.plan-cycle{font-size:.75rem;color:#adb5bd;margin-bottom:20px}
+.plan-feats{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.plan-feats li{display:flex;align-items:center;gap:8px;font-size:.8rem;color:#ced4da}
+.plan-feats li::before{content:'checkmark';font-size:0}
+.plan-feats li span.ck{color:#69db7c;font-weight:700;margin-right:4px}
+.plan-btn{width:100%;padding:11px;border-radius:8px;border:none;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;display:block;text-decoration:none}
+.btn-pl-outline{background:transparent;color:#74c0fc;border:1px solid #74c0fc}
+.btn-pl-outline:hover{background:rgba(116,192,252,.1)}
+.btn-pl-solid{background:#3b5bdb;color:#fff}
+.btn-pl-solid:hover{background:#2f4fbf}
+
+/* TESTIMONIALS */
+.test-sec{background:#f8f9fa;padding:80px 40px}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
+.t-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.t-card .quote{font-size:.88rem;color:#495057;line-height:1.6;margin-bottom:16px;font-style:italic}
+.t-card .author{font-size:.78rem;font-weight:700;color:#1a1f2e}
+.t-card .role{font-size:.72rem;color:#6c757d}
+.stars{color:#f59f00;font-size:.85rem;margin-bottom:10px}
+
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,#3b5bdb,#1a1f2e);padding:80px 40px;text-align:center}
+.cta-sec h2{color:#fff;font-size:2.2rem;margin-bottom:12px}
+.cta-sec p{color:#adb5bd;margin-bottom:32px;font-size:1rem}
+.cta-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+/* FOOTER */
+footer{background:#111418;padding:40px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}
+.footer-brand .logo{font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:8px}
+.footer-brand .logo span{color:#74c0fc}
+.footer-brand p{font-size:.8rem;color:#6c757d;line-height:1.6}
+footer h4{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+footer ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+footer ul a{font-size:.78rem;color:#6c757d;text-decoration:none;transition:color .2s}
+footer ul a:hover{color:#74c0fc}
+.footer-bottom{background:#0d1014;padding:16px 40px;display:flex;justify-content:space-between;align-items:center}
+.footer-bottom p{font-size:.72rem;color:#495057}
+
+@media(max-width:768px){
+  .hero-content,.features-grid,.steps,.roles-grid,.plans,.test-grid{grid-template-columns:1fr}
+  .steps::before{display:none}
+  h1{font-size:2rem}
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  footer{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Nirvachak <span>AI</span></div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Request Demo</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge">
+        <div class="dot"></div>
+        Live Platform &bull; Used in Real Elections
+      </div>
+      <h1>Win Every Election<br>with <span>Real-Time</span><br>Voter Intelligence</h1>
+      <p class="hero-sub">
+        India's most complete election campaign management platform.<br>
+        <strong>Voter tracking. Field team management. AI win probability.</strong><br>
+        EC-compliant. Offline-ready. One platform for your entire team.
+      </p>
+      <div class="hero-btns">
+        <a href="https://nirvachakai-production.up.railway.app" target="_blank" class="btn-primary">&#128640; Try Live Demo</a>
+        <a href="#features" class="btn-outline">See All Features</a>
+      </div>
+    </div>
+    <div>
+      <div class="hero-card">
+        <div class="card-title">Live Campaign Dashboard</div>
+        <div class="metric"><span class="label">Favour Voters</span><span class="badge-g">68% &#8593;</span></div>
+        <div class="metric"><span class="label">Field Workers Active</span><span class="val">12 / 14</span></div>
+        <div class="metric"><span class="label">Visits Today</span><span class="badge-b">247</span></div>
+        <div class="metric"><span class="label">Competitor Threat</span><span class="badge-o">Medium</span></div>
+        <div class="metric"><span class="label">Win Probability</span><span class="badge-g">74% &#127942;</span></div>
+        <div class="metric"><span class="label">EC Budget Used</span><span class="badge-b">62%</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="num">25+</div><div class="lbl">Feature Modules</div></div>
+  <div class="stat-item"><div class="num">6</div><div class="lbl">User Roles</div></div>
+  <div class="stat-item"><div class="num">100%</div><div class="lbl">EC Compliant</div></div>
+  <div class="stat-item"><div class="num">4,120+</div><div class="lbl">MLA Constituencies in India</div></div>
+</div>
+
+<!-- FEATURES -->
+<div id="features" style="background:#fff;padding:80px 0">
+  <div class="section">
+    <div class="sec-badge">Platform Features</div>
+    <h2>Everything Your Campaign Needs</h2>
+    <p class="sec-sub">From first voter visit to result day &mdash; one platform replaces your WhatsApp groups, Excel sheets, and manual booth reports.</p>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon">&#128506;</div><h3>Voter Intelligence</h3><p>Track Favour, Against, Neutral, Floating sentiment for every voter. Filter by booth, ward, gender. Identify swing voters instantly.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128241;</div><h3>Offline Mobile App</h3><p>Field workers log GPS-verified door-to-door visits even without internet. Auto-syncs when back online. Built with React Native.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#127942;</div><h3>Field Leaderboard</h3><p>Real-time worker performance ranking. Score = Visits x2 + Calls x1 + Favour Conversions x3. Motivate your team daily.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128202;</div><h3>AI Win Probability</h3><p>Live win score calculated from voter sentiment, booth coverage, floating voter potential and contact rate. Know where you stand every day.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128373;</div><h3>Competitor Intelligence</h3><p>Log competitor rallies, door-to-door campaigns, social media threats. Track threat levels (Low to Critical). Plan your counter-strategy.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128176;</div><h3>EC Expense Compliance</h3><p>Track every rupee against the Rs.40L EC cap. Auto-generate EC-compliant PDF expense reports ready for submission.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128222;</div><h3>Phone Banking</h3><p>Log every voter call. Track outcomes (Talked, No Answer, Call Back). Update sentiment after call. Full call history per voter.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128317;</div><h3>Panna Pramukh Tracker</h3><p>Manage Panna Pramukhs booth-wise and panna-wise. Track voters assigned vs contacted. Monitor coverage in real-time.</p></div>
+      <div class="feat-card"><div class="feat-icon">&#128640;</div><h3>Election Day Live Hub</h3><p>Real-time booth-wise voter turnout via SignalR. Mark voters as Voted / Absent. Coordinate transport for voters who need pickup.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div id="how" class="how-bg">
+  <div class="section">
+    <div class="sec-badge">How It Works</div>
+    <h2>Up &amp; Running in 2 Hours</h2>
+    <p class="sec-sub">From sign-up to your entire field team being active &mdash; in one afternoon.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Setup Constituency</h3>
+        <p>Add your constituency, booths, wards and import your voter list via CSV in minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Create Field Team</h3>
+        <p>Add campaign managers, field workers and booth agents. Assign booths automatically.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Go Live on Mobile</h3>
+        <p>Field workers download the app and start logging visits, calls and voter sentiment immediately.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Win with Insights</h3>
+        <p>Campaign manager sees live analytics, swing voter alerts, win probability and booth heat maps.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROLES -->
+<div style="background:#fff;padding:80px 0">
+  <div class="section">
+    <div class="sec-badge">Built for Everyone</div>
+    <h2>One Platform, Six Roles</h2>
+    <p class="sec-sub">Every member of your campaign team has a role designed exactly for their job.</p>
+    <div class="roles-grid">
+      <div class="role-card" style="border-color:#ffd43b;background:#fffbeb"><div class="role-icon">&#127942;</div><div class="role-name" style="color:#e67700">Candidate</div><div class="role-desc">Real-time win probability, analytics dashboard, campaign overview and announcements.</div></div>
+      <div class="role-card" style="border-color:#74c0fc;background:#f0f8ff"><div class="role-icon">&#128203;</div><div class="role-name" style="color:#1971c2">Campaign Manager</div><div class="role-desc">Full access to all modules. Manages field team, events, expenses, announcements and strategy.</div></div>
+      <div class="role-card" style="border-color:#69db7c;background:#f0fff4"><div class="role-icon">&#128694;</div><div class="role-name" style="color:#2f9e44">Field Worker</div><div class="role-desc">Mobile app for logging visits, calls and voter sentiment. Works offline with GPS verification.</div></div>
+      <div class="role-card" style="border-color:#f783ac;background:#fff0f6"><div class="role-icon">&#128681;</div><div class="role-name" style="color:#c2255c">Booth Agent</div><div class="role-desc">Booth-level voter management, checklist, transport coordination and election day turnout.</div></div>
+      <div class="role-card" style="border-color:#a9e34b;background:#f4fce3"><div class="role-icon">&#128736;</div><div class="role-name" style="color:#5c940d">Admin</div><div class="role-desc">Manages users, booths, wards, expenses and all constituency-level settings.</div></div>
+      <div class="role-card" style="border-color:#9775fa;background:#f8f0ff"><div class="role-icon">&#128274;</div><div class="role-name" style="color:#7048e8">Super Admin</div><div class="role-desc">Platform-wide access. Manages multiple constituencies for party-level deployments.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section id="pricing" class="pricing-sec">
+  <div class="sec-badge" style="background:rgba(116,192,252,.15);color:#74c0fc">Simple Pricing</div>
+  <h2 style="margin-top:8px">Pay Per Election. Not Per Month.</h2>
+  <p class="sec-sub">Elections are events, not subscriptions. You only pay when you campaign.</p>
+  <div class="plans">
+    <div class="plan-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price"><span class="curr">Rs. </span>15,000</div>
+      <div class="plan-cycle">per election cycle</div>
+      <ul class="plan-feats">
+        <li><span class="ck">&#10003;</span> 1 Constituency</li>
+        <li><span class="ck">&#10003;</span> Up to 5 users</li>
+        <li><span class="ck">&#10003;</span> Voter list &amp; sentiment tracking</li>
+        <li><span class="ck">&#10003;</span> Door-to-door visit logging</li>
+        <li><span class="ck">&#10003;</span> Basic analytics dashboard</li>
+        <li><span class="ck">&#10003;</span> Mobile app access</li>
+      </ul>
+      <a href="#contact" class="plan-btn btn-pl-outline">Get Started</a>
+    </div>
+    <div class="plan-card popular">
+      <div class="pop-badge">&#11088; Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price"><span class="curr">Rs. </span>35,000</div>
+      <div class="plan-cycle">per election cycle</div>
+      <ul class="plan-feats">
+        <li><span class="ck">&#10003;</span> 1 Constituency, Unlimited users</li>
+        <li><span class="ck">&#10003;</span> AI Win Probability</li>
+        <li><span class="ck">&#10003;</span> Competitor Intelligence</li>
+        <li><span class="ck">&#10003;</span> Panna Pramukh Tracker</li>
+        <li><span class="ck">&#10003;</span> EC Expense Compliance PDF</li>
+        <li><span class="ck">&#10003;</span> Phone Banking module</li>
+        <li><span class="ck">&#10003;</span> WhatsApp Broadcasting</li>
+        <li><span class="ck">&#10003;</span> Onboarding + training included</li>
+      </ul>
+      <a href="#contact" class="plan-btn btn-pl-solid">Request Demo</a>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Party Plan</div>
+      <div class="plan-price" style="font-size:1.5rem">Custom</div>
+      <div class="plan-cycle">per election cycle</div>
+      <ul class="plan-feats">
+        <li><span class="ck">&#10003;</span> Multiple constituencies</li>
+        <li><span class="ck">&#10003;</span> Party-level SuperAdmin</li>
+        <li><span class="ck">&#10003;</span> Centralized analytics</li>
+        <li><span class="ck">&#10003;</span> White-label option</li>
+        <li><span class="ck">&#10003;</span> Dedicated support</li>
+        <li><span class="ck">&#10003;</span> Custom integrations</li>
+      </ul>
+      <a href="#contact" class="plan-btn btn-pl-outline">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<div class="test-sec">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="sec-badge">What Campaign Teams Say</div>
+      <h2>Trusted by Candidates Who Win</h2>
+    </div>
+    <div class="test-grid">
+      <div class="t-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="quote">"For the first time I could see exactly which booths were weak. We focused our last 2 weeks only on swing voters and won by a margin we did not expect."</div>
+        <div class="author">Constituency Candidate, Maharashtra</div>
+        <div class="role">MLA Election</div>
+      </div>
+      <div class="t-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="quote">"The leaderboard made our field team incredibly motivated. Door-to-door coverage went from 40% to 85% in just 3 weeks because workers were competing to top the chart."</div>
+        <div class="author">Campaign Manager</div>
+        <div class="role">Ward Election, Gujarat</div>
+      </div>
+      <div class="t-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="quote">"The EC expense tracker alone saved us huge headaches. We always knew where we stood against the Rs.40L cap and the PDF report was ready in one click."</div>
+        <div class="author">Election Consultant</div>
+        <div class="role">Managing 5 MLA Constituencies</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section id="contact" class="cta-sec">
+  <h2>Ready to Run a Smarter Campaign?</h2>
+  <p>Get a live demo in 30 minutes. We will walk you through the entire platform.</p>
+  <div class="cta-btns">
+    <a href="https://nirvachakai-production.up.railway.app" target="_blank" class="btn-primary">&#128640; Try Live Demo Now</a>
+    <a href="mailto:contact@nirvachak.ai" class="btn-outline">&#128231; contact@nirvachak.ai</a>
+  </div>
+  <p style="margin-top:20px;font-size:.8rem;color:#6c757d">No credit card required. Full platform access during demo period.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="logo">Nirvachak <span>AI</span></div>
+    <p>India's smart election campaign management platform. Built for candidates who want to win with data, not just effort.</p>
+  </div>
+  <div>
+    <h4>Platform</h4>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="https://nirvachakai-production.up.railway.app" target="_blank">Live Demo</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4>Contact</h4>
+    <ul>
+      <li><a href="mailto:contact@nirvachak.ai">contact@nirvachak.ai</a></li>
+      <li><a href="https://nirvachakai-production.up.railway.app" target="_blank">Live Platform</a></li>
+      <li><a href="#contact">Request Demo</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>&copy; 2026 Nirvachak AI. All rights reserved.</p>
+  <p>Built for Indian Elections &bull; MLA &bull; Ward &bull; MP</p>
+</div>
+
+</body>
+</html>

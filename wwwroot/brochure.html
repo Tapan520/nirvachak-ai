@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nirvachak AI - Product Brochure</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:#f0f2f5;display:flex;justify-content:center;padding:20px}
+.page{width:210mm;min-height:297mm;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.hdr{background:linear-gradient(135deg,#1a1f2e,#3b5bdb);color:#fff;padding:28px 36px 20px;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:2rem;font-weight:900;letter-spacing:-1px}
+.hdr h1 span{color:#74c0fc}
+.hdr p{font-size:.82rem;color:#adb5bd;margin-top:4px}
+.hdr-r{text-align:right;background:rgba(255,255,255,.1);border-radius:10px;padding:10px 16px}
+.hdr-r .tag{font-size:.75rem;color:#74c0fc;font-weight:700}
+.hdr-r .sub{font-size:.68rem;color:#ced4da;margin-top:3px}
+.hero{background:#3b5bdb;color:#fff;text-align:center;padding:14px 36px;font-size:1rem;font-weight:700}
+.hero span{color:#ffd43b}
+.body{padding:24px 36px;flex:1}
+.intro{background:#f8f9ff;border-left:4px solid #3b5bdb;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:20px;font-size:.85rem;color:#343a40;line-height:1.6}
+.intro strong{color:#3b5bdb}
+.sec{font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#3b5bdb;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:#dee2e6}
+.stats{background:linear-gradient(135deg,#1a1f2e,#3b5bdb);border-radius:10px;display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:20px;overflow:hidden}
+.stat{background:rgba(255,255,255,.07);text-align:center;padding:12px 6px;color:#fff}
+.stat .num{font-size:1.3rem;font-weight:900;color:#74c0fc}
+.stat .lbl{font-size:.6rem;color:#adb5bd;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.feat{background:#f8f9ff;border:1px solid #e9ecef;border-radius:10px;padding:12px;text-align:center}
+.feat .icon{font-size:1.4rem;margin-bottom:5px}
+.feat .title{font-size:.75rem;font-weight:700;color:#212529;margin-bottom:3px}
+.feat .desc{font-size:.65rem;color:#6c757d;line-height:1.4}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.who-list{list-style:none}
+.who-list li{display:flex;align-items:flex-start;gap:8px;font-size:.75rem;color:#343a40;padding:5px 0;border-bottom:1px solid #f1f3f5;line-height:1.4}
+.who-list li:last-child{border-bottom:none}
+.dot{width:8px;height:8px;border-radius:50%;background:#3b5bdb;flex-shrink:0;margin-top:4px}
+.who-list li strong{color:#1a1f2e}
+.pricing{display:flex;flex-direction:column;gap:7px}
+.plan{display:flex;justify-content:space-between;align-items:center;background:#f8f9ff;border:1px solid #e9ecef;border-radius:8px;padding:8px 12px}
+.plan.hi{background:#ebf3ff;border-color:#3b5bdb}
+.plan .name{font-size:.75rem;font-weight:700;color:#212529}
+.plan .det{font-size:.63rem;color:#6c757d}
+.plan .price{font-size:.8rem;font-weight:800;color:#3b5bdb;white-space:nowrap}
+.pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.pill{background:#f1f3f5;border-radius:20px;padding:4px 11px;font-size:.67rem;font-weight:600;color:#495057;border:1px solid #dee2e6}
+.pill.b{background:#dbe4ff;color:#3b5bdb;border-color:#bac8ff}
+.pill.g{background:#d3f9d8;color:#2f9e44;border-color:#b2f2bb}
+.pill.o{background:#fff3bf;color:#e67700;border-color:#ffe066}
+.ftr{background:#1a1f2e;color:#fff;padding:16px 36px;display:flex;justify-content:space-between;align-items:center}
+.ftr .brand{font-size:.95rem;font-weight:800}
+.ftr .brand span{color:#74c0fc}
+.ftr .contact{font-size:.68rem;color:#adb5bd;text-align:right;line-height:1.7}
+.ftr .contact a{color:#74c0fc;text-decoration:none}
+.print-btn{position:fixed;bottom:20px;right:20px;background:#3b5bdb;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:.85rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(59,91,219,.4)}
+@media print{body{background:none;padding:0}.page{box-shadow:none;width:100%}.print-btn{display:none}@page{size:A4;margin:0}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <div>
+      <h1>Nirvachak <span>AI</span></h1>
+      <p>India's Smart Election Campaign Management Platform</p>
+    </div>
+    <div class="hdr-r">
+      <div class="tag">WIN WITH DATA. NOT GUESSWORK.</div>
+      <div class="sub">Built for Indian Elections &bull; MLA &bull; Ward &bull; MP</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    Replace WhatsApp groups &amp; Excel sheets with <span>real-time voter intelligence</span> &mdash; in one platform.
+  </div>
+
+  <div class="body">
+
+    <div class="intro">
+      <strong>Nirvachak AI</strong> is a full-stack election campaign management system built for Indian candidates,
+      campaign managers, and field teams. From tracking every door-to-door visit to monitoring competitor activity
+      &mdash; everything is live, role-based, and EC-compliant. Your field workers use the <strong>mobile app</strong>.
+      Your campaign manager sees everything on the <strong>web dashboard</strong>.
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num">25+</div><div class="lbl">Modules</div></div>
+      <div class="stat"><div class="num">6</div><div class="lbl">User Roles</div></div>
+      <div class="stat"><div class="num">100%</div><div class="lbl">EC Compliant</div></div>
+      <div class="stat"><div class="num">Live</div><div class="lbl">Real-time</div></div>
+    </div>
+
+    <div class="sec">Key Features</div>
+    <div class="features">
+      <div class="feat">
+        <div class="icon">&#128506;</div>
+        <div class="title">Voter Intelligence</div>
+        <div class="desc">Track Favour / Against / Floating sentiment for every voter, booth-wise</div>
+      </div>
+      <div class="feat">
+        <div class="icon">&#128241;</div>
+        <div class="title">Offline Mobile App</div>
+        <div class="desc">GPS visit logging. Works offline. Auto-syncs when connected.</div>
+      </div>
+      <div class="feat">
+        <div class="icon">&#127942;</div>
+        <div class="title">Field Leaderboard</div>
+        <div class="desc">Motivate workers with real-time rankings and performance scores</div>
+      </div>
+      <div class="feat">
+        <div class="icon">&#128202;</div>
+        <div class="title">Win Probability AI</div>
+        <div class="desc">Live win score based on sentiment, booth coverage and predictions</div>
+      </div>
+      <div class="feat">
+        <div class="icon">&#128373;</div>
+        <div class="title">Competitor Intel</div>
+        <div class="desc">Track competitor rallies, threat levels and plan counter-strategy</div>
+      </div>
+      <div class="feat">
+        <div class="icon">&#128176;</div>
+        <div class="title">EC Expense Tracker</div>
+        <div class="desc">Stay within Rs.40L cap. Auto PDF reports for EC submission</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="sec">Who Is It For</div>
+        <ul class="who-list">
+          <li><div class="dot"></div><div><strong>MLA / MP / Ward Candidates</strong><br>Win with data-driven decisions</div></li>
+          <li><div class="dot"></div><div><strong>Campaign Managers</strong><br>One dashboard for the entire field team</div></li>
+          <li><div class="dot"></div><div><strong>Field Workers &amp; Booth Agents</strong><br>Simple mobile app, works offline</div></li>
+          <li><div class="dot"></div><div><strong>Political Parties</strong><br>Multi-constituency party-level view</div></li>
+          <li><div class="dot"></div><div><strong>Election Consultants</strong><br>Bundle with your campaign services</div></li>
+        </ul>
+      </div>
+      <div>
+        <div class="sec">Pricing (Per Election Cycle)</div>
+        <div class="pricing">
+          <div class="plan">
+            <div><div class="name">Starter</div><div class="det">1 constituency &bull; up to 5 users</div></div>
+            <div class="price">Rs. 15,000</div>
+          </div>
+          <div class="plan hi">
+            <div><div class="name">Pro &#11088; Most Popular</div><div class="det">1 constituency &bull; unlimited users</div></div>
+            <div class="price">Rs. 35,000</div>
+          </div>
+          <div class="plan">
+            <div><div class="name">Party Plan</div><div class="det">Multiple constituencies &bull; SuperAdmin</div></div>
+            <div class="price">Custom</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:.63rem;color:#6c757d;line-height:1.6">
+          * Pay per election cycle - not a monthly subscription<br>
+          * Includes onboarding, training &amp; support throughout campaign
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">Why Nirvachak AI</div>
+    <div class="pills">
+      <span class="pill b">Real-time Voter Sentiment</span>
+      <span class="pill b">Panna Pramukh Tracker</span>
+      <span class="pill g">Offline Mobile App</span>
+      <span class="pill g">GPS Visit Logging</span>
+      <span class="pill o">AI Win Probability</span>
+      <span class="pill o">Swing Voter Alerts</span>
+      <span class="pill b">Phone Banking Module</span>
+      <span class="pill g">WhatsApp Broadcasting</span>
+      <span class="pill b">Booth Heat Map</span>
+      <span class="pill o">EC Expense Compliance</span>
+      <span class="pill b">Influencer Network</span>
+      <span class="pill g">Live Election Turnout</span>
+    </div>
+
+  </div>
+
+  <div class="ftr">
+    <div>
+      <div class="brand">Nirvachak <span>AI</span></div>
+      <div style="font-size:.65rem;color:#6c757d;margin-top:3px">Smart Campaigns. Real Results.</div>
+    </div>
+    <div class="contact">
+      <a href="https://nirvachakai-production.up.railway.app">nirvachakai-production.up.railway.app</a><br>
+      contact@nirvachak.ai &bull; Request a live demo today
+    </div>
+  </div>
+
+</div>
+<button class="print-btn" onclick="window.print()">&#128424; Save as PDF</button>
+</body>
+</html>

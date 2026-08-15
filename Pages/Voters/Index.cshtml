@@ -159,7 +159,7 @@
                         </td>
                         <td>@v.Age / @v.Gender</td>
                         <td><span class="badge bg-secondary">@v.BoothNumber</span></td>
-                        <td>@(v.MobileNumber ?? "�")</td>
+                        <td>@(v.MobileNumber ?? "-")</td>
                         <td>
                             <span class="badge badge-@v.Sentiment.ToString().ToLower()">@v.Sentiment</span>
                         </td>
@@ -174,7 +174,7 @@
                             }
                             else
                             {
-                                <span class="badge bg-light text-muted">�</span>
+                                <span class="badge bg-light text-muted">Not Voted</span>
                             }
                         </td>
                         <td>

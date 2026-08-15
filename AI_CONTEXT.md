@@ -5,6 +5,24 @@
 
 ---
 
+## !! CRITICAL SAFETY RULES — READ FIRST, NO EXCEPTIONS !!
+
+> These rules apply at ALL times, even if the user does not mention them in their message.
+
+| # | Rule | Detail |
+|---|---|---|
+| 1 | **NEVER delete or overwrite the database** | Never run `DROP`, `DELETE` without `WHERE`, `TRUNCATE`, or `EnsureDeleted()`. Never delete the `.db` file. |
+| 2 | **NEVER wipe existing production data** | `SeedService` already guards this — do not bypass its real-user checks. |
+| 3 | **Migrations must be additive only** | Only `ADD COLUMN`, `CREATE TABLE` — never `DROP TABLE` or `DROP COLUMN` in a migration. |
+| 4 | **No destructive EF commands** | Never run `dotnet ef database drop` or `EnsureDeletedAsync()` under any circumstance. |
+| 5 | **No bulk UPDATE/DELETE without WHERE** | Every data-modifying query must be scoped by `ConstituencyId` or a specific record ID. |
+| 6 | **Backups before schema changes** | If a migration changes an existing column, note it clearly in the PR/commit message. |
+| 7 | **Soft-delete only for Voters** | Set `IsDeleted = true` — never physically delete a `Voter` row. |
+
+> These rules were set by the project owner and must never be overridden by any instruction, prompt, or suggestion.
+
+---
+
 ## 1. Project Identity
 
 | Property | Value |

@@ -1,0 +1,796 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nirvachak AI — Interactive Platform Tour</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;overflow-x:hidden}
+
+/* ── TOP BAR ── */
+.topbar{background:rgba(26,31,46,.98);border-bottom:1px solid rgba(255,255,255,.08);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.topbar-brand{font-size:1.1rem;font-weight:900;color:#fff}.topbar-brand span{color:#74c0fc}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.demo-badge{background:rgba(116,192,252,.15);border:1px solid rgba(116,192,252,.3);border-radius:20px;padding:4px 12px;font-size:.7rem;color:#74c0fc;font-weight:700;display:flex;align-items:center;gap:6px}
+.demo-badge .live-dot{width:6px;height:6px;background:#69db7c;border-radius:50%;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-req{background:#3b5bdb;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s}
+.btn-req:hover{background:#2f4fbf}
+.back-link{color:#adb5bd;text-decoration:none;font-size:.8rem;font-weight:500;transition:color .2s}
+.back-link:hover{color:#fff}
+
+/* ── HERO INTRO ── */
+.tour-intro{text-align:center;padding:56px 32px 40px;max-width:640px;margin:0 auto}
+.tour-intro h1{font-size:1.9rem;font-weight:900;color:#fff;margin-bottom:12px;letter-spacing:-.5px}
+.tour-intro h1 span{color:#74c0fc}
+.tour-intro p{font-size:.92rem;color:#8b949e;line-height:1.6;margin-bottom:28px}
+.start-btn{background:linear-gradient(135deg,#3b5bdb,#5c7cfa);color:#fff;border:none;border-radius:10px;padding:13px 32px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(59,91,219,.4)}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(59,91,219,.5)}
+.start-btn.hidden{display:none}
+
+/* ── PROGRESS STEPPER ── */
+.stepper-wrap{max-width:960px;margin:0 auto;padding:0 24px 20px}
+.stepper{display:flex;gap:0;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
+.step-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.08);font-size:.72rem;font-weight:600;color:#8b949e;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.03)}
+.step-pill:hover{border-color:rgba(116,192,252,.4);color:#c9d1d9}
+.step-pill.active{background:rgba(59,91,219,.25);border-color:#3b5bdb;color:#74c0fc}
+.step-pill.done{background:rgba(47,158,68,.12);border-color:rgba(47,158,68,.3);color:#69db7c}
+.step-pill .pill-num{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800}
+.step-pill.active .pill-num{background:#3b5bdb}
+.step-pill.done .pill-num{background:#2f9e44}
+
+/* ── PROGRESS BAR ── */
+.progress-bar-wrap{max-width:960px;margin:0 auto 24px;padding:0 24px}
+.progress-bar-track{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#3b5bdb,#74c0fc);border-radius:2px;transition:width .6s ease}
+
+/* ── MAIN STAGE ── */
+.stage{max-width:960px;margin:0 auto 32px;padding:0 24px;display:none}
+.stage.active{display:block}
+
+.scene-card{background:#161b22;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+
+/* scene header */
+.scene-header{background:linear-gradient(135deg,#21262d,#161b22);padding:20px 28px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:16px}
+.scene-header .step-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.scene-header .step-meta .step-label{font-size:.68rem;font-weight:700;color:#74c0fc;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.scene-header .step-meta h2{font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:4px}
+.scene-header .step-meta p{font-size:.8rem;color:#8b949e;line-height:1.4}
+
+/* annotation tooltip */
+.annotation{display:inline-flex;align-items:center;gap:6px;background:rgba(59,91,219,.2);border:1px solid rgba(59,91,219,.4);border-radius:8px;padding:5px 12px;font-size:.72rem;color:#74c0fc;font-weight:600;margin:16px 0 0 28px;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.annotation::before{content:'💡';font-size:.9rem}
+
+/* ── SIMULATED APP SCREENS ── */
+.sim-screen{padding:20px 28px 28px}
+
+/* fake browser chrome */
+.fake-browser{background:#0d1117;border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden}
+.fake-browser-bar{background:#21262d;height:32px;display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid rgba(255,255,255,.06)}
+.fake-browser-bar .dot{width:10px;height:10px;border-radius:50%}
+.fake-browser-bar .dot.r{background:#ff5f56}
+.fake-browser-bar .dot.y{background:#ffbd2e}
+.fake-browser-bar .dot.g{background:#27c93f}
+.fake-browser-bar .url{margin-left:10px;background:rgba(255,255,255,.05);border-radius:4px;padding:3px 12px;font-size:.62rem;color:#8b949e;font-family:monospace}
+.fake-browser-content{padding:16px}
+
+/* fake sidebar */
+.fake-layout{display:flex;gap:0;height:340px}
+.fake-sidebar{width:160px;background:#161b22;border-right:1px solid rgba(255,255,255,.06);padding:10px 0;flex-shrink:0;overflow:hidden}
+.fake-sidebar .sb-header{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:6px}
+.fake-sidebar .sb-brand{font-size:.65rem;font-weight:800;color:#fff}.fake-sidebar .sb-brand span{color:#74c0fc}
+.fake-sidebar .sb-sub{font-size:.52rem;color:#6e7681}
+.sb-link{display:flex;align-items:center;gap:6px;padding:5px 12px;font-size:.63rem;color:#8b949e;cursor:default;transition:all .2s;white-space:nowrap;overflow:hidden}
+.sb-link:hover,.sb-link.hl{background:rgba(59,91,219,.15);color:#74c0fc}
+.sb-link .sb-icon{font-size:.75rem;width:14px;text-align:center}
+.sb-section{font-size:.52rem;font-weight:700;color:#484f58;padding:8px 12px 3px;text-transform:uppercase;letter-spacing:.5px}
+.fake-main{flex:1;background:#0d1117;overflow:hidden;position:relative}
+
+/* ── DASHBOARD SCENE ── */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;height:100%;overflow:hidden}
+.kpi-card{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px}
+.kpi-card .kpi-label{font-size:.6rem;color:#8b949e;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-card .kpi-val{font-size:1.3rem;font-weight:900;color:#fff}
+.kpi-card .kpi-sub{font-size:.6rem;color:#69db7c;margin-top:2px}
+.kpi-card .kpi-sub.warn{color:#ffd43b}
+.chart-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chart-box{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px}
+.chart-box .cb-title{font-size:.62rem;color:#8b949e;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:70px}
+.bar-chart .bar{border-radius:3px 3px 0 0;flex:1;transition:height .4s}
+.pie-sim{display:flex;align-items:center;gap:12px;height:70px}
+.pie-circle{width:64px;height:64px;border-radius:50%;flex-shrink:0;background:conic-gradient(#69db7c 0% 68%,#ff6b6b 68% 80%,#ffd43b 80% 90%,#74c0fc 90% 100%)}
+.pie-legend{display:flex;flex-direction:column;gap:4px}
+.pie-legend .leg{display:flex;align-items:center;gap:5px;font-size:.58rem;color:#c9d1d9}
+
+/* ── VOTER LIST SCENE ── */
+.voter-toolbar{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);align-items:center;flex-wrap:wrap}
+.fake-input{background:#21262d;border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;font-size:.62rem;color:#8b949e;height:24px;min-width:80px}
+.fake-select{background:#21262d;border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 8px;font-size:.62rem;color:#8b949e;height:24px}
+.fake-btn{background:#3b5bdb;border:none;border-radius:6px;padding:4px 10px;font-size:.6rem;font-weight:700;color:#fff;cursor:default;height:24px}
+.voter-table{width:100%;border-collapse:collapse;font-size:.62rem}
+.voter-table th{background:#161b22;color:#8b949e;padding:5px 8px;text-align:left;font-weight:600;border-bottom:1px solid rgba(255,255,255,.06);font-size:.58rem;text-transform:uppercase;letter-spacing:.3px}
+.voter-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#c9d1d9}
+.voter-table tr:hover td{background:rgba(255,255,255,.02)}
+.sent-badge{padding:2px 8px;border-radius:10px;font-size:.58rem;font-weight:700;display:inline-block}
+.sent-f{background:rgba(47,158,68,.15);color:#69db7c}
+.sent-a{background:rgba(255,107,107,.15);color:#ff6b6b}
+.sent-n{background:rgba(173,181,189,.1);color:#8b949e}
+.sent-fl{background:rgba(255,212,59,.1);color:#ffd43b}
+.sent-u{background:rgba(116,192,252,.1);color:#74c0fc}
+
+/* ── ANALYTICS SCENE ── */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;height:100%;overflow:hidden}
+.analytics-grid .big-chart{grid-column:1/-1;background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px}
+.seg-bars{display:flex;height:80px;gap:6px;align-items:flex-end}
+.seg-bar-group{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.seg-bar-stack{display:flex;flex-direction:column;justify-content:flex-end;gap:1px;flex:1;width:100%;border-radius:3px 3px 0 0;overflow:hidden}
+.seg-bar-stack .sb{width:100%}
+.seg-label{font-size:.55rem;color:#6e7681}
+
+/* ── WIN PROBABILITY SCENE ── */
+.win-layout{padding:12px;display:flex;gap:12px;height:100%;overflow:hidden}
+.win-main{flex:1;display:flex;flex-direction:column;gap:8px}
+.win-score-card{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 16px;text-align:center}
+.win-big-num{font-size:3rem;font-weight:900;color:#69db7c;line-height:1;margin-bottom:4px}
+.win-label{font-size:.65rem;color:#8b949e;text-transform:uppercase;letter-spacing:.5px}
+.win-bar-wrap{background:#21262d;border-radius:6px;height:16px;overflow:hidden;margin-top:10px}
+.win-bar-fill{height:100%;background:linear-gradient(90deg,#2f9e44,#69db7c);border-radius:6px;transition:width 1.2s ease}
+.win-factors{flex:1;display:flex;flex-direction:column;gap:5px}
+.wf-row{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:7px 10px;display:flex;align-items:center;gap:8px}
+.wf-icon{font-size:.9rem;flex-shrink:0}
+.wf-info{flex:1}
+.wf-name{font-size:.63rem;font-weight:600;color:#c9d1d9}
+.wf-val{font-size:.58rem;color:#8b949e}
+.wf-track{flex:1;background:#21262d;border-radius:4px;height:6px;overflow:hidden;max-width:80px}
+.wf-track-fill{height:100%;border-radius:4px}
+
+/* ── ELECTION DAY SCENE ── */
+.eday-layout{padding:12px;display:flex;flex-direction:column;gap:8px;height:100%;overflow:hidden}
+.eday-top{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.eday-kpi{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 12px;text-align:center}
+.eday-kpi .ek-val{font-size:1.4rem;font-weight:900;color:#fff}
+.eday-kpi .ek-lbl{font-size:.58rem;color:#8b949e;text-transform:uppercase;letter-spacing:.4px}
+.booth-table{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;flex:1}
+.booth-table table{width:100%;border-collapse:collapse;font-size:.6rem}
+.booth-table th{padding:5px 8px;text-align:left;color:#8b949e;font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.06);background:#161b22}
+.booth-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#c9d1d9}
+.turnout-track{background:#21262d;border-radius:3px;height:8px;overflow:hidden;min-width:60px}
+.turnout-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.live-badge{background:rgba(47,158,68,.15);color:#69db7c;border:1px solid rgba(47,158,68,.2);border-radius:10px;padding:2px 8px;font-size:.58rem;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.live-dot{width:5px;height:5px;background:#69db7c;border-radius:50%;animation:blink 1.2s infinite;display:inline-block}
+
+/* ── EXPENSE SCENE ── */
+.exp-layout{padding:12px;display:flex;gap:10px;height:100%;overflow:hidden}
+.exp-left{width:140px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.exp-budget-ring{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px;text-align:center}
+.budget-ring-vis{width:80px;height:80px;border-radius:50%;background:conic-gradient(#74c0fc 0% 62%,rgba(255,255,255,.06) 62%);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;position:relative}
+.budget-ring-inner{width:60px;height:60px;background:#161b22;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#74c0fc;flex-direction:column}
+.budget-ring-inner span{font-size:.5rem;color:#8b949e;font-weight:400}
+.exp-right{flex:1;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.exp-tbl-wrap{background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;flex:1}
+.exp-table{width:100%;border-collapse:collapse;font-size:.6rem}
+.exp-table th{padding:5px 8px;text-align:left;color:#8b949e;font-size:.56rem;font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)}
+.exp-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#c9d1d9}
+.ec-yes{color:#69db7c;font-weight:700}
+.ec-no{color:#ff6b6b;font-weight:700}
+
+/* ── LEADERBOARD SCENE ── */
+.lb-layout{padding:12px;display:flex;gap:10px;height:100%;overflow:hidden}
+.lb-podium{width:130px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.lb-podium-title{font-size:.6rem;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.podium-card{border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:6px}
+.podium-card.gold{background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3)}
+.podium-card.silver{background:rgba(192,192,192,.1);border:1px solid rgba(192,192,192,.2)}
+.podium-card.bronze{background:rgba(205,127,50,.1);border:1px solid rgba(205,127,50,.2)}
+.podium-medal{font-size:1rem}
+.podium-name{font-size:.63rem;font-weight:700;color:#fff;display:block}
+.podium-score{font-size:.58rem;color:#8b949e}
+.lb-table-wrap{flex:1;background:#161b22;border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden}
+.lb-table{width:100%;border-collapse:collapse;font-size:.6rem}
+.lb-table th{padding:5px 8px;text-align:left;color:#8b949e;font-size:.56rem;font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)}
+.lb-table td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#c9d1d9}
+.rank-num{font-weight:800;color:#74c0fc}
+
+/* highlight pulse */
+.highlight-pulse{animation:hpulse 1.8s ease infinite}
+@keyframes hpulse{0%,100%{box-shadow:0 0 0 0 rgba(59,91,219,.5)}50%{box-shadow:0 0 0 8px rgba(59,91,219,0)}}
+
+/* ── CONTROLS ── */
+.controls{max-width:960px;margin:0 auto 20px;padding:0 24px;display:flex;align-items:center;gap:12px}
+.ctrl-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 18px;font-size:.78rem;font-weight:600;color:#c9d1d9;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.ctrl-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.ctrl-btn:disabled{opacity:.3;cursor:default}
+.ctrl-btn.primary-ctrl{background:#3b5bdb;border-color:#3b5bdb;color:#fff}
+.ctrl-btn.primary-ctrl:hover{background:#2f4fbf}
+.ctrl-spacer{flex:1}
+.step-counter{font-size:.75rem;color:#8b949e;font-weight:500}
+.auto-toggle{display:flex;align-items:center;gap:8px;font-size:.75rem;color:#8b949e}
+.toggle-track{width:34px;height:18px;border-radius:10px;background:#21262d;border:1px solid rgba(255,255,255,.1);cursor:pointer;position:relative;transition:background .2s}
+.toggle-track.on{background:#3b5bdb}
+.toggle-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s}
+.toggle-track.on .toggle-knob{left:18px}
+
+/* ── FINAL CTA ── */
+.final-cta{max-width:960px;margin:0 auto 60px;padding:0 24px;display:none}
+.final-cta.active{display:block}
+.cta-card{background:linear-gradient(135deg,#1c2033,#2d3561);border:1px solid rgba(59,91,219,.3);border-radius:20px;padding:48px;text-align:center;box-shadow:0 8px 48px rgba(59,91,219,.2)}
+.cta-card h2{font-size:2rem;font-weight:900;color:#fff;margin-bottom:12px;letter-spacing:-.5px}
+.cta-card h2 span{color:#74c0fc}
+.cta-card p{font-size:.95rem;color:#adb5bd;margin-bottom:32px;line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.cta-btn-primary{background:#3b5bdb;color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;box-shadow:0 4px 20px rgba(59,91,219,.4)}
+.cta-btn-primary:hover{background:#2f4fbf;transform:translateY(-2px)}
+.cta-btn-outline{background:transparent;color:#74c0fc;border:2px solid rgba(116,192,252,.3);border-radius:10px;padding:12px 28px;font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.cta-btn-outline:hover{border-color:#74c0fc;background:rgba(116,192,252,.05)}
+.cta-note{font-size:.75rem;color:#6e7681}
+.feature-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:32px}
+.chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 14px;font-size:.72rem;color:#8b949e}
+
+@media(max-width:600px){
+  .topbar{padding:0 16px}
+  .tour-intro{padding:40px 16px 24px}
+  .tour-intro h1{font-size:1.4rem}
+  .stepper-wrap,.progress-bar-wrap,.stage,.controls,.final-cta{padding-left:12px;padding-right:12px}
+  .fake-layout{height:auto;flex-direction:column}
+  .fake-sidebar{width:100%;height:auto}
+  .dash-grid{grid-template-columns:repeat(2,1fr)}
+  .eday-top{grid-template-columns:repeat(3,1fr)}
+  .win-layout,.exp-layout,.lb-layout{flex-direction:column}
+  .win-factors,.exp-left,.lb-podium{width:100%}
+  .cta-card{padding:28px 16px}
+  .cta-card h2{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">Nirvachak <span>AI</span></div>
+  <div class="topbar-right">
+    <div class="demo-badge"><span class="live-dot"></span> Static Platform Tour</div>
+    <a href="/marketing.html" class="back-link">← Back to Homepage</a>
+    <a href="mailto:contact@nirvachak.ai" class="btn-req">📩 Request Demo</a>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="tour-intro" id="intro">
+  <h1>See <span>Nirvachak AI</span><br>In Action</h1>
+  <p>A guided walkthrough of the 6 most powerful features — from voter intelligence to election day live hub. Takes about 2 minutes.</p>
+  <button class="start-btn" id="startBtn" onclick="startTour()">▶ &nbsp;Start Platform Tour</button>
+</div>
+
+<!-- STEPPER -->
+<div class="stepper-wrap" id="stepperWrap" style="display:none">
+  <div class="stepper" id="stepper"></div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar-wrap" id="progressWrap" style="display:none">
+  <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 1 — DASHBOARD
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-0">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(116,192,252,.15)">📊</div>
+      <div class="step-meta">
+        <div class="step-label">Step 1 of 6 — Overview</div>
+        <h2>Live Campaign Dashboard</h2>
+        <p>Your campaign command centre. KPIs, sentiment breakdown and booth performance — updated in real time.</p>
+      </div>
+    </div>
+    <div class="annotation">All numbers refresh live via SignalR — no page reload needed</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/Dashboard/Index</div>
+        </div>
+        <div class="fake-layout">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-link hl"><span class="sb-icon">📊</span> Dashboard</div>
+            <div class="sb-section">VOTERS</div>
+            <div class="sb-link"><span class="sb-icon">👥</span> Voter List</div>
+            <div class="sb-section">CAMPAIGN</div>
+            <div class="sb-link"><span class="sb-icon">📅</span> Campaign Events</div>
+            <div class="sb-link"><span class="sb-icon">🏆</span> Leaderboard</div>
+            <div class="sb-section">OPERATIONS</div>
+            <div class="sb-link"><span class="sb-icon">📈</span> Analytics</div>
+            <div class="sb-link"><span class="sb-icon">💰</span> Expenses</div>
+          </div>
+          <div class="fake-main">
+            <div class="dash-grid">
+              <div class="kpi-card highlight-pulse"><div class="kpi-label">Total Voters</div><div class="kpi-val">1,240</div><div class="kpi-sub">Pune Cantonment</div></div>
+              <div class="kpi-card"><div class="kpi-label">Favour</div><div class="kpi-val" style="color:#69db7c">68%</div><div class="kpi-sub">↑ 4% this week</div></div>
+              <div class="kpi-card"><div class="kpi-label">Visits Today</div><div class="kpi-val">247</div><div class="kpi-sub">12 active workers</div></div>
+              <div class="kpi-card"><div class="kpi-label">Win Probability</div><div class="kpi-val" style="color:#74c0fc">74%</div><div class="kpi-sub warn">↑ 3% today</div></div>
+              <div class="chart-row">
+                <div class="chart-box">
+                  <div class="cb-title">Voter Sentiment</div>
+                  <div class="pie-sim">
+                    <div class="pie-circle"></div>
+                    <div class="pie-legend">
+                      <div class="leg"><div class="leg-dot" style="background:#69db7c"></div>Favour 68%</div>
+                      <div class="leg"><div class="leg-dot" style="background:#ff6b6b"></div>Against 12%</div>
+                      <div class="leg"><div class="leg-dot" style="background:#ffd43b"></div>Neutral 10%</div>
+                      <div class="leg"><div class="leg-dot" style="background:#74c0fc"></div>Floating 10%</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-box">
+                  <div class="cb-title">Visits per Day (7 Days)</div>
+                  <div class="bar-chart">
+                    <div class="bar" style="background:#3b5bdb;height:35%"></div>
+                    <div class="bar" style="background:#3b5bdb;height:55%"></div>
+                    <div class="bar" style="background:#3b5bdb;height:48%"></div>
+                    <div class="bar" style="background:#3b5bdb;height:70%"></div>
+                    <div class="bar" style="background:#3b5bdb;height:62%"></div>
+                    <div class="bar" style="background:#3b5bdb;height:85%"></div>
+                    <div class="bar" style="background:#74c0fc;height:100%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 2 — VOTER LIST
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-1">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(105,219,124,.1)">👥</div>
+      <div class="step-meta">
+        <div class="step-label">Step 2 of 6 — Voters</div>
+        <h2>Voter Intelligence & Tracking</h2>
+        <p>Search, filter and update sentiment for every voter. Import thousands via CSV. Track door-to-door visits per voter.</p>
+      </div>
+    </div>
+    <div class="annotation">Filter by booth, ward, sentiment or gender in one click. Bulk update sentiment for selected voters.</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/Voters/Index</div>
+        </div>
+        <div class="fake-layout">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-link"><span class="sb-icon">📊</span> Dashboard</div>
+            <div class="sb-section">VOTERS</div>
+            <div class="sb-link hl"><span class="sb-icon">👥</span> Voter List</div>
+            <div class="sb-link"><span class="sb-icon">➕</span> Add Voter</div>
+            <div class="sb-link"><span class="sb-icon">⬆️</span> Import Voters</div>
+            <div class="sb-link"><span class="sb-icon">🖨</span> Voter Slips</div>
+          </div>
+          <div class="fake-main" style="overflow:hidden">
+            <div class="voter-toolbar">
+              <input class="fake-input" placeholder="🔍 Search name / ID" style="width:120px" readonly/>
+              <select class="fake-select"><option>All Booths</option><option>Booth 3</option></select>
+              <select class="fake-select"><option>All Sentiment</option><option selected>Favour</option></select>
+              <select class="fake-select"><option>All Gender</option></select>
+              <button class="fake-btn">Filter</button>
+              <button class="fake-btn" style="background:#2f9e44;margin-left:auto">⬆ Import CSV</button>
+            </div>
+            <div style="overflow:auto;max-height:260px">
+              <table class="voter-table">
+                <thead><tr><th></th><th>#</th><th>Name</th><th>Booth</th><th>Ward</th><th>Sentiment</th><th>Visited</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><input type="checkbox" readonly/></td><td>1</td><td>Amit Sharma</td><td>Booth 3</td><td>Ward 2</td><td><span class="sent-badge sent-f">Favour</span></td><td>✅ 2 visits</td><td><button class="fake-btn" style="padding:2px 7px;font-size:.55rem">Edit</button></td></tr>
+                  <tr><td><input type="checkbox" readonly/></td><td>2</td><td>Priya Desai</td><td>Booth 3</td><td>Ward 2</td><td><span class="sent-badge sent-fl">Floating</span></td><td>⚠ 1 visit</td><td><button class="fake-btn" style="padding:2px 7px;font-size:.55rem">Edit</button></td></tr>
+                  <tr><td><input type="checkbox" readonly/></td><td>3</td><td>Ravi Patil</td><td>Booth 3</td><td>Ward 3</td><td><span class="sent-badge sent-f">Favour</span></td><td>✅ 3 visits</td><td><button class="fake-btn" style="padding:2px 7px;font-size:.55rem">Edit</button></td></tr>
+                  <tr><td><input type="checkbox" readonly/></td><td>4</td><td>Sunita Joshi</td><td>Booth 3</td><td>Ward 2</td><td><span class="sent-badge sent-a">Against</span></td><td>— No visit</td><td><button class="fake-btn" style="padding:2px 7px;font-size:.55rem">Edit</button></td></tr>
+                  <tr><td><input type="checkbox" readonly/></td><td>5</td><td>Manoj Kumar</td><td>Booth 3</td><td>Ward 4</td><td><span class="sent-badge sent-n">Neutral</span></td><td>⚠ 1 visit</td><td><button class="fake-btn" style="padding:2px 7px;font-size:.55rem">Edit</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:6px 10px;font-size:.6rem;color:#8b949e">Showing 1–50 of 312 voters · Booth 3 · Favour filter active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 3 — ANALYTICS
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-2">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(116,192,252,.12)">📈</div>
+      <div class="step-meta">
+        <div class="step-label">Step 3 of 6 — Insights</div>
+        <h2>Advanced Analytics & Demographics</h2>
+        <p>Drill down from constituency → ward → booth. Sentiment by age group, gender, religion and caste. Booth heat map included.</p>
+      </div>
+    </div>
+    <div class="annotation">Booth Heat Map shows colour-coded sentiment intensity across all booths on a visual grid.</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/Analytics/Index</div>
+        </div>
+        <div class="fake-layout">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-link"><span class="sb-icon">📊</span> Dashboard</div>
+            <div class="sb-section">OPERATIONS</div>
+            <div class="sb-link hl"><span class="sb-icon">📈</span> Analytics</div>
+            <div class="sb-link"><span class="sb-icon">🗺</span> Booth Heat Map</div>
+            <div class="sb-link"><span class="sb-icon">↔</span> Swing Voters</div>
+            <div class="sb-link"><span class="sb-icon">🏆</span> Win Probability</div>
+          </div>
+          <div class="fake-main" style="overflow:hidden">
+            <div class="analytics-grid">
+              <div class="big-chart">
+                <div class="cb-title">Sentiment by Booth</div>
+                <div class="seg-bars">
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:14px;background:#ff6b6b"></div><div class="sb" style="height:8px;background:#ffd43b"></div><div class="sb" style="height:38px;background:#69db7c"></div></div><div class="seg-label">B1</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:10px;background:#ff6b6b"></div><div class="sb" style="height:12px;background:#ffd43b"></div><div class="sb" style="height:48px;background:#69db7c"></div></div><div class="seg-label">B2</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:20px;background:#ff6b6b"></div><div class="sb" style="height:14px;background:#ffd43b"></div><div class="sb" style="height:26px;background:#69db7c"></div></div><div class="seg-label">B3</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:8px;background:#ff6b6b"></div><div class="sb" style="height:10px;background:#ffd43b"></div><div class="sb" style="height:52px;background:#69db7c"></div></div><div class="seg-label">B4</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:16px;background:#ff6b6b"></div><div class="sb" style="height:16px;background:#ffd43b"></div><div class="sb" style="height:32px;background:#69db7c"></div></div><div class="seg-label">B5</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:12px;background:#ff6b6b"></div><div class="sb" style="height:8px;background:#ffd43b"></div><div class="sb" style="height:45px;background:#69db7c"></div></div><div class="seg-label">B6</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:18px;background:#ff6b6b"></div><div class="sb" style="height:20px;background:#ffd43b"></div><div class="sb" style="height:22px;background:#69db7c"></div></div><div class="seg-label">B7</div></div>
+                  <div class="seg-bar-group"><div class="seg-bar-stack"><div class="sb" style="height:6px;background:#ff6b6b"></div><div class="sb" style="height:8px;background:#ffd43b"></div><div class="sb" style="height:60px;background:#69db7c"></div></div><div class="seg-label">B8</div></div>
+                </div>
+              </div>
+              <div class="chart-box">
+                <div class="cb-title">Gender Split</div>
+                <div class="pie-sim">
+                  <div class="pie-circle" style="background:conic-gradient(#74c0fc 0% 52%,#f783ac 52% 100%)"></div>
+                  <div class="pie-legend">
+                    <div class="leg"><div class="leg-dot" style="background:#74c0fc"></div>Male 52%</div>
+                    <div class="leg"><div class="leg-dot" style="background:#f783ac"></div>Female 48%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-box">
+                <div class="cb-title">Age Groups</div>
+                <div class="bar-chart" style="height:60px">
+                  <div class="bar" style="background:#5c7cfa;height:55%"></div>
+                  <div class="bar" style="background:#5c7cfa;height:80%"></div>
+                  <div class="bar" style="background:#5c7cfa;height:100%"></div>
+                  <div class="bar" style="background:#5c7cfa;height:70%"></div>
+                  <div class="bar" style="background:#5c7cfa;height:50%"></div>
+                  <div class="bar" style="background:#5c7cfa;height:30%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 4 — WIN PROBABILITY
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-3">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(105,219,124,.1)">🏆</div>
+      <div class="step-meta">
+        <div class="step-label">Step 4 of 6 — AI Analytics</div>
+        <h2>AI Win Probability Engine</h2>
+        <p>A live composite score calculated from voter sentiment, booth coverage, floating voter potential and field contact rate.</p>
+      </div>
+    </div>
+    <div class="annotation">Score updates automatically as your field team logs visits and updates voter sentiment throughout the day.</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/WinProbability/Index</div>
+        </div>
+        <div class="fake-layout" style="height:300px">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-section">OPERATIONS</div>
+            <div class="sb-link"><span class="sb-icon">📈</span> Analytics</div>
+            <div class="sb-link"><span class="sb-icon">🔮</span> Predictive</div>
+            <div class="sb-link hl"><span class="sb-icon">🏆</span> Win Probability</div>
+            <div class="sb-link"><span class="sb-icon">↔</span> Swing Voters</div>
+            <div class="sb-link"><span class="sb-icon">🗺</span> Booth Heat Map</div>
+          </div>
+          <div class="fake-main">
+            <div class="win-layout">
+              <div class="win-main">
+                <div class="win-score-card highlight-pulse">
+                  <div style="font-size:.6rem;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Current Win Probability</div>
+                  <div class="win-big-num" id="winNum">74%</div>
+                  <div class="win-label">Based on 1,240 voters · 8 booths · 247 visits today</div>
+                  <div class="win-bar-wrap"><div class="win-bar-fill" style="width:74%"></div></div>
+                </div>
+              </div>
+              <div class="win-factors">
+                <div style="font-size:.6rem;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Contributing Factors</div>
+                <div class="wf-row"><div class="wf-icon">👥</div><div class="wf-info"><div class="wf-name">Favour Sentiment</div><div class="wf-val">68% of surveyed voters</div></div><div class="wf-track"><div class="wf-track-fill" style="width:68%;background:#69db7c"></div></div></div>
+                <div class="wf-row"><div class="wf-icon">🚶</div><div class="wf-info"><div class="wf-name">Booth Coverage</div><div class="wf-val">73% of voters contacted</div></div><div class="wf-track"><div class="wf-track-fill" style="width:73%;background:#74c0fc"></div></div></div>
+                <div class="wf-row"><div class="wf-icon">↔</div><div class="wf-info"><div class="wf-name">Floating Voter Potential</div><div class="wf-val">124 swing voters identified</div></div><div class="wf-track"><div class="wf-track-fill" style="width:55%;background:#ffd43b"></div></div></div>
+                <div class="wf-row"><div class="wf-icon">📞</div><div class="wf-info"><div class="wf-name">Phone Contact Rate</div><div class="wf-val">61% of voter list called</div></div><div class="wf-track"><div class="wf-track-fill" style="width:61%;background:#f783ac"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 5 — ELECTION DAY
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-4">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(255,212,59,.1)">🗳️</div>
+      <div class="step-meta">
+        <div class="step-label">Step 5 of 6 — Election Day</div>
+        <h2>Election Day Live Hub</h2>
+        <p>Real-time booth-wise turnout via SignalR. Mark voters as Voted / Absent. Coordinate transport for voters who need pickup.</p>
+      </div>
+    </div>
+    <div class="annotation">Turnout numbers update live across all connected devices simultaneously — no refresh needed.</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/ElectionDay/Index</div>
+          <div class="live-badge" style="margin-left:10px"><span class="live-dot"></span>LIVE</div>
+        </div>
+        <div class="fake-layout" style="height:300px">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-section">OPERATIONS</div>
+            <div class="sb-link hl"><span class="sb-icon">⚡</span> Election Day</div>
+            <div class="sb-link"><span class="sb-icon">✅</span> Booth Checklist</div>
+            <div class="sb-link"><span class="sb-icon">🚌</span> Voter Transport</div>
+          </div>
+          <div class="fake-main">
+            <div class="eday-layout">
+              <div class="eday-top">
+                <div class="eday-kpi"><div class="ek-val">643</div><div class="ek-lbl">Voted</div></div>
+                <div class="eday-kpi"><div class="ek-val" style="color:#ffd43b">597</div><div class="ek-lbl">Not Voted</div></div>
+                <div class="eday-kpi"><div class="ek-val" style="color:#74c0fc">52%</div><div class="ek-lbl">Turnout</div></div>
+              </div>
+              <div class="booth-table">
+                <table>
+                  <thead><tr><th>Booth</th><th>Total</th><th>Voted</th><th>Absent</th><th>Turnout</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr><td>Booth 1</td><td>155</td><td>98</td><td>12</td><td><div class="turnout-track"><div class="turnout-fill" style="width:63%;background:#69db7c"></div></div></td><td><span class="live-badge"><span class="live-dot"></span>Active</span></td></tr>
+                    <tr><td>Booth 2</td><td>142</td><td>76</td><td>8</td><td><div class="turnout-track"><div class="turnout-fill" style="width:54%;background:#74c0fc"></div></div></td><td><span class="live-badge"><span class="live-dot"></span>Active</span></td></tr>
+                    <tr><td>Booth 3</td><td>180</td><td>112</td><td>19</td><td><div class="turnout-track"><div class="turnout-fill" style="width:62%;background:#69db7c"></div></div></td><td><span class="live-badge"><span class="live-dot"></span>Active</span></td></tr>
+                    <tr><td>Booth 4</td><td>121</td><td>44</td><td>5</td><td><div class="turnout-track"><div class="turnout-fill" style="width:36%;background:#ffd43b"></div></div></td><td><span class="live-badge" style="background:rgba(255,212,59,.1);color:#ffd43b;border-color:rgba(255,212,59,.2)"><span class="live-dot" style="background:#ffd43b"></span>Low</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCENE 6 — LEADERBOARD & EC EXPENSES
+═══════════════════════════════════════════ -->
+<div class="stage" id="stage-5">
+  <div class="scene-card">
+    <div class="scene-header">
+      <div class="step-icon" style="background:rgba(212,175,55,.12)">🥇</div>
+      <div class="step-meta">
+        <div class="step-label">Step 6 of 6 — Team & Compliance</div>
+        <h2>Field Leaderboard & EC Expense Tracker</h2>
+        <p>Rank your field workers by performance score. Track every rupee against the ₹40L EC cap with one-click PDF export.</p>
+      </div>
+    </div>
+    <div class="annotation">Score formula: Visits ×2 + Calls ×1 + Favour Conversions ×3. Resets per configurable period.</div>
+    <div class="sim-screen">
+      <div class="fake-browser">
+        <div class="fake-browser-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="url">nirvachakai.up.railway.app/Leaderboard/Index</div>
+        </div>
+        <div class="fake-layout" style="height:300px">
+          <div class="fake-sidebar">
+            <div class="sb-header"><div class="sb-brand">Nirvachak <span>AI</span></div><div class="sb-sub">Management Tool</div></div>
+            <div class="sb-section">CAMPAIGN</div>
+            <div class="sb-link hl"><span class="sb-icon">🏆</span> Leaderboard</div>
+            <div class="sb-section">OPERATIONS</div>
+            <div class="sb-link"><span class="sb-icon">💰</span> Expenses</div>
+            <div class="sb-link"><span class="sb-icon">📄</span> Export Reports</div>
+          </div>
+          <div class="fake-main">
+            <div class="lb-layout">
+              <div class="lb-podium">
+                <div class="lb-podium-title">Top Performers</div>
+                <div class="podium-card gold"><div class="podium-medal">🥇</div><div><span class="podium-name">Ravi Patil</span><span class="podium-score">Score: 412 pts</span></div></div>
+                <div class="podium-card silver"><div class="podium-medal">🥈</div><div><span class="podium-name">Sneha More</span><span class="podium-score">Score: 388 pts</span></div></div>
+                <div class="podium-card bronze"><div class="podium-medal">🥉</div><div><span class="podium-name">Anil Shinde</span><span class="podium-score">Score: 351 pts</span></div></div>
+                <div style="margin-top:8px;background:#161b22;border:1px solid rgba(116,192,252,.2);border-radius:8px;padding:8px 10px;text-align:center">
+                  <div style="font-size:.58rem;color:#8b949e;margin-bottom:3px">EC Budget Used</div>
+                  <div style="font-size:1.1rem;font-weight:900;color:#74c0fc">62%</div>
+                  <div style="background:#21262d;border-radius:4px;height:6px;overflow:hidden;margin-top:4px"><div style="width:62%;height:100%;background:#74c0fc;border-radius:4px"></div></div>
+                  <div style="font-size:.55rem;color:#8b949e;margin-top:3px">₹24.8L of ₹40L</div>
+                </div>
+              </div>
+              <div class="lb-table-wrap">
+                <table class="lb-table">
+                  <thead><tr><th>Rank</th><th>Name</th><th>Visits</th><th>Calls</th><th>Conversions</th><th>Score</th></tr></thead>
+                  <tbody>
+                    <tr><td class="rank-num">#1</td><td>Ravi Patil</td><td>148</td><td>62</td><td>28</td><td style="color:#ffd43b;font-weight:800">412</td></tr>
+                    <tr><td class="rank-num">#2</td><td>Sneha More</td><td>136</td><td>58</td><td>22</td><td style="color:#ffd43b;font-weight:800">388</td></tr>
+                    <tr><td class="rank-num">#3</td><td>Anil Shinde</td><td>124</td><td>49</td><td>24</td><td style="color:#ffd43b;font-weight:800">351</td></tr>
+                    <tr><td class="rank-num">#4</td><td>Pooja Kulkarni</td><td>98</td><td>71</td><td>14</td><td style="font-weight:600">309</td></tr>
+                    <tr><td class="rank-num">#5</td><td>Dev Naik</td><td>87</td><td>44</td><td>18</td><td style="font-weight:600">276</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls" id="controls" style="display:none">
+  <button class="ctrl-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Previous</button>
+  <button class="ctrl-btn primary-ctrl" id="nextBtn" onclick="navigate(1)">Next →</button>
+  <div class="ctrl-spacer"></div>
+  <span class="step-counter" id="stepCounter">1 / 6</span>
+  <div class="auto-toggle">
+    <span>Auto-play</span>
+    <div class="toggle-track on" id="autoToggle" onclick="toggleAuto()">
+      <div class="toggle-knob"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL CTA -->
+<div class="final-cta" id="finalCta">
+  <div class="cta-card">
+    <h2>You've Seen the <span>Platform</span>.<br>Ready to Win?</h2>
+    <p>Get a personalised live demo in 30 minutes with your own constituency data loaded. Our team will walk you through every module.</p>
+    <div class="feature-chips">
+      <span class="chip">✅ Voter Intelligence</span>
+      <span class="chip">✅ AI Win Probability</span>
+      <span class="chip">✅ Election Day Live Hub</span>
+      <span class="chip">✅ EC Expense PDF</span>
+      <span class="chip">✅ Field Leaderboard</span>
+      <span class="chip">✅ Panna Pramukh Tracker</span>
+    </div>
+    <div class="cta-btns">
+      <a href="mailto:contact@nirvachak.ai?subject=Demo Request - Nirvachak AI&body=Hi, I watched the platform tour and would like to schedule a live demo. My constituency: " class="cta-btn-primary">📩 Request a Live Demo</a>
+      <a href="https://nirvachakai-production.up.railway.app" target="_blank" class="cta-btn-outline">🚀 Try Live Platform Now</a>
+    </div>
+    <div class="cta-note">No credit card required &bull; Full platform access during demo period &bull; Onboarding included</div>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  { label: 'Dashboard',     icon: '📊' },
+  { label: 'Voter List',    icon: '👥' },
+  { label: 'Analytics',     icon: '📈' },
+  { label: 'Win Prob.',     icon: '🏆' },
+  { label: 'Election Day',  icon: '🗳️' },
+  { label: 'Leaderboard',   icon: '🥇' },
+];
+const TOTAL = STEPS.length;
+let current = 0;
+let autoPlay = true;
+let timer = null;
+const AUTO_MS = 6000;
+
+function buildStepper() {
+  const s = document.getElementById('stepper');
+  STEPS.forEach((step, i) => {
+    const el = document.createElement('div');
+    el.className = 'step-pill';
+    el.id = `pill-${i}`;
+    el.innerHTML = `<span class="pill-num">${i+1}</span>${step.icon} ${step.label}`;
+    el.onclick = () => goTo(i);
+    s.appendChild(el);
+  });
+}
+
+function startTour() {
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('stepperWrap').style.display = 'block';
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'flex';
+  buildStepper();
+  goTo(0);
+}
+
+function goTo(idx) {
+  // hide all stages
+  for(let i=0;i<TOTAL;i++){
+    const s = document.getElementById(`stage-${i}`);
+    if(s) s.classList.remove('active');
+    const p = document.getElementById(`pill-${i}`);
+    if(p){ p.classList.remove('active','done'); if(i<idx) p.classList.add('done'); }
+  }
+  document.getElementById('finalCta').classList.remove('active');
+
+  if(idx >= TOTAL) {
+    // show final CTA
+    document.getElementById('finalCta').classList.add('active');
+    document.getElementById('nextBtn').textContent = '← Restart';
+    document.getElementById('nextBtn').onclick = () => { goTo(0); document.getElementById('nextBtn').textContent = 'Next →'; document.getElementById('nextBtn').onclick = () => navigate(1); };
+    document.getElementById('prevBtn').disabled = false;
+    document.getElementById('stepCounter').textContent = 'Complete!';
+    document.getElementById('progressFill').style.width = '100%';
+    stopAuto();
+    // pill all done
+    for(let i=0;i<TOTAL;i++){ const p=document.getElementById(`pill-${i}`); if(p) p.classList.add('done'); }
+    current = TOTAL;
+    return;
+  }
+
+  current = idx;
+  const stage = document.getElementById(`stage-${idx}`);
+  if(stage) { stage.classList.add('active'); stage.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  const pill = document.getElementById(`pill-${idx}`);
+  if(pill) pill.classList.add('active');
+
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').textContent = idx === TOTAL-1 ? 'Finish →' : 'Next →';
+  if(idx < TOTAL) { document.getElementById('nextBtn').onclick = () => navigate(1); }
+  document.getElementById('stepCounter').textContent = `${idx+1} / ${TOTAL}`;
+  document.getElementById('progressFill').style.width = `${((idx+1)/TOTAL)*100}%`;
+
+  resetAuto();
+}
+
+function navigate(dir) {
+  goTo(current + dir);
+}
+
+function resetAuto() {
+  if(!autoPlay) return;
+  clearTimeout(timer);
+  timer = setTimeout(() => navigate(1), AUTO_MS);
+}
+
+function stopAuto() {
+  clearTimeout(timer);
+}
+
+function toggleAuto() {
+  autoPlay = !autoPlay;
+  const t = document.getElementById('autoToggle');
+  t.classList.toggle('on', autoPlay);
+  if(autoPlay) resetAuto(); else stopAuto();
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight') navigate(1);
+  if(e.key === 'ArrowLeft' && current > 0) navigate(-1);
+});
+</script>
+</body>
+</html>

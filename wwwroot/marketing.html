@@ -13,9 +13,10 @@ body{font-family:Inter,sans-serif;background:#fff;color:#212529}
 nav{position:fixed;top:0;left:0;right:0;background:rgba(26,31,46,.96);backdrop-filter:blur(10px);z-index:100;padding:0 40px;display:flex;justify-content:space-between;align-items:center;height:64px}
 .nav-brand{font-size:1.3rem;font-weight:900;color:#fff}
 .nav-brand span{color:#74c0fc}
-.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links{display:flex;gap:24px;list-style:none;align-items:center}
 .nav-links a{color:#adb5bd;text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
 .nav-links a:hover{color:#fff}
+.nav-tour-link{color:#74c0fc !important;font-weight:700 !important}
 .nav-cta{background:#3b5bdb;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:.85rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s}
 .nav-cta:hover{background:#2f4fbf}
 
@@ -35,6 +36,8 @@ h1 span{color:#74c0fc}
 .btn-primary:hover{background:#2f4fbf;transform:translateY(-2px)}
 .btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:10px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
 .btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.05)}
+.btn-tour{background:rgba(116,192,252,.15);color:#74c0fc;border:2px solid rgba(116,192,252,.4);border-radius:10px;padding:12px 28px;font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-tour:hover{background:rgba(116,192,252,.25);border-color:#74c0fc}
 .hero-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px;backdrop-filter:blur(10px)}
 .hero-card .card-title{font-size:.75rem;font-weight:700;color:#74c0fc;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
 .metric{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -63,6 +66,18 @@ h2{font-size:2rem;font-weight:800;color:#1a1f2e;margin-bottom:12px;letter-spacin
 .feat-icon{width:48px;height:48px;border-radius:12px;background:#dbe4ff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px}
 .feat-card h3{font-size:.95rem;font-weight:700;color:#1a1f2e;margin-bottom:8px}
 .feat-card p{font-size:.82rem;color:#6c757d;line-height:1.6}
+
+/* PLATFORM TOUR BANNER */
+.tour-banner{background:linear-gradient(135deg,#161b22,#21262d);border-top:1px solid rgba(116,192,252,.15);border-bottom:1px solid rgba(116,192,252,.15);padding:40px;text-align:center}
+.tour-banner-inner{max-width:700px;margin:0 auto}
+.tour-banner h3{font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:8px}
+.tour-banner h3 span{color:#74c0fc}
+.tour-banner p{font-size:.88rem;color:#8b949e;margin-bottom:20px;line-height:1.6}
+.tour-screens{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tour-screen-chip{background:rgba(59,91,219,.15);border:1px solid rgba(59,91,219,.3);border-radius:20px;padding:4px 14px;font-size:.7rem;color:#74c0fc;font-weight:600}
+.btn-tour-large{background:linear-gradient(135deg,#3b5bdb,#5c7cfa);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:10px;transition:all .2s;box-shadow:0 4px 20px rgba(59,91,219,.35)}
+.btn-tour-large:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(59,91,219,.5)}
+.tour-note{font-size:.72rem;color:#6e7681;margin-top:10px}
 
 /* HOW IT WORKS */
 .how-bg{background:linear-gradient(135deg,#f8f9ff,#fff);padding:80px 0}
@@ -150,6 +165,7 @@ footer ul a:hover{color:#74c0fc}
     <li><a href="#features">Features</a></li>
     <li><a href="#how">How It Works</a></li>
     <li><a href="#pricing">Pricing</a></li>
+    <li><a href="/static-demo.html" class="nav-tour-link">&#9654; Platform Tour</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
   <a href="#contact" class="nav-cta">Request Demo</a>
@@ -171,6 +187,7 @@ footer ul a:hover{color:#74c0fc}
       </p>
       <div class="hero-btns">
         <a href="https://nirvachakai-production.up.railway.app" target="_blank" class="btn-primary">&#128640; Try Live Demo</a>
+        <a href="/static-demo.html" class="btn-tour">&#9654; Platform Tour</a>
         <a href="#features" class="btn-outline">See All Features</a>
       </div>
     </div>
@@ -204,7 +221,6 @@ footer ul a:hover{color:#74c0fc}
     <p class="sec-sub">From first voter visit to result day &mdash; one platform replaces your WhatsApp groups, Excel sheets, and manual booth reports.</p>
     <div class="features-grid">
         <div class="feat-card"><div class="feat-icon">&#128506;</div><h3>Voter Intelligence</h3><p>Track Favour, Against, Neutral, Floating sentiment for every voter. Filter by booth, ward, gender. Identify swing voters instantly.</p></div>
-        <!-- <div class="feat-card"><div class="feat-icon">&#128241;</div><h3>Offline Mobile App</h3><p>Field workers log GPS-verified door-to-door visits even without internet. Auto-syncs when back online. Built with React Native.</p></div>-->
         <div class="feat-card"><div class="feat-icon">&#127942;</div><h3>Field Leaderboard</h3><p>Real-time worker performance ranking. Score = Visits x2 + Calls x1 + Favour Conversions x3. Motivate your team daily.</p></div>
         <div class="feat-card"><div class="feat-icon">&#128202;</div><h3>AI Win Probability</h3><p>Live win score calculated from voter sentiment, booth coverage, floating voter potential and contact rate. Know where you stand every day.</p></div>
         <div class="feat-card"><div class="feat-icon">&#128373;</div><h3>Competitor Intelligence</h3><p>Log competitor rallies, door-to-door campaigns, social media threats. Track threat levels (Low to Critical). Plan your counter-strategy.</p></div>
@@ -213,6 +229,24 @@ footer ul a:hover{color:#74c0fc}
         <div class="feat-card"><div class="feat-icon">&#128317;</div><h3>Panna Pramukh Tracker</h3><p>Manage Panna Pramukhs booth-wise and panna-wise. Track voters assigned vs contacted. Monitor coverage in real-time.</p></div>
         <div class="feat-card"><div class="feat-icon">&#128640;</div><h3>Election Day Live Hub</h3><p>Real-time booth-wise voter turnout via SignalR. Mark voters as Voted / Absent. Coordinate transport for voters who need pickup.</p></div>
     </div>
+  </div>
+</div>
+
+<!-- PLATFORM TOUR BANNER -->
+<div class="tour-banner">
+  <div class="tour-banner-inner">
+    <h3>See the <span>Platform in Action</span></h3>
+    <p>No login required. A 2-minute guided walkthrough of the 6 most powerful features — with simulated screens that look exactly like the real app.</p>
+    <div class="tour-screens">
+      <span class="tour-screen-chip">📊 Dashboard</span>
+      <span class="tour-screen-chip">👥 Voter List</span>
+      <span class="tour-screen-chip">📈 Analytics</span>
+      <span class="tour-screen-chip">🏆 Win Probability</span>
+      <span class="tour-screen-chip">🗳️ Election Day</span>
+      <span class="tour-screen-chip">🥇 Leaderboard</span>
+    </div>
+    <a href="/static-demo.html" class="btn-tour-large">&#9654;&nbsp; Start Platform Tour</a>
+    <div class="tour-note">Auto-plays &bull; Click to skip ahead &bull; Keyboard ← → navigation supported</div>
   </div>
 </div>
 
@@ -259,7 +293,6 @@ footer ul a:hover{color:#74c0fc}
         <div class="role-card" style="border-color:#69db7c;background:#f0fff4"><div class="role-icon">&#128694;</div><div class="role-name" style="color:#2f9e44">Field Worker</div><div class="role-desc">Mobile app for logging visits, calls and voter sentiment. Works offline with GPS verification.</div></div>
         <div class="role-card" style="border-color:#f783ac;background:#fff0f6"><div class="role-icon">&#128681;</div><div class="role-name" style="color:#c2255c">Booth Agent</div><div class="role-desc">Booth-level voter management, checklist, transport coordination and election day turnout.</div></div>
         <div class="role-card" style="border-color:#a9e34b;background:#f4fce3"><div class="role-icon">&#128736;</div><div class="role-name" style="color:#5c940d">Admin</div><div class="role-desc">Manages users, booths, wards, expenses and all constituency-level settings.</div></div>
-        <!-- <div class="role-card" style="border-color:#9775fa;background:#f8f0ff"><div class="role-icon">&#128274;</div><div class="role-name" style="color:#7048e8">Super Admin</div><div class="role-desc">Platform-wide access. Manages multiple constituencies for party-level deployments.</div></div> -->
     </div>
   </div>
 </div>
@@ -307,7 +340,6 @@ footer ul a:hover{color:#74c0fc}
       <div class="plan-cycle">per election cycle</div>
       <ul class="plan-feats">
           <li><span class="ck">&#10003;</span> Multiple constituencies</li>
-          <!-- <li><span class="ck">&#10003;</span> Party-level SuperAdmin</li> -->
           <li><span class="ck">&#10003;</span> Centralized analytics</li>
           <li><span class="ck">&#10003;</span> White-label option</li>
           <li><span class="ck">&#10003;</span> Dedicated support</li>
@@ -336,7 +368,7 @@ footer ul a:hover{color:#74c0fc}
         <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
         <div class="quote">"The leaderboard made our field team incredibly motivated. Door-to-door coverage went from 40% to 85% in just 3 weeks because workers were competing to top the chart."</div>
         <div class="author">Campaign Manager</div>
-        <div class="role">Ward Election, Rajesthan</div>
+        <div class="role">Ward Election, Rajasthan</div>
       </div>
       <div class="t-card">
         <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
@@ -354,6 +386,7 @@ footer ul a:hover{color:#74c0fc}
   <p>Get a live demo in 30 minutes. We will walk you through the entire platform.</p>
   <div class="cta-btns">
     <a href="https://nirvachakai-production.up.railway.app" target="_blank" class="btn-primary">&#128640; Try Live Demo Now</a>
+    <a href="/static-demo.html" class="btn-outline">&#9654; Platform Tour</a>
     <a href="mailto:contact@nirvachak.ai" class="btn-outline">&#128231; contact@nirvachak.ai</a>
   </div>
   <p style="margin-top:20px;font-size:.8rem;color:#6c757d">No credit card required. Full platform access during demo period.</p>
@@ -371,6 +404,7 @@ footer ul a:hover{color:#74c0fc}
       <li><a href="#features">Features</a></li>
       <li><a href="#how">How It Works</a></li>
       <li><a href="#pricing">Pricing</a></li>
+      <li><a href="/static-demo.html">Platform Tour</a></li>
       <li><a href="https://nirvachakai-production.up.railway.app" target="_blank">Live Demo</a></li>
     </ul>
   </div>

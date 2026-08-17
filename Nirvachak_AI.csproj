@@ -7,7 +7,7 @@
     <AssemblyName>Nirvachak_AI</AssemblyName>
     <RootNamespace>Nirvachak_AI</RootNamespace>
     <UserSecretsId>nirvachak-ai-secrets</UserSecretsId>
-    <TypeScriptToolsVersion>4.9</TypeScriptToolsVersion>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,10 +21,6 @@
     </PackageReference>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="ClosedXML" Version="0.102.3" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="7.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>

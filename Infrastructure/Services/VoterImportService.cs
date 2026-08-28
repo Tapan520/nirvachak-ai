@@ -14,7 +14,25 @@ public class ImportResult
     public int Imported { get; set; }
     public int Skipped { get; set; }
     public List<string> Errors { get; set; } = new();
+    public List<FailedVoterRow> FailedRows { get; set; } = new();
     public bool Success { get; set; }
+}
+
+public class FailedVoterRow
+{
+    public string VoterId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? NameLocal { get; set; }
+    public string? FatherHusbandName { get; set; }
+    public int Age { get; set; }
+    public string Gender { get; set; } = string.Empty;
+    public string? MobileNumber { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public int BoothNumber { get; set; }
+    public string? WardNumber { get; set; }
+    public string? PannaNumber { get; set; }
+    public int SerialNumber { get; set; }
+    public string FailReason { get; set; } = string.Empty;
 }
 
 public class VoterCsvRow
@@ -60,16 +78,15 @@ public class VoterImportService
             var rows = csv.GetRecords<VoterCsvRow>().ToList();
             result.Total = rows.Count;
 
+            // Only check active (non-deleted) voters — soft-deleted records must not block re-import
             var existingIds = _db.Voters
-                .IgnoreQueryFilters()
-                .Where(v => v.ConstituencyId == constituencyId)
+                .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
                 .Select(v => v.VoterId)
                 .ToHashSet();
 
             // Build a set of existing (normalised name + booth + serial) keys for fuzzy duplicate detection
             var existingKeys = _db.Voters
-                .IgnoreQueryFilters()
-                .Where(v => v.ConstituencyId == constituencyId)
+                .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
                 .Select(v => v.Name.ToLower() + "|" + v.BoothNumber + "|" + v.SerialNumber)
                 .ToHashSet();
 
@@ -82,20 +99,26 @@ public class VoterImportService
                 if (string.IsNullOrWhiteSpace(row.VoterId))
                 {
                     result.Skipped++;
-                    result.Errors.Add($"Row skipped — empty Voter ID (Name: {row.Name})");
+                    var reason = $"Empty Voter ID";
+                    result.Errors.Add($"Row skipped — {reason} (Name: {row.Name})");
+                    result.FailedRows.Add(ToFailedRow(row, reason));
                     continue;
                 }
                 var cleanId = row.VoterId.Trim();
                 if (existingIds.Contains(cleanId))
                 {
                     result.Skipped++;
+                    var reason = "Duplicate — already exists in DB";
                     result.Errors.Add($"Duplicate (already in DB): {cleanId} — {row.Name}");
+                    result.FailedRows.Add(ToFailedRow(row, reason));
                     continue;
                 }
                 if (!seenInFile.Add(cleanId))
                 {
                     result.Skipped++;
+                    var reason = "Duplicate — appears more than once in this file";
                     result.Errors.Add($"Duplicate (within file): {cleanId} — {row.Name}");
+                    result.FailedRows.Add(ToFailedRow(row, reason));
                     continue;
                 }
                 // Fuzzy duplicate: same name + booth + serial already in DB or file
@@ -103,13 +126,17 @@ public class VoterImportService
                 if (existingKeys.Contains(fuzzyKey))
                 {
                     result.Skipped++;
+                    var reason = "Probable duplicate — same Name + Booth + Serial already in DB";
                     result.Errors.Add($"Probable duplicate (same name+booth+serial in DB): {cleanId} — {row.Name}");
+                    result.FailedRows.Add(ToFailedRow(row, reason));
                     continue;
                 }
                 if (!seenKeysInFile.Add(fuzzyKey))
                 {
                     result.Skipped++;
+                    var reason = "Probable duplicate — same Name + Booth + Serial within this file";
                     result.Errors.Add($"Probable duplicate (same name+booth+serial within file): {cleanId} — {row.Name}");
+                    result.FailedRows.Add(ToFailedRow(row, reason));
                     continue;
                 }
                 voters.Add(new Voter
@@ -161,4 +188,21 @@ public class VoterImportService
         }
         return result;
     }
+
+    private static FailedVoterRow ToFailedRow(VoterCsvRow row, string reason) => new()
+    {
+        VoterId           = row.VoterId,
+        Name              = row.Name,
+        NameLocal         = row.NameLocal,
+        FatherHusbandName = row.FatherHusbandName,
+        Age               = row.Age,
+        Gender            = row.Gender,
+        MobileNumber      = row.MobileNumber,
+        Address           = row.Address,
+        BoothNumber       = row.BoothNumber,
+        WardNumber        = row.WardNumber,
+        PannaNumber       = row.PannaNumber,
+        SerialNumber      = row.SerialNumber,
+        FailReason        = reason
+    };
 }

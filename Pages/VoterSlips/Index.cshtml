@@ -85,7 +85,8 @@
 </div>
 
 @* ?? Slip grid ????????????????????????????????????????????????????????????? *@
-<div class="row g-2" id="slipContainer">
+<div class="slip-grid-outer">
+<div class="row g-0" id="slipContainer">
     @foreach (var v in Model.Voters)
     {
         var booth = Model.Booths.FirstOrDefault(b => b.BoothNumber == v.BoothNumber);
@@ -160,6 +161,7 @@
         </div>
     }
 </div>
+</div>
 
 @* Dynamic print-column style - updated by setColumns() before window.print() *@
 <style id="printColStyle">
@@ -184,6 +186,33 @@
     }
 </style>
 
+@* Cut-line styles (screen + print) *@
+<style>
+    /* Each slip cell gets dashed cut borders on all sides */
+    .slip-col {
+        border-right:  1.5px dashed #aaa;
+        border-bottom: 1.5px dashed #aaa;
+        padding: 6px 8px;
+    }
+    /* Remove right border from last column in each row */
+    .slip-col:nth-child(3n) {
+        border-right: none;
+    }
+
+    @@media print {
+        .slip-grid-outer {
+            border-top:  1.5px dashed #000;
+            border-left: 1.5px dashed #000;
+        }
+        .slip-col {
+            border-right:  1.5px dashed #000 !important;
+            border-bottom: 1.5px dashed #000 !important;
+            padding: 6px 8px !important;
+        }
+        /* nth-child rule overridden per column count by JS */
+    }
+</style>
+
 @section Scripts {
 <script>
     const colClasses = { 2: 'col-6', 3: 'col-4', 4: 'col-3' };
@@ -191,7 +220,7 @@
     const colFontPt  = { 2: '8.5pt', 3: '7pt',     4: '6pt'  };
     const AT = '\u0040'; // unicode for the at-sign, avoids Razor parsing
 
-    function buildPrintCss(w, f) {
+    function buildPrintCss(w, f, cols) {
         return AT + 'media print {\n'
              + '  .slip-col {\n'
              + '    width: '     + w + ' !important;\n'
@@ -200,6 +229,7 @@
              + '  }\n'
              + '  .voter-slip-card { font-size: ' + f + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; border-color: #000 !important; }\n'
              + '  .voter-slip-card * { color: #000 !important; }\n'
+             + '  .slip-col:nth-child(' + cols + 'n) { border-right: none !important; }\n'
              + '}';
     }
 
@@ -211,7 +241,12 @@
 
         // 2. Rewrite the dynamic print style
         document.getElementById('printColStyle').textContent =
-            buildPrintCss(colWidths[n], colFontPt[n]);
+            buildPrintCss(colWidths[n], colFontPt[n], n);
+
+        // 3. Update screen nth-child cut-line rule to match new column count
+        document.querySelectorAll('#slipContainer .slip-col').forEach((el, idx) => {
+            el.style.borderRight = ((idx + 1) % n === 0) ? 'none' : '1.5px dashed #aaa';
+        });
 
         // 3. Toggle button active states
         [2, 3, 4].forEach(i => {

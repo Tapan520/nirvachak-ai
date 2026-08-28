@@ -1,31 +1,96 @@
-ï»¿@page
+@page
 @model Nirvachak_AI.Pages.Voters.ImportModel
 @{
     ViewData["Title"] = "Import Voters";
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-10">
+
+        @* ?? Result summary banner ??????????????????????????????????????? *@
         @if (Model.Result != null)
         {
-            if (Model.Result.Success)
+            if (Model.Result.Success && Model.Result.Skipped == 0)
             {
-                var successMsg = $"Import Complete! {Model.Result.Imported} imported, {Model.Result.Skipped} skipped out of {Model.Result.Total} total rows.";
-                <div class="alert alert-success alert-auto-dismiss">
-                    <i class="bi bi-check-circle me-2"></i>
-                    <strong>@successMsg</strong>
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Import Complete — all rows loaded successfully!</strong>
+                    &nbsp;<span class="badge bg-success">@Model.Result.Imported Imported</span>
+                    &nbsp;<span class="badge bg-secondary">@Model.Result.Total Total Rows</span>
+                </div>
+            }
+            else if (Model.Result.Success && Model.Result.Skipped > 0)
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    <strong>Import Complete with issues.</strong>
+                    &nbsp;<span class="badge bg-success">@Model.Result.Imported Imported</span>
+                    &nbsp;<span class="badge bg-warning text-dark">@Model.Result.Skipped Skipped</span>
+                    &nbsp;<span class="badge bg-secondary">@Model.Result.Total Total Rows</span>
+                    <div class="small mt-1 text-dark">See the failed rows table below — download, fix and re-upload.</div>
                 </div>
             }
             else
             {
-                var errorMsg = string.Join(", ", Model.Result.Errors);
-                <div class="alert alert-danger alert-auto-dismiss">
-                    <i class="bi bi-x-circle me-2"></i>
-                    <strong>Import Failed:</strong> @errorMsg
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <strong>Import Failed:</strong> @string.Join(" | ", Model.Result.Errors)
                 </div>
             }
         }
 
+        @* ?? Failed Rows Panel (only when skipped rows exist) ??????????? *@
+        @if (Model.FailedRows.Any())
+        {
+            <div class="card border-warning mb-4">
+                <div class="card-header bg-warning bg-opacity-10 border-warning d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                        <strong>@Model.FailedRows.Count row(s) could not be imported</strong>
+                        <span class="text-muted small ms-2">— correct the issues and re-upload</span>
+                    </div>
+                    <a asp-page-handler="DownloadFailed" class="btn btn-sm btn-warning">
+                        <i class="bi bi-download me-1"></i>Download Failed Rows as CSV
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height:380px; overflow-y:auto;">
+                        <table class="table table-sm table-hover mb-0 small">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Voter ID</th>
+                                    <th>Name</th>
+                                    <th>Booth</th>
+                                    <th>Serial</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th class="text-danger">Reason for Failure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int rowNum = 1; }
+                                @foreach (var row in Model.FailedRows)
+                                {
+                                    <tr>
+                                        <td class="text-muted">@rowNum++</td>
+                                        <td class="font-monospace">@row.VoterId</td>
+                                        <td>@row.Name</td>
+                                        <td>@row.BoothNumber</td>
+                                        <td>@row.SerialNumber</td>
+                                        <td>@row.Age</td>
+                                        <td>@row.Gender</td>
+                                        <td><span class="badge bg-danger bg-opacity-75">@row.FailReason</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* ?? Upload form ????????????????????????????????????????????????? *@
         <div class="card mb-4">
             <div class="card-header"><i class="bi bi-upload me-2"></i>Upload Voter CSV File</div>
             <div class="card-body">
@@ -55,6 +120,7 @@
             </div>
         </div>
 
+        @* ?? CSV Format Guide ???????????????????????????????????????????? *@
         <div class="card">
             <div class="card-header"><i class="bi bi-info-circle me-2"></i>CSV Format Guide</div>
             <div class="card-body">
@@ -72,7 +138,7 @@
                             <tr><td><code>Address</code></td><td><span class="badge bg-danger">Required</span></td><td>House 5, Ward 2</td><td>Full address</td></tr>
                             <tr><td><code>BoothNumber</code></td><td><span class="badge bg-danger">Required</span></td><td>3</td><td>Polling booth number</td></tr>
                             <tr><td><code>SerialNumber</code></td><td><span class="badge bg-danger">Required</span></td><td>127</td><td>Serial in voter list</td></tr>
-                            <tr><td><code>NameLocal</code></td><td><span class="badge bg-secondary">Optional</span></td><td>????? ?????</td><td>Regional language name</td></tr>
+                            <tr><td><code>NameLocal</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Local Name</td><td>Regional language name</td></tr>
                             <tr><td><code>FatherHusbandName</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Ram Kumar</td><td>Father/Husband name</td></tr>
                             <tr><td><code>MobileNumber</code></td><td><span class="badge bg-secondary">Optional</span></td><td>9876543210</td><td>10-digit mobile</td></tr>
                             <tr><td><code>WardNumber</code></td><td><span class="badge bg-secondary">Optional</span></td><td>5</td><td>Ward number</td></tr>
@@ -85,5 +151,6 @@
                 </a>
             </div>
         </div>
+
     </div>
 </div>

@@ -31,6 +31,7 @@ public class IndexModel : PageModel
     public bool IsAdmin { get; set; }
     public bool CanImportCsv { get; set; }
     public bool CanAddVoter { get; set; }
+    public bool CanBulkDelete { get; set; }
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }
 
@@ -55,6 +56,7 @@ public class IndexModel : PageModel
         IsAdmin = user?.Role == UserRole.SuperAdmin;
         CanImportCsv = user?.Role != UserRole.FieldWorker && user?.Role != UserRole.BoothAgent && user?.Role != UserRole.VoterManager;
         CanAddVoter = user != null;
+        CanBulkDelete = user?.Role == UserRole.SuperAdmin || user?.Role == UserRole.Admin;
 
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
@@ -166,6 +168,78 @@ public class IndexModel : PageModel
 
         await _db.SaveChangesAsync();
         TempData["Message"] = $"Sentiment updated to '{bulkSentiment}' for {voters.Count} voter(s).";
+        return RedirectToPage();
+    }
+
+    // Delete selected voter IDs (must be Admin/SuperAdmin)
+    public async Task<IActionResult> OnPostBulkDeleteAsync(List<int> selectedIds)
+    {
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null) return Forbid();
+        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.SuperAdmin)
+            return Forbid();
+        if (selectedIds == null || selectedIds.Count == 0)
+        {
+            TempData["Error"] = "No voters selected for deletion.";
+            return RedirectToPage();
+        }
+
+        var voters = await _db.Voters
+            .Where(v => selectedIds.Contains(v.Id) && !v.IsDeleted)
+            .ToListAsync();
+
+        // Non-SuperAdmin restricted to own constituency
+        if (currentUser.Role != UserRole.SuperAdmin)
+            voters = voters.Where(v => v.ConstituencyId == currentUser.ConstituencyId).ToList();
+
+        foreach (var v in voters) v.IsDeleted = true;
+        await _db.SaveChangesAsync();
+
+        _audit.Track(currentUser.Id, currentUser.FullName,
+            "BulkDelete", "Voter", string.Join(",", voters.Select(v => v.Id)),
+            $"{voters.Count} voter(s) deleted", currentUser.ConstituencyId);
+
+        TempData["Message"] = $"{voters.Count} voter(s) deleted successfully.";
+        return RedirectToPage();
+    }
+
+    // Delete all voters in a booth, or entire constituency (must be Admin/SuperAdmin)
+    public async Task<IActionResult> OnPostDeleteBoothAsync(int deleteBoothNumber, int deleteConstituencyId, bool deleteAll)
+    {
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null) return Forbid();
+        if (currentUser.Role != UserRole.Admin && currentUser.Role != UserRole.SuperAdmin)
+            return Forbid();
+
+        // Non-SuperAdmin can only delete within their own constituency
+        var cId = currentUser.Role == UserRole.SuperAdmin ? deleteConstituencyId : (currentUser.ConstituencyId ?? 0);
+        if (cId == 0)
+        {
+            TempData["Error"] = "Constituency not resolved.";
+            return RedirectToPage();
+        }
+
+        IQueryable<Voter> query = _db.Voters.Where(v => v.ConstituencyId == cId && !v.IsDeleted);
+        if (!deleteAll)
+        {
+            if (deleteBoothNumber <= 0)
+            {
+                TempData["Error"] = "Please select a booth to delete.";
+                return RedirectToPage();
+            }
+            query = query.Where(v => v.BoothNumber == deleteBoothNumber);
+        }
+
+        var voters = await query.ToListAsync();
+        foreach (var v in voters) v.IsDeleted = true;
+        await _db.SaveChangesAsync();
+
+        var scope = deleteAll ? "entire constituency" : $"Booth {deleteBoothNumber}";
+        _audit.Track(currentUser.Id, currentUser.FullName,
+            "BulkDeleteBooth", "Voter", scope,
+            $"{voters.Count} voter(s) deleted from {scope}", cId);
+
+        TempData["Message"] = $"{voters.Count} voter(s) from {scope} deleted successfully.";
         return RedirectToPage();
     }
 }

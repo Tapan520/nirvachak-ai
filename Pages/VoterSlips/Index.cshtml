@@ -48,6 +48,17 @@
 
         @* Column-count toggle *@
         <div class="col-auto ms-auto d-flex align-items-end gap-2">
+            @* Language toggle *@
+            <div>
+                <label class="form-label form-label-sm mb-1 fw-semibold d-block">Language</label>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="langToggle" id="langEn" autocomplete="off" checked onchange="switchLang('en')">
+                    <label class="btn btn-outline-secondary" for="langEn">English</label>
+                    <input type="radio" class="btn-check" name="langToggle" id="langHi" autocomplete="off" onchange="switchLang('hi')">
+                    <label class="btn btn-outline-secondary" for="langHi">हिंदी</label>
+                </div>
+                <span id="langSpinner" class="spinner-border spinner-border-sm text-primary ms-1 align-self-center" role="status" style="display:none;" title="Translating..."></span>
+            </div>
             <div>
                 <label class="form-label form-label-sm mb-1 fw-semibold">Columns</label>
                 <div class="btn-group btn-group-sm" role="group" id="colToggle">
@@ -100,24 +111,24 @@
 
                         @* Row 1: Sr | Ward No | Panna *@
                         <div style="font-size:0.78rem; color:#111; line-height:1.35;">
-                            <span style="font-weight:700;">Sr:&nbsp;</span>@v.SerialNumber
+                            <span class="slip-label" data-en="Sr:" data-hi="क्र.सं:" style="font-weight:700;">Sr:&nbsp;</span>@v.SerialNumber
                             &nbsp;
-                            <span style="font-weight:700;">Ward No:</span>@(v.WardNumber ?? "-")
+                            <span class="slip-label" data-en="Ward No:" data-hi="वार्ड:" style="font-weight:700;">Ward No:</span>@(v.WardNumber ?? "-")
                             &nbsp;
-                            <span style="font-weight:700;">Panna:&nbsp;</span>@(v.PannaNumber ?? "-")
+                            <span class="slip-label" data-en="Panna:" data-hi="पन्ना:" style="font-weight:700;">Panna:&nbsp;</span>@(v.PannaNumber ?? "-")
                         </div>
 
                         @* Row 2: EPIC | Age | Gender *@
                         <div style="font-size:0.78rem; color:#111; line-height:1.35;">
-                            <span style="font-weight:700;">EPIC:&nbsp;</span><span class="font-monospace">@v.VoterId</span>
+                            <span class="slip-label" data-en="EPIC:" data-hi="क्रमांक:" style="font-weight:700;">EPIC:&nbsp;</span><span class="font-monospace">@v.VoterId</span>
                             &nbsp;
-                            <span style="font-weight:700;">Age:&nbsp;</span>@(v.Age > 0 ? v.Age.ToString() : "-") @(v.Gender ?? "-")
+                            <span class="slip-label" data-en="Age:" data-hi="आयु:" style="font-weight:700;">Age:&nbsp;</span>@(v.Age > 0 ? v.Age.ToString() : "-") @(v.Gender ?? "-")
                         </div>
 
                         @* Row 3: Name *@
                         <div style="font-size:0.80rem; color:#000; line-height:1.35;">
-                            <span style="font-weight:700;">Name:&nbsp;</span>
-                            @v.Name
+                            <span class="slip-label" data-en="Name:" data-hi="नाम:" style="font-weight:700;">Name:&nbsp;</span>
+                            <span class="slip-val" data-en="@v.Name" @(!string.IsNullOrEmpty(v.NameLocal) ? $"data-hi-preset=\"{v.NameLocal}\"" : "")>@v.Name</span>
                             @if (!string.IsNullOrEmpty(v.NameLocal))
                             {
                                 <span> (@v.NameLocal)</span>
@@ -126,12 +137,17 @@
 
                         @* Row 4: S/O or W/O *@
                         <div style="font-size:0.78rem; color:#111; line-height:1.35;">
-                            <span style="font-weight:700;">@(v.Gender == "F" ? "W/O" : "S/O"):&nbsp;</span> @(v.FatherHusbandName ?? "-")
+                            <span class="slip-label"
+                                  data-en="@(v.Gender == "F" ? "W/O:" : "S/O:")"
+                                  data-hi="@(v.Gender == "F" ? "पत्नी:" : "पुत्र:")"
+                                  style="font-weight:700;">@(v.Gender == "F" ? "W/O" : "S/O"):&nbsp;</span>
+                            <span class="slip-val" data-en="@(v.FatherHusbandName ?? "-")">@(v.FatherHusbandName ?? "-")</span>
                         </div>
 
                         @* Row 5: Voter Address *@
                         <div style="font-size:0.76rem; color:#111; line-height:1.35;">
-                            <span style="font-weight:700;">Address:&nbsp;</span> @(v.Address ?? "-")
+                            <span class="slip-label" data-en="Address:" data-hi="पता:" style="font-weight:700;">Address:&nbsp;</span>
+                            <span class="slip-val" data-en="@(v.Address ?? "-")">@(v.Address ?? "-")</span>
                         </div>
 
                         @* Thick separator between Voter Address and Booth Address *@
@@ -139,7 +155,8 @@
 
                         @* Row 6: Booth Address *@
                         <div style="font-size:0.76rem; color:#111; line-height:1.35;">
-                            <span style="font-weight:700;">Booth Address:&nbsp;</span> @boothAddr
+                            <span class="slip-label" data-en="Booth Address:" data-hi="मतदान केंद्र:" style="font-weight:700;">Booth Address:&nbsp;</span>
+                            <span class="slip-val" data-en="@boothAddr">@boothAddr</span>
                         </div>
 
                     </div>
@@ -231,6 +248,82 @@
              + '  .voter-slip-card * { color: #000 !important; }\n'
              + '  .slip-col:nth-child(' + cols + 'n) { border-right: none !important; }\n'
              + '}';
+    }
+
+    // Translation cache: English text → Hindi text
+    const txCache = new Map();
+
+    // Translate a single string via Google Translate (unofficial free endpoint)
+    async function gtTranslate(text) {
+        if (!text || text === '-') return text;
+        if (txCache.has(text)) return txCache.get(text);
+        try {
+            const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q='
+                        + encodeURIComponent(text);
+            const res  = await fetch(url);
+            const json = await res.json();
+            const hi   = json[0].map(x => x[0]).join('');
+            txCache.set(text, hi);
+            return hi;
+        } catch { return text; }
+    }
+
+    // Language: 'en' or 'hi'
+    let currentLang = 'en';
+    let translating  = false;
+
+    async function switchLang(lang) {
+        if (translating) return;
+        currentLang = lang;
+
+        // 1. Flip all labels immediately
+        document.querySelectorAll('.slip-label').forEach(el => {
+            const t = el.getAttribute('data-' + lang);
+            if (t) el.innerHTML = t + '\u00a0';
+        });
+
+        if (lang === 'hi') {
+            // 2. Collect all slip-val elements and unique English texts
+            const valEls     = [...document.querySelectorAll('.slip-val')];
+            const needFetch  = [];
+
+            valEls.forEach(el => {
+                const en = el.getAttribute('data-en') || '';
+                // Use preset Hindi (NameLocal) if available
+                if (el.hasAttribute('data-hi-preset')) {
+                    txCache.set(en, el.getAttribute('data-hi-preset'));
+                } else if (!txCache.has(en) && en && en !== '-') {
+                    needFetch.push(en);
+                }
+            });
+
+            const uniqueTexts = [...new Set(needFetch)];
+
+            if (uniqueTexts.length > 0) {
+                // 3. Show a spinner in the toolbar while translating
+                translating = true;
+                const spinner = document.getElementById('langSpinner');
+                if (spinner) spinner.style.display = 'inline-block';
+
+                // 4. Batch translate (parallel, deduped)
+                await Promise.all(uniqueTexts.map(t => gtTranslate(t)));
+
+                if (spinner) spinner.style.display = 'none';
+                translating = false;
+            }
+
+            // 5. Apply Hindi text to every value span
+            valEls.forEach(el => {
+                const en = el.getAttribute('data-en') || '';
+                el.textContent = txCache.has(en) ? txCache.get(en) : en;
+            });
+
+        } else {
+            // Revert all values to English
+            document.querySelectorAll('.slip-val').forEach(el => {
+                el.textContent = el.getAttribute('data-en') || '';
+            });
+        }
     }
 
     function setColumns(n) {

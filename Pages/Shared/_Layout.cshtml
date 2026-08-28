@@ -201,7 +201,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/Index">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") && !currentPage.StartsWith("/Analytics/PreferenceAnalytics") ? "active" : "")" asp-page="/Analytics/Index">
                                 <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
                             </a>
                         </li>
@@ -375,7 +375,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") && !currentPage.StartsWith("/Admin/Exotel") ? "active" : "")" asp-page="/Admin/Index">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") && !currentPage.StartsWith("/Admin/Exotel") && !currentPage.StartsWith("/Admin/CandidatesParties") ? "active" : "")" asp-page="/Admin/Index">
                                 <i class="bi bi-people me-2"></i> Users
                             </a>
                         </li>

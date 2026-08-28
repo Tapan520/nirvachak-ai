@@ -53,7 +53,7 @@ public class IndexModel : PageModel
     {
         var user = await _userManager.GetUserAsync(User);
         IsAdmin = user?.Role == UserRole.SuperAdmin;
-        CanImportCsv = user?.Role != UserRole.FieldWorker && user?.Role != UserRole.BoothAgent;
+        CanImportCsv = user?.Role != UserRole.FieldWorker && user?.Role != UserRole.BoothAgent && user?.Role != UserRole.VoterManager;
         CanAddVoter = user != null;
 
         if (IsAdmin)
@@ -68,6 +68,14 @@ public class IndexModel : PageModel
         }
         else if (user?.ConstituencyId.HasValue == true)
             query = query.Where(v => v.ConstituencyId == user.ConstituencyId);
+
+        // VoterManager is restricted to their assigned booths only
+        if (user?.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any())
+                query = query.Where(v => assignedBooths.Contains(v.BoothNumber));
+        }
 
         // Load wards for the active constituency
         var cId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
@@ -100,7 +108,7 @@ public class IndexModel : PageModel
             .Take(PageSize)
             .ToListAsync();
 
-        // Booth numbers for filter dropdown � scoped to selected constituency for Admin
+        // Booth numbers for filter dropdown — scoped to assigned booths for VoterManager
         IQueryable<Voter> allVoters = _db.Voters.Where(v => !v.IsDeleted);
         if (IsAdmin)
         {
@@ -109,8 +117,22 @@ public class IndexModel : PageModel
         }
         else if (user?.ConstituencyId.HasValue == true)
             allVoters = allVoters.Where(v => v.ConstituencyId == user.ConstituencyId);
+
+        if (user?.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any())
+                allVoters = allVoters.Where(v => assignedBooths.Contains(v.BoothNumber));
+        }
+
         BoothNumbers = await allVoters.Select(v => v.BoothNumber).Distinct().OrderBy(n => n).ToListAsync();
     }
+
+    private static List<int> ParseAssignedBooths(string? assignedBoothNumbers) =>
+        (assignedBoothNumbers ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+            .Where(n => n.HasValue).Select(n => n!.Value).ToList();
 
     public async Task<IActionResult> OnPostBulkSentimentAsync(List<int> selectedIds, VoterSentiment bulkSentiment)
     {
@@ -125,6 +147,14 @@ public class IndexModel : PageModel
         var voters = await _db.Voters
             .Where(v => selectedIds.Contains(v.Id) && !v.IsDeleted)
             .ToListAsync();
+
+        // VoterManager can only update voters in their assigned booths
+        if (currentUser.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(currentUser.AssignedBoothNumbers);
+            if (assignedBooths.Any())
+                voters = voters.Where(v => assignedBooths.Contains(v.BoothNumber)).ToList();
+        }
 
         foreach (var voter in voters)
             voter.Sentiment = bulkSentiment;

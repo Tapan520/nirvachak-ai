@@ -55,21 +55,49 @@ public class IndexModel : PageModel
         ConstituencyId = IsAdmin
             ? (ConstituencyFilter ?? Constituencies.FirstOrDefault()?.Id ?? 1)
             : (user?.ConstituencyId ?? 1);
+
+        // VoterManager: restrict to assigned booths only
+        var isVoterManager = user?.Role == UserRole.VoterManager;
+        var assignedBooths = isVoterManager
+            ? (user?.AssignedBoothNumbers ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+                .Where(n => n.HasValue).Select(n => n!.Value).ToList()
+            : new List<int>();
+
         BoothTurnout = await _electionDayService.GetLiveTurnoutAsync(ConstituencyId);
+        if (isVoterManager && assignedBooths.Any())
+            BoothTurnout = BoothTurnout.Where(b => assignedBooths.Contains(b.BoothNumber)).ToList();
+
         var (total, voted, pct) = await _electionDayService.GetConstituencyTurnoutAsync(ConstituencyId);
+        if (isVoterManager && assignedBooths.Any())
+        {
+            total = BoothTurnout.Sum(b => b.TotalVoters);
+            voted = BoothTurnout.Sum(b => b.VotedCount);
+            pct   = total > 0 ? Math.Round((double)voted / total * 100, 1) : 0;
+        }
         TotalVoters = total;
         TotalVoted = voted;
         OverallPercent = pct;
-        TodayVoters = await _db.Voters
-            .Where(v => v.ConstituencyId == ConstituencyId && !v.IsDeleted)
+
+        var voterQuery = _db.Voters
+            .Where(v => v.ConstituencyId == ConstituencyId && !v.IsDeleted);
+        if (isVoterManager && assignedBooths.Any())
+            voterQuery = voterQuery.Where(v => assignedBooths.Contains(v.BoothNumber));
+
+        TodayVoters = await voterQuery
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
             .Take(500).ToListAsync();
 
         // Priority chase list: Favour voters who haven't voted yet
-        NotYetVotedFavour = await _db.Voters
+        var chaseQuery = _db.Voters
             .Where(v => v.ConstituencyId == ConstituencyId && !v.IsDeleted
                      && v.ElectionDayStatus == ElectionDayStatus.NotVoted
-                     && v.Sentiment == VoterSentiment.Favour)
+                     && v.Sentiment == VoterSentiment.Favour);
+        if (isVoterManager && assignedBooths.Any())
+            chaseQuery = chaseQuery.Where(v => assignedBooths.Contains(v.BoothNumber));
+
+        NotYetVotedFavour = await chaseQuery
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
             .Take(200).ToListAsync();
 

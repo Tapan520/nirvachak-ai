@@ -294,6 +294,7 @@ app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Nirvachak_AI.Infrastructure.Filters.VoterManagerAccessMiddleware>();
 
 app.MapRazorPages();
 app.MapControllers();

@@ -73,17 +73,17 @@ public class CreateUserModel : PageModel
             // Admin cannot create SuperAdmin or another Admin
             if (Input.Role == UserRole.SuperAdmin || Input.Role == UserRole.Admin)
             {
-                ModelState.AddModelError("", "Admins can only create CampaignManager, Candidate, FieldWorker or BoothAgent users.");
+                ModelState.AddModelError("", "Admins can only create CampaignManager, Candidate, FieldWorker, BoothAgent or VoterManager users.");
                 return Page();
             }
             Input.ConstituencyId = currentUser?.ConstituencyId;
         }
         else
         {
-            // CampaignManager can only create FieldWorker or BoothAgent
-            if (Input.Role != UserRole.FieldWorker && Input.Role != UserRole.BoothAgent)
+            // CampaignManager can only create FieldWorker, BoothAgent, or VoterManager
+            if (Input.Role != UserRole.FieldWorker && Input.Role != UserRole.BoothAgent && Input.Role != UserRole.VoterManager)
             {
-                ModelState.AddModelError("", "You can only create FieldWorker or BoothAgent users.");
+                ModelState.AddModelError("", "You can only create FieldWorker, BoothAgent or VoterManager users.");
                 return Page();
             }
             Input.ConstituencyId = currentUser?.ConstituencyId;
@@ -136,8 +136,8 @@ public class CreateUserModel : PageModel
         UserRole[] allowedRoles = isSuperAdmin
             ? Enum.GetValues<UserRole>()                                                               // SuperAdmin: all roles
             : isAdmin
-                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent } // Admin: no Admin/SuperAdmin
-                : new[] { UserRole.FieldWorker, UserRole.BoothAgent };                                 // Manager: ground level only
+                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent, UserRole.VoterManager } // Admin: no Admin/SuperAdmin
+                : new[] { UserRole.FieldWorker, UserRole.BoothAgent, UserRole.VoterManager };           // Manager: ground level only
 
         RoleItems = allowedRoles.Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() }).ToList();
     }

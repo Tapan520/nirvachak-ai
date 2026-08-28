@@ -31,4 +31,11 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="nirvachak-ai\**" />
+    <Content Remove="nirvachak-ai\**" />
+    <EmbeddedResource Remove="nirvachak-ai\**" />
+    <None Remove="nirvachak-ai\**" />
+  </ItemGroup>
+
 </Project>

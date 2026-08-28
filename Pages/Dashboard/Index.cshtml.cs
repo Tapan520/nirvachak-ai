@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +24,7 @@ public class IndexModel : PageModel
         _winProbability = winProbability;
     }
 
-    // ── Drill-down filters ───────────────────────────────────────
+    // -- Drill-down filters ---------------------------------------
     [BindProperty(SupportsGet = true)]
     public int? SelectedConstituencyId { get; set; }
 
@@ -34,19 +34,19 @@ public class IndexModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int? SelectedBoothNumber { get; set; }
 
-    // ── Role / identity ──────────────────────────────────────────
+    // -- Role / identity ------------------------------------------
     public bool IsAdmin       { get; set; }
     public bool IsFieldWorker { get; set; }  // FieldWorker or BoothAgent
     public UserRole CurrentRole { get; set; }
     public string? CurrentUserName { get; set; }
 
-    // ── Dropdown sources ─────────────────────────────────────────
+    // -- Dropdown sources -----------------------------------------
     public List<Constituency> Constituencies { get; set; } = new();
     public List<Ward>         Wards          { get; set; } = new();
     public List<Booth>        BoothOptions   { get; set; } = new();
     public string?            ActiveConstituencyName { get; set; }
 
-    // ── Full-dashboard stats (Admin/Manager/Candidate) ───────────
+    // -- Full-dashboard stats (Admin/Manager/Candidate) -----------
     public int TotalVoters        { get; set; }
     public int FavourVoters       { get; set; }
     public int TotalBooths        { get; set; }
@@ -76,7 +76,7 @@ public class IndexModel : PageModel
     public List<Booth>         BoothSummary        { get; set; } = new();
     public List<CampaignEvent> UpcomingEvents       { get; set; } = new();
 
-    // ── Field-worker focused stats ───────────────────────────────
+    // -- Field-worker focused stats -------------------------------
     public int   MyAssignedVoters    { get; set; }
     public int   MyContactedToday    { get; set; }
     public int   MyTotalContacted    { get; set; }
@@ -86,17 +86,22 @@ public class IndexModel : PageModel
     public List<DoorToDoorVisit> MyTodayVisits      { get; set; } = new();
     public List<CampaignEvent>   MyUpcomingEvents   { get; set; } = new();
 
-    // ── Win Probability (Admin/Manager/Candidate) ───────────────
+    // -- Win Probability (Admin/Manager/Candidate) ---------------
     public WinProbabilityResult? WinProbability { get; set; }
 
-    // ── Announcements (all roles) ────────────────────────────────
+    // -- Announcements (all roles) --------------------------------
     public List<AnnouncementViewModel> CriticalAlerts       { get; set; } = new();
     public List<AnnouncementViewModel> RecentAnnouncements  { get; set; } = new();
     public int UnacknowledgedCount { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
+
+        // VoterManager only has access to the Voters section � redirect them directly
+        if (user?.Role == UserRole.VoterManager)
+            return RedirectToPage("/Voters/Index");
+
         IsAdmin       = user?.Role == UserRole.SuperAdmin;
         IsFieldWorker = user?.Role is UserRole.FieldWorker or UserRole.BoothAgent;
         CurrentRole   = user?.Role ?? UserRole.FieldWorker;
@@ -123,17 +128,17 @@ public class IndexModel : PageModel
             BoothOptions = await boothQ.OrderBy(b => b.BoothNumber).ToListAsync();
         }
 
-        // ── Load announcements (all roles) ───────────────────────
+        // -- Load announcements (all roles) -----------------------
         await LoadAnnouncementsAsync(user);
 
-        // ── Field-worker view ────────────────────────────────────
+        // -- Field-worker view ------------------------------------
         if (IsFieldWorker && user != null)
         {
             await LoadFieldWorkerStatsAsync(user, cId);
-            return; // skip full-dashboard queries
+            return Page(); // skip full-dashboard queries
         }
 
-        // ── Full dashboard (Admin / Manager / Candidate) ─────────
+        // -- Full dashboard (Admin / Manager / Candidate) ---------
         IQueryable<Voter>        voters     = _db.Voters.Where(v => !v.IsDeleted);
         IQueryable<Booth>        booths     = _db.Booths;
         IQueryable<Grievance>    grievances = _db.Grievances;
@@ -224,12 +229,14 @@ public class IndexModel : PageModel
             .GroupBy(p => p.CasteCategory!).OrderByDescending(g => g.Count())
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // ── Win Probability ──────────────────────────────────────
+        // -- Win Probability --------------------------------------
         if (cId.HasValue)
             WinProbability = await _winProbability.ComputeAsync(cId.Value);
+
+        return Page();
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ------------------------------------------------------------
     private async Task LoadFieldWorkerStatsAsync(AppUser user, int? cId)
     {
         // Resolve assigned booths/ward

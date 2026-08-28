@@ -37,6 +37,12 @@ public class DetailsModel : PageModel
         if (Voter == null) return NotFound();
         if (currentUser?.Role != UserRole.SuperAdmin && Voter.ConstituencyId != currentUser?.ConstituencyId)
             return Forbid();
+        if (currentUser?.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(currentUser.AssignedBoothNumbers);
+            if (assignedBooths.Any() && !assignedBooths.Contains(Voter.BoothNumber))
+                return Forbid();
+        }
         Visits = await _db.DoorToDoorVisits
             .Where(v => v.VoterId == id)
             .OrderByDescending(v => v.VisitedAt)
@@ -64,7 +70,13 @@ public class DetailsModel : PageModel
     }
 
     private bool IsRestrictedRole(AppUser? user)
-        => user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent;
+        => user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent || user?.Role == UserRole.VoterManager;
+
+    private static List<int> ParseAssignedBooths(string? assignedBoothNumbers) =>
+        (assignedBoothNumbers ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+            .Where(n => n.HasValue).Select(n => n!.Value).ToList();
 
     public async Task<IActionResult> OnPostUpdateSentimentAsync(int id, VoterSentiment sentiment)
     {
@@ -76,6 +88,12 @@ public class DetailsModel : PageModel
         {
             if (currentUser.Role != UserRole.SuperAdmin && voter.ConstituencyId != currentUser.ConstituencyId)
                 return Forbid();
+            if (currentUser.Role == UserRole.VoterManager)
+            {
+                var assignedBooths = ParseAssignedBooths(currentUser.AssignedBoothNumbers);
+                if (assignedBooths.Any() && !assignedBooths.Contains(voter.BoothNumber))
+                    return Forbid();
+            }
             var previous = voter.Sentiment;
             voter.Sentiment = sentiment;
             _audit.Track(
@@ -97,6 +115,12 @@ public class DetailsModel : PageModel
         {
             if (user.Role != UserRole.SuperAdmin && voter.ConstituencyId != user.ConstituencyId)
                 return Forbid();
+            if (user.Role == UserRole.VoterManager)
+            {
+                var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+                if (assignedBooths.Any() && !assignedBooths.Contains(voter.BoothNumber))
+                    return Forbid();
+            }
             var visit = new DoorToDoorVisit
             {
                 VoterId = id,

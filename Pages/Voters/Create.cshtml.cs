@@ -10,7 +10,7 @@ using Nirvachak_AI.Infrastructure.Services;
 
 namespace Nirvachak_AI.Pages.Voters;
 
-[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate,FieldWorker,BoothAgent")]
+[Authorize(Roles = "Admin,SuperAdmin,CampaignManager,Candidate,FieldWorker,BoothAgent,VoterManager")]
 public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -42,7 +42,7 @@ public class CreateModel : PageModel
         if (user == null) return Forbid();
 
         IsAdmin = user.Role == UserRole.SuperAdmin;
-        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent;
+        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent || user.Role == UserRole.VoterManager;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
@@ -56,7 +56,7 @@ public class CreateModel : PageModel
         if (user == null) return Forbid();
 
         IsAdmin = user.Role == UserRole.SuperAdmin;
-        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent;
+        IsRestrictedRole = user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent || user.Role == UserRole.VoterManager;
         if (IsAdmin)
             Constituencies = await _db.Constituencies.OrderBy(c => c.Name).ToListAsync();
 
@@ -79,7 +79,7 @@ public class CreateModel : PageModel
         if (IsAdmin && !cId.HasValue)
             ModelState.AddModelError("SelectedConstituencyId", "Constituency is required.");
 
-        // Restricted roles can only add voters to their assigned booths
+        // Restricted roles (including VoterManager) can only add voters to their assigned booths
         if (IsRestrictedRole)
         {
             var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
@@ -119,8 +119,8 @@ public class CreateModel : PageModel
 
         var boothQuery = _db.Booths.Where(b => b.ConstituencyId == cId.Value);
 
-        // Restricted roles only see their assigned booths
-        if (user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent)
+        // Restricted roles (including VoterManager) only see their assigned booths
+        if (user.Role == UserRole.FieldWorker || user.Role == UserRole.BoothAgent || user.Role == UserRole.VoterManager)
         {
             var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
             if (assignedBooths.Any())

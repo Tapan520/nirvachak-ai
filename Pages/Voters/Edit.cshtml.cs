@@ -29,6 +29,12 @@ public class EditModel : PageModel
         if (Voter == null) return NotFound();
         if (user?.Role != UserRole.SuperAdmin && Voter.ConstituencyId != user?.ConstituencyId)
             return Forbid();
+        if (user?.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any() && !assignedBooths.Contains(Voter.BoothNumber))
+                return Forbid();
+        }
         return Page();
     }
 
@@ -40,6 +46,12 @@ public class EditModel : PageModel
         if (existing == null) return NotFound();
         if (user?.Role != UserRole.SuperAdmin && existing.ConstituencyId != user?.ConstituencyId)
             return Forbid();
+        if (user?.Role == UserRole.VoterManager)
+        {
+            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
+            if (assignedBooths.Any() && !assignedBooths.Contains(existing.BoothNumber))
+                return Forbid();
+        }
 
         existing.Name = Voter.Name;
         existing.NameLocal = Voter.NameLocal;
@@ -60,4 +72,10 @@ public class EditModel : PageModel
         TempData["Message"] = "Voter updated successfully.";
         return RedirectToPage("/Voters/Details", new { id = Voter.Id });
     }
+
+    private static List<int> ParseAssignedBooths(string? assignedBoothNumbers) =>
+        (assignedBoothNumbers ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+            .Where(n => n.HasValue).Select(n => n!.Value).ToList();
 }

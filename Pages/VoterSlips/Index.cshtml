@@ -88,33 +88,65 @@
 <div class="row g-2" id="slipContainer">
     @foreach (var v in Model.Voters)
     {
+        var booth = Model.Booths.FirstOrDefault(b => b.BoothNumber == v.BoothNumber);
+        var boothAddr = booth != null && !string.IsNullOrEmpty(booth.Address)
+                        ? $"Booth {v.BoothNumber} \u2013 {booth.Address}"
+                        : $"Booth {v.BoothNumber}";
         <div class="col-4 slip-col" id="slipWrap_@v.Id">
-            <div class="voter-slip-card border rounded p-2">
+            <div class="voter-slip-card border border-dark rounded p-2">
                 <div class="d-flex gap-1 align-items-start">
                     <div class="flex-grow-1 overflow-hidden">
-                        <div class="slip-name fw-bold text-truncate" style="font-size:0.78rem">@v.Name</div>
-                        @if (!string.IsNullOrEmpty(v.NameLocal))
-                        {
-                            <div class="slip-local text-truncate" style="font-size:0.75rem">@v.NameLocal</div>
-                        }
-                        <div class="text-muted small">S/O: @(v.FatherHusbandName ?? "-")</div>
 
-                        <div class="d-flex flex-wrap gap-x-2 mt-1" style="font-size:0.72rem; column-gap:0.6rem">
-                            <span><span class="slip-label fw-semibold">EPIC:</span> <span class="font-monospace">@v.VoterId</span></span>
+                        @* Row 1: Sr | Ward No | Panna *@
+                        <div style="font-size:0.78rem; color:#111; line-height:1.35;">
+                            <span style="font-weight:700;">Sr:&nbsp;</span>@v.SerialNumber
+                            &nbsp;
+                            <span style="font-weight:700;">Ward No:</span>@(v.WardNumber ?? "-")
+                            &nbsp;
+                            <span style="font-weight:700;">Panna:&nbsp;</span>@(v.PannaNumber ?? "-")
                         </div>
-                        <div class="d-flex flex-wrap gap-x-2" style="font-size:0.72rem; column-gap:0.6rem">
-                            <span><span class="slip-label fw-semibold">Booth:</span> @v.BoothNumber</span>
-                            <span><span class="slip-label fw-semibold">Sr:</span> @v.SerialNumber</span>
-                            <span><span class="slip-label fw-semibold">Ward:</span> @(v.WardNumber ?? "-")</span>
-                            <span><span class="slip-label fw-semibold">Panna:</span> @(v.PannaNumber ?? "-")</span>
+
+                        @* Row 2: EPIC | Age | Gender *@
+                        <div style="font-size:0.78rem; color:#111; line-height:1.35;">
+                            <span style="font-weight:700;">EPIC:&nbsp;</span><span class="font-monospace">@v.VoterId</span>
+                            &nbsp;
+                            <span style="font-weight:700;">Age:&nbsp;</span>@(v.Age > 0 ? v.Age.ToString() : "-") @(v.Gender ?? "-")
                         </div>
-                        <div class="slip-address text-muted text-truncate" style="font-size:0.65rem; margin-top:2px">@v.Address</div>
+
+                        @* Row 3: Name *@
+                        <div style="font-size:0.80rem; color:#000; line-height:1.35;">
+                            <span style="font-weight:700;">Name:&nbsp;</span>
+                            @v.Name
+                            @if (!string.IsNullOrEmpty(v.NameLocal))
+                            {
+                                <span> (@v.NameLocal)</span>
+                            }
+                        </div>
+
+                        @* Row 4: S/O or W/O *@
+                        <div style="font-size:0.78rem; color:#111; line-height:1.35;">
+                            <span style="font-weight:700;">@(v.Gender == "F" ? "W/O" : "S/O"):&nbsp;</span> @(v.FatherHusbandName ?? "-")
+                        </div>
+
+                        @* Row 5: Voter Address *@
+                        <div style="font-size:0.76rem; color:#111; line-height:1.35;">
+                            <span style="font-weight:700;">Address:&nbsp;</span> @(v.Address ?? "-")
+                        </div>
+
+                        @* Thick separator between Voter Address and Booth Address *@
+                        <hr style="border:none; border-top:2.5px solid #000; margin:3px 0;" />
+
+                        @* Row 6: Booth Address *@
+                        <div style="font-size:0.76rem; color:#111; line-height:1.35;">
+                            <span style="font-weight:700;">Booth Address:&nbsp;</span> @boothAddr
+                        </div>
+
                     </div>
                     @if (!string.IsNullOrEmpty(Model.GetQrCode(v.Id)))
                     {
                         <img src="data:image/png;base64,@Model.GetQrCode(v.Id)"
                              width="44" height="44" alt="QR"
-                             style="flex-shrink:0; border:1px solid #dee2e6; border-radius:3px" />
+                             style="flex-shrink:0; border:1px solid #333; border-radius:3px" />
                     }
                 </div>
             </div>
@@ -137,6 +169,18 @@
             max-width: 33.333% !important;
             flex: 0 0 33.333% !important;
         }
+        .voter-slip-card {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: #000 !important;
+            border-color: #000 !important;
+        }
+        .voter-slip-card * {
+            color: #000 !important;
+        }
+        .voter-slip-card .slip-label {
+            font-weight: 700 !important;
+        }
     }
 </style>
 
@@ -154,7 +198,8 @@
              + '    max-width: ' + w + ' !important;\n'
              + '    flex: 0 0 '  + w + ' !important;\n'
              + '  }\n'
-             + '  .voter-slip-card { font-size: ' + f + ' !important; }\n'
+             + '  .voter-slip-card { font-size: ' + f + ' !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; border-color: #000 !important; }\n'
+             + '  .voter-slip-card * { color: #000 !important; }\n'
              + '}';
     }
 

@@ -71,7 +71,8 @@ public class IndexModel : PageModel
     {
         var user = await _userManager.GetUserAsync(User);
         var isAdmin = user?.Role == UserRole.SuperAdmin;
-        var isRestricted = user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent;
+        var isRestricted = user?.Role == UserRole.FieldWorker || user?.Role == UserRole.BoothAgent
+                        || user?.Role == UserRole.VoterManager;
 
         if (isAdmin)
         {

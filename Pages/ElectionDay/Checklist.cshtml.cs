@@ -44,9 +44,19 @@ public class ChecklistModel : PageModel
 
         if (ConstituencyId == 0) return;
 
-        Booths = await _db.Booths
-            .Where(b => b.ConstituencyId == ConstituencyId)
-            .OrderBy(b => b.BoothNumber).ToListAsync();
+        // VoterManager: restrict to assigned booths only
+        var isVoterManager = user?.Role == UserRole.VoterManager;
+        var assignedBooths = isVoterManager
+            ? (user?.AssignedBoothNumbers ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+                .Where(n => n.HasValue).Select(n => n!.Value).ToList()
+            : new List<int>();
+
+        var boothQuery = _db.Booths.Where(b => b.ConstituencyId == ConstituencyId);
+        if (isVoterManager && assignedBooths.Any())
+            boothQuery = boothQuery.Where(b => assignedBooths.Contains(b.BoothNumber));
+        Booths = await boothQuery.OrderBy(b => b.BoothNumber).ToListAsync();
 
         var lists = await _db.BoothChecklists
             .Where(c => c.ConstituencyId == ConstituencyId)

@@ -91,8 +91,8 @@ public class EditUserModel : PageModel
 
             if (!isAdmin)
             {
-                // CampaignManager: only FieldWorker/BoothAgent in own constituency
-                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
+                // CampaignManager: only FieldWorker/BoothAgent/VoterManager in own constituency
+                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent && targetUser.Role != UserRole.VoterManager)
                     return Forbid();
                 if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
                     return Forbid();
@@ -139,7 +139,7 @@ public class EditUserModel : PageModel
 
             if (!isAdmin)
             {
-                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent)
+                if (targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent && targetUser.Role != UserRole.VoterManager)
                     return Forbid();
                 if (targetUser.ConstituencyId != currentUser?.ConstituencyId)
                     return Forbid();
@@ -282,8 +282,8 @@ public class EditUserModel : PageModel
         UserRole[] allowedRoles = isSuperAdmin
             ? Enum.GetValues<UserRole>()
             : isAdmin
-                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent }
-                : new[] { UserRole.FieldWorker, UserRole.BoothAgent };
+                ? new[] { UserRole.CampaignManager, UserRole.Candidate, UserRole.FieldWorker, UserRole.BoothAgent, UserRole.VoterManager }
+                : new[] { UserRole.FieldWorker, UserRole.BoothAgent, UserRole.VoterManager };
 
         RoleItems = allowedRoles
             .Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() })

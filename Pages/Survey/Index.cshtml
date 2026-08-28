@@ -56,7 +56,7 @@
             </div>
         }
 
-        @* Step 1: EPIC Lookup - also auto-submits when ?epic= param is present *@
+        @* Step 1: EPIC Lookup *@
         @if (Model.Step == "lookup" || Model.Step == "prelookup")
         {
             <div class="card shadow-sm border-0">
@@ -88,6 +88,122 @@
             {
                 <script>document.addEventListener('DOMContentLoaded',()=>document.getElementById('epicForm').submit());</script>
             }
+        }
+
+        @* ── Not registered? Offer self-registration ───────────── *@
+        @if (Model.Step == "register")
+        {
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-person-x-fill text-warning mb-2" style="font-size:2.5rem"></i>
+                    <h5 class="fw-bold">Voter ID Not Found</h5>
+                    <p class="text-muted small mb-3">
+                        <strong>@Model.RegEpic</strong> was not found in our voter database.<br />
+                        You can still participate by registering below — your details will be saved for future use.
+                    </p>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#regForm">
+                        <i class="bi bi-person-plus-fill me-2"></i>Register &amp; Complete Survey
+                    </button>
+                    <a asp-page="/Survey/Index" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-arrow-left me-1"></i>Try Again
+                    </a>
+                </div>
+            </div>
+
+            <div class="collapse show" id="regForm">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header py-3" style="background:#2f9e44; color:#fff; border-radius: calc(0.375rem - 1px) calc(0.375rem - 1px) 0 0;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-plus-fill fs-5"></i>
+                            <div>
+                                <span class="badge bg-white text-success step-pill me-2">New Registration</span>
+                                <strong>Register &amp; Take Survey</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" asp-page-handler="Register" id="regFormEl">
+                            <input type="hidden" asp-for="RegEpic" />
+
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger small py-2 mb-3">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                    { <div>@e.ErrorMessage</div> }
+                                </div>
+                            }
+
+                            @* ── Location (Constituency → Ward → Booth) ─────── *@
+                            <p class="section-title"><i class="bi bi-geo-alt-fill me-2"></i>Your Polling Location</p>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold small">Constituency *</label>
+                                    <select asp-for="RegConstituencyId" class="form-select" id="regConstituency" required onchange="loadWards(this.value)">
+                                        <option value="0">– Select Constituency –</option>
+                                        @foreach (var c in Model.Constituencies)
+                                        { <option value="@c.Id">@c.Name</option> }
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold small">Ward *</label>
+                                    <select asp-for="RegWardNumber" class="form-select" id="regWard" required onchange="loadBooths()">
+                                        <option value="">– Select Ward –</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold small">Booth *</label>
+                                    <select asp-for="RegBoothNumber" class="form-select" id="regBooth" required>
+                                        <option value="0">– Select Booth –</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            @* ── Personal Details ──────────────────────────── *@
+                            <p class="section-title"><i class="bi bi-person-lines-fill me-2"></i>Personal Details</p>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Full Name *</label>
+                                    <input asp-for="RegName" class="form-control" placeholder="Your full name" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Father / Husband Name</label>
+                                    <input asp-for="RegFatherHusband" class="form-control" placeholder="Optional" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold small">Age *</label>
+                                    <input asp-for="RegAge" type="number" min="18" max="120" class="form-control" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold small">Gender *</label>
+                                    <select asp-for="RegGender" class="form-select" required>
+                                        <option value="">– Select –</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Mobile Number</label>
+                                    <input asp-for="RegMobile" type="tel" class="form-control" placeholder="10-digit mobile" maxlength="10" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold small">Address</label>
+                                    <input asp-for="RegAddress" class="form-control" placeholder="Your residential address" />
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Save &amp; Continue to Survey
+                            </button>
+                            <p class="text-muted text-center small mt-2 mb-0">
+                                <i class="bi bi-lock-fill me-1"></i>
+                                Your details are saved securely and linked to the selected booth.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
         }
 
         @* ?? Step 2: Profile + Consent Form ?????????????????????? *@
@@ -342,7 +458,48 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Enforce max 3 concern checkbox selections
+        // ── Cascading Ward / Booth dropdowns ─────────────────────
+        async function loadWards(constituencyId) {
+            const wardSel  = document.getElementById('regWard');
+            const boothSel = document.getElementById('regBooth');
+            wardSel.innerHTML  = '<option value="">– Loading... –</option>';
+            boothSel.innerHTML = '<option value="0">– Select Booth –</option>';
+            if (!constituencyId || constituencyId === '0') {
+                wardSel.innerHTML = '<option value="">– Select Ward –</option>';
+                return;
+            }
+            const res   = await fetch(`/Survey?handler=Wards&constituencyId=${constituencyId}`);
+            const wards = await res.json();
+            wardSel.innerHTML = '<option value="">– Select Ward –</option>';
+            wards.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value       = w.wardNumber;
+                opt.textContent = `Ward ${w.wardNumber} – ${w.wardName}`;
+                wardSel.appendChild(opt);
+            });
+        }
+
+        async function loadBooths() {
+            const constituencyId = document.getElementById('regConstituency')?.value;
+            const wardNumber     = document.getElementById('regWard')?.value;
+            const boothSel       = document.getElementById('regBooth');
+            boothSel.innerHTML   = '<option value="0">– Loading... –</option>';
+            if (!constituencyId || !wardNumber) {
+                boothSel.innerHTML = '<option value="0">– Select Booth –</option>';
+                return;
+            }
+            const res    = await fetch(`/Survey?handler=Booths&constituencyId=${constituencyId}&wardNumber=${encodeURIComponent(wardNumber)}`);
+            const booths = await res.json();
+            boothSel.innerHTML = '<option value="0">– Select Booth –</option>';
+            booths.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value       = b.boothNumber;
+                opt.textContent = `Booth ${b.boothNumber} – ${b.boothName}`;
+                boothSel.appendChild(opt);
+            });
+        }
+
+        // ── Concern chips max-3 ───────────────────────────────────
         document.querySelectorAll('#concernChips input[type=checkbox]').forEach(cb => {
             cb.addEventListener('change', () => {
                 const checked = document.querySelectorAll('#concernChips input[type=checkbox]:checked');
@@ -350,11 +507,11 @@
             });
         });
 
-        // Consent gate: submit button unlocks ONLY when mandatory third-party consent is checked
-        const mandatoryCb   = document.getElementById('consentThirdParty');
-        const submitBtn     = document.getElementById('submitBtn');
-        const mandatoryErr  = document.getElementById('consentMandatoryError');
-        const consentCard   = document.getElementById('consentCard');
+        // ── Consent gate ──────────────────────────────────────────
+        const mandatoryCb  = document.getElementById('consentThirdParty');
+        const submitBtn    = document.getElementById('submitBtn');
+        const mandatoryErr = document.getElementById('consentMandatoryError');
+        const consentCard  = document.getElementById('consentCard');
 
         function updateSubmitState() {
             const accepted = mandatoryCb && mandatoryCb.checked;
@@ -366,8 +523,6 @@
         }
 
         if (mandatoryCb) mandatoryCb.addEventListener('change', updateSubmitState);
-
-        // Run on load - re-apply state after server-side validation round-trip
         updateSubmitState();
     </script>
 </body>

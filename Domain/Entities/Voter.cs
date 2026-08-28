@@ -25,6 +25,7 @@ public class Voter
     public string? PhotoPath { get; set; }
     public string? HouseholdId { get; set; }
     public bool IsDeleted { get; set; } = false;
+    public bool IsSelfRegistered { get; set; } = false;
     public DateTime ImportedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastContactedAt { get; set; }
     public ICollection<DoorToDoorVisit> Visits { get; set; } = new List<DoorToDoorVisit>();

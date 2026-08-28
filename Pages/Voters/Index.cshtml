@@ -237,6 +237,10 @@
                             {
                                 <div class="text-muted" style="font-size:0.75rem">S/O @v.FatherHusbandName</div>
                             }
+                            @if (v.IsSelfRegistered)
+                            {
+                                <span class="badge bg-warning text-dark" style="font-size:0.65rem">Self-Reg</span>
+                            }
                         </td>
                         <td>@v.Age / @v.Gender</td>
                         <td><span class="badge bg-secondary">@v.BoothNumber</span></td>

@@ -1,0 +1,189 @@
+@page
+@model Nirvachak_AI.Pages.Admin.CandidatesParties.IndexModel
+@{
+    ViewData["Title"] = "Candidates & Parties";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Candidates &amp; Parties</h4>
+</div>
+
+@if (TempData["Message"] is string msg)
+{
+    <div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>@msg</div>
+}
+
+@* Constituency filter (SuperAdmin only) *@
+@if (Model.IsAdmin)
+{
+    <form method="get" class="d-flex gap-2 align-items-end mb-3">
+        <div>
+            <label class="form-label form-label-sm fw-semibold mb-1">Constituency</label>
+            <select asp-for="ConstituencyFilter" class="form-select form-select-sm" style="min-width:200px" onchange="this.form.submit()">
+                <option value="">All Constituencies</option>
+                @foreach (var c in Model.Constituencies)
+                { <option value="@c.Id">@c.Name</option> }
+            </select>
+        </div>
+    </form>
+}
+
+<div class="row g-4">
+    @* ?? Candidates ??????????????????????????????????????????? *@
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white py-2 d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-person-fill me-2"></i>Candidates</span>
+                <span class="badge bg-white text-primary">@Model.Candidates.Count</span>
+            </div>
+            <div class="card-body p-3">
+                @* Add Candidate *@
+                <form method="post" asp-page-handler="AddCandidate" class="mb-3 border rounded p-3 bg-light">
+                    <p class="fw-semibold small mb-2 text-primary">Add New Candidate</p>
+                    @if (Model.IsAdmin)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label form-label-sm">Constituency</label>
+                            <select asp-for="CandidateConstituencyId" class="form-select form-select-sm" required>
+                                <option value="">- Select -</option>
+                                @foreach (var c in Model.Constituencies)
+                                { <option value="@c.Id">@c.Name</option> }
+                            </select>
+                        </div>
+                    }
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Candidate Name *</label>
+                        <input asp-for="CandidateName" class="form-control form-control-sm" placeholder="e.g. Ramesh Sharma" required />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Party Affiliation</label>
+                        <input asp-for="CandidatePartyAffiliation" class="form-control form-control-sm" placeholder="e.g. BJP, INC, Independent" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Notes</label>
+                        <input asp-for="CandidateNotes" class="form-control form-control-sm" placeholder="Optional" />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i>Add Candidate
+                    </button>
+                </form>
+
+                @* Candidate list *@
+                @if (!Model.Candidates.Any())
+                {
+                    <p class="text-muted text-center small py-3"><i class="bi bi-inbox d-block fs-3 mb-1"></i>No candidates yet.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var c in Model.Candidates)
+                        {
+                            <div class="list-group-item px-2 py-2 d-flex align-items-center justify-content-between gap-2">
+                                <div>
+                                    <span class="fw-semibold small">@c.Name</span>
+                                    @if (!string.IsNullOrEmpty(c.PartyAffiliation))
+                                    { <span class="badge bg-secondary ms-1 small">@c.PartyAffiliation</span> }
+                                    @if (!string.IsNullOrEmpty(c.Notes))
+                                    { <div class="text-muted" style="font-size:0.72rem">@c.Notes</div> }
+                                    @if (Model.IsAdmin)
+                                    { <div class="text-muted" style="font-size:0.7rem">@c.Constituency?.Name</div> }
+                                </div>
+                                <div class="d-flex gap-1 flex-shrink-0">
+                                    <form method="post" asp-page-handler="ToggleCandidate">
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button class="btn btn-sm @(c.IsActive ? "btn-success" : "btn-outline-secondary")" title="@(c.IsActive ? "Active – click to deactivate" : "Inactive – click to activate")">
+                                            <i class="bi @(c.IsActive ? "bi-eye-fill" : "bi-eye-slash")"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" asp-page-handler="DeleteCandidate" onsubmit="return confirm('Delete candidate @c.Name?')">
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ?? Parties ??????????????????????????????????????????????? *@
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white py-2 d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-flag-fill me-2"></i>Parties</span>
+                <span class="badge bg-white text-success">@Model.Parties.Count</span>
+            </div>
+            <div class="card-body p-3">
+                @* Add Party *@
+                <form method="post" asp-page-handler="AddParty" class="mb-3 border rounded p-3 bg-light">
+                    <p class="fw-semibold small mb-2 text-success">Add New Party</p>
+                    @if (Model.IsAdmin)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label form-label-sm">Constituency</label>
+                            <select asp-for="PartyConstituencyId" class="form-select form-select-sm" required>
+                                <option value="">- Select -</option>
+                                @foreach (var c in Model.Constituencies)
+                                { <option value="@c.Id">@c.Name</option> }
+                            </select>
+                        </div>
+                    }
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Party Name *</label>
+                        <input asp-for="PartyName" class="form-control form-control-sm" placeholder="e.g. Bharatiya Janata Party" required />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Symbol / Abbreviation</label>
+                        <input asp-for="PartySymbol" class="form-control form-control-sm" placeholder="e.g. BJP, INC, AAP" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label form-label-sm">Notes</label>
+                        <input asp-for="PartyNotes" class="form-control form-control-sm" placeholder="Optional" />
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i>Add Party
+                    </button>
+                </form>
+
+                @* Party list *@
+                @if (!Model.Parties.Any())
+                {
+                    <p class="text-muted text-center small py-3"><i class="bi bi-inbox d-block fs-3 mb-1"></i>No parties yet.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var p in Model.Parties)
+                        {
+                            <div class="list-group-item px-2 py-2 d-flex align-items-center justify-content-between gap-2">
+                                <div>
+                                    <span class="fw-semibold small">@p.Name</span>
+                                    @if (!string.IsNullOrEmpty(p.Symbol))
+                                    { <span class="badge bg-success ms-1 small">@p.Symbol</span> }
+                                    @if (!string.IsNullOrEmpty(p.Notes))
+                                    { <div class="text-muted" style="font-size:0.72rem">@p.Notes</div> }
+                                    @if (Model.IsAdmin)
+                                    { <div class="text-muted" style="font-size:0.7rem">@p.Constituency?.Name</div> }
+                                </div>
+                                <div class="d-flex gap-1 flex-shrink-0">
+                                    <form method="post" asp-page-handler="ToggleParty">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <button class="btn btn-sm @(p.IsActive ? "btn-success" : "btn-outline-secondary")" title="@(p.IsActive ? "Active" : "Inactive")">
+                                            <i class="bi @(p.IsActive ? "bi-eye-fill" : "bi-eye-slash")"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" asp-page-handler="DeleteParty" onsubmit="return confirm('Delete party @p.Name?')">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

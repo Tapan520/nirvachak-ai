@@ -41,6 +41,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<RewardConfig> RewardConfigs => Set<RewardConfig>();
     public DbSet<CouponPool> CouponPools => Set<CouponPool>();
     public DbSet<SurveyCompletion> SurveyCompletions => Set<SurveyCompletion>();
+    public DbSet<SurveyCandidate> SurveyCandidates => Set<SurveyCandidate>();
+    public DbSet<SurveyParty> SurveyParties => Set<SurveyParty>();
 
     // ── Election Enhancement Modules ─────────────────────────────
     public DbSet<PannaPramukh> PannaPramukhs => Set<PannaPramukh>();
@@ -100,6 +102,30 @@ public class AppDbContext : IdentityDbContext<AppUser>
         // ── Voter Self-Survey Module ──────────────────────────────
         builder.Entity<VoterProfile>()
             .HasIndex(v => v.VoterId).IsUnique();
+
+        builder.Entity<SurveyCandidate>()
+            .HasOne(c => c.Constituency)
+            .WithMany()
+            .HasForeignKey(c => c.ConstituencyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SurveyParty>()
+            .HasOne(p => p.Constituency)
+            .WithMany()
+            .HasForeignKey(p => p.ConstituencyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<VoterProfile>()
+            .HasOne(v => v.PreferredCandidate)
+            .WithMany()
+            .HasForeignKey(v => v.PreferredCandidateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<VoterProfile>()
+            .HasOne(v => v.PreferredParty)
+            .WithMany()
+            .HasForeignKey(v => v.PreferredPartyId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<VoterConsent>()
             .HasIndex(v => v.VoterId).IsUnique();

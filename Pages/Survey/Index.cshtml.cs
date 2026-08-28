@@ -46,6 +46,12 @@ public class IndexModel : PageModel
     [BindProperty] public bool ConsentSchemeNotifications { get; set; }
     [BindProperty] public bool ConsentAnalytics { get; set; }
 
+    // ?? Candidate & Party Preference ?????????????????????????????????????
+    [BindProperty] public int? PreferredCandidateId { get; set; }
+    [BindProperty] public int? PreferredPartyId { get; set; }
+    public List<SurveyCandidate> Candidates { get; set; } = new();
+    public List<SurveyParty> Parties { get; set; } = new();
+
     // ?? Static option lists ???????????????????????????????????????
     public static readonly string[] AgeBrackets     = { "18–25", "26–35", "36–50", "51–65", "65+" };
     public static readonly string[] CasteCategories = { "General", "OBC", "SC", "ST", "NT" };
@@ -132,6 +138,15 @@ public class IndexModel : PageModel
         FoundVoter = voter;
         VoterDbId  = voter.Id;
         Step       = "form";
+
+        // Load active candidates & parties for this constituency
+        Candidates = await _db.SurveyCandidates
+            .Where(c => c.ConstituencyId == voter.ConstituencyId && c.IsActive)
+            .OrderBy(c => c.Name).ToListAsync();
+        Parties = await _db.SurveyParties
+            .Where(p => p.ConstituencyId == voter.ConstituencyId && p.IsActive)
+            .OrderBy(p => p.Name).ToListAsync();
+
         return Page();
     }
 
@@ -151,6 +166,12 @@ public class IndexModel : PageModel
         if (!ConsentThirdPartyAdvertising)
         {
             FoundVoter = voter;
+            Candidates = await _db.SurveyCandidates
+                .Where(c => c.ConstituencyId == voter.ConstituencyId && c.IsActive)
+                .OrderBy(c => c.Name).ToListAsync();
+            Parties = await _db.SurveyParties
+                .Where(p => p.ConstituencyId == voter.ConstituencyId && p.IsActive)
+                .OrderBy(p => p.Name).ToListAsync();
             ModelState.AddModelError("ConsentRequired",
                 "You must accept the Third-Party Data & Advertisement consent to claim your reward coupon.");
             Step = "form";
@@ -178,6 +199,8 @@ public class IndexModel : PageModel
         profile.PreferredLanguage    = PreferredLanguage;
         profile.CompletedAt          = DateTime.UtcNow;
         profile.IpAddress            = ip;
+        profile.PreferredCandidateId = PreferredCandidateId;
+        profile.PreferredPartyId     = PreferredPartyId;
 
         // ?? Upsert VoterConsent ???????????????????????????????????
         var consent = await _db.VoterConsents.FirstOrDefaultAsync(c => c.VoterId == voter.Id);

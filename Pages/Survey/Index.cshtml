@@ -162,7 +162,7 @@
                                     { <option value="@o" selected="@(Model.MonthlyIncomeBracket == o)">@o</option> }
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                        <div class="col-md-6">
                                 <label class="form-label fw-semibold small">Preferred Language</label>
                                 <select asp-for="PreferredLanguage" class="form-select">
                                     <option value="">- Select -</option>
@@ -171,6 +171,52 @@
                                 </select>
                             </div>
                         </div>
+
+                        @* ── Candidate & Party Preference ───────────────────────── *@
+                        @if (Model.Candidates.Any() || Model.Parties.Any())
+                        {
+                            <p class="section-title mt-2">
+                                <i class="bi bi-ballot me-2"></i>Your Preference
+                            </p>
+                            <div class="row g-3 mb-4">
+                                @if (Model.Candidates.Any())
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">
+                                            Preferred Candidate
+                                            <span class="text-muted fw-normal">(Optional)</span>
+                                        </label>
+                                        <select asp-for="PreferredCandidateId" class="form-select">
+                                            <option value="">- No preference -</option>
+                                            @foreach (var c in Model.Candidates)
+                                            {
+                                                <option value="@c.Id" selected="@(Model.PreferredCandidateId == c.Id)">
+                                                    @c.Name@(!string.IsNullOrEmpty(c.PartyAffiliation) ? $" ({c.PartyAffiliation})" : "")
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                }
+                                @if (Model.Parties.Any())
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">
+                                            Preferred Party
+                                            <span class="text-muted fw-normal">(Optional)</span>
+                                        </label>
+                                        <select asp-for="PreferredPartyId" class="form-select">
+                                            <option value="">- No preference -</option>
+                                            @foreach (var p in Model.Parties)
+                                            {
+                                                <option value="@p.Id" selected="@(Model.PreferredPartyId == p.Id)">
+                                                    @p.Name@(!string.IsNullOrEmpty(p.Symbol) ? $" ({p.Symbol})" : "")
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                }
+                            </div>
+                        }
 
                         <p class="section-title">
                             <i class="bi bi-exclamation-triangle me-2"></i>

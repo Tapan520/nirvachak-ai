@@ -66,7 +66,7 @@
                 @{
                     bool votersOpen      = currentPage.StartsWith("/Voters") || currentPage == "/VoterSlips/Index";
                         bool campaignOpen    = currentPage.StartsWith("/PhoneBanking") || currentPage.StartsWith("/Influencers") || currentPage.StartsWith("/Competitor") || currentPage.StartsWith("/Campaign") || currentPage.StartsWith("/Volunteers") || currentPage.StartsWith("/Leaderboard");
-                        bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/SwingVoters") || currentPage.StartsWith("/BoothHeatMap") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/Reports");
+                    bool operationsOpen  = currentPage.StartsWith("/Announcements") || currentPage.StartsWith("/ElectionDay") || currentPage.StartsWith("/Analytics") || currentPage.StartsWith("/Predictions") || currentPage.StartsWith("/WinProbability") || currentPage.StartsWith("/SwingVoters") || currentPage.StartsWith("/BoothHeatMap") || currentPage.StartsWith("/Grievances") || currentPage.StartsWith("/Expenses") || currentPage.StartsWith("/Surveys") || currentPage.StartsWith("/Transport") || currentPage.StartsWith("/Reports");
                     bool electionOpsOpen = currentPage.StartsWith("/PannaPramukh") || currentPage.StartsWith("/BoothShifts") || currentPage.StartsWith("/RapidResponse") || currentPage.StartsWith("/Broadcast") || currentPage.StartsWith("/Budget") || currentPage.StartsWith("/Results") || currentPage.StartsWith("/FieldReports");
                     bool managementOpen  = currentPage.StartsWith("/Admin") || currentPage.StartsWith("/Booths");
                 }
@@ -256,6 +256,14 @@
                         @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
                         {
                         <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage == "/Analytics/PreferenceAnalytics" ? "active" : "")" asp-page="/Analytics/PreferenceAnalytics">
+                                <i class="bi bi-bar-chart-steps me-2 text-warning"></i> Preference Analytics
+                            </a>
+                        </li>
+                        }
+                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        {
+                        <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Transport") ? "active" : "")" asp-page="/Transport/Index">
                                 <i class="bi bi-truck me-2"></i> Voter Transport
                             </a>
@@ -374,6 +382,11 @@
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Rewards/Index">
                                 <i class="bi bi-gift-fill me-2"></i> Rewards
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/CandidatesParties") ? "active" : "")" asp-page="/Admin/CandidatesParties/Index">
+                                <i class="bi bi-person-badge me-2 text-primary"></i> Candidates &amp; Parties
                             </a>
                         </li>
                         <li class="nav-item">

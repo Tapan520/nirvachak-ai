@@ -1,0 +1,35 @@
+@model List<Nirvachak_AI.Pages.Analytics.DemographicPreferenceRow>
+@{
+    var allCandidates = Model.SelectMany(r => r.Counts).GroupBy(c => c.CandidateId)
+        .Select(g => g.First()).OrderByDescending(c => Model.Sum(r => r.Counts.FirstOrDefault(x => x.CandidateId == c.CandidateId)?.Count ?? 0)).ToList();
+}
+<div class="table-responsive">
+    <table class="table table-sm table-bordered mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Group</th>
+                <th>Total</th>
+                @foreach (var c in allCandidates)
+                { <th class="text-center">@c.CandidateName</th> }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@row.Group</td>
+                    <td>@row.Total</td>
+                    @foreach (var c in allCandidates)
+                    {
+                        var cnt = row.Counts.FirstOrDefault(x => x.CandidateId == c.CandidateId)?.Count ?? 0;
+                        var pct = row.Total > 0 ? cnt * 100.0 / row.Total : 0;
+                        var isTop = row.Counts.FirstOrDefault()?.CandidateId == c.CandidateId && cnt > 0;
+                        <td class="text-center @(isTop ? "table-primary fw-bold" : "")">
+                            @cnt <span class="text-muted small">(@pct.ToString("F0")%)</span>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

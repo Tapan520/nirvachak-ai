@@ -1,0 +1,253 @@
+@page
+@model Nirvachak_AI.Pages.Analytics.PreferenceAnalyticsModel
+@{
+    ViewData["Title"] = "Preference Analytics";
+    var candLabels = Model.CandidateRows.Select(r => $"\"{r.Name}\"").ToList();
+    var candData   = Model.CandidateRows.Select(r => r.Count).ToList();
+    var partyLabels = Model.PartyRows.Select(r => $"\"{r.Name}\"").ToList();
+    var partyData   = Model.PartyRows.Select(r => r.Count).ToList();
+    var chartColors = new[] { "#3b5bdb","#f03e3e","#2f9e44","#f59f00","#ae3ec9","#1098ad","#d6336c","#e67700","#5c940d","#862e9c" };
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0"><i class="bi bi-bar-chart-steps me-2 text-primary"></i>Preference Analytics</h4>
+    <a asp-page="/Analytics/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back to Analytics
+    </a>
+</div>
+
+@* Constituency filter (SuperAdmin) *@
+@if (Model.IsAdmin)
+{
+    <form method="get" class="d-flex gap-2 align-items-end mb-3">
+        <div>
+            <label class="form-label form-label-sm fw-semibold mb-1">Constituency</label>
+            <select asp-for="SelectedConstituencyId" class="form-select form-select-sm" style="min-width:220px" onchange="this.form.submit()">
+                <option value="">– Select Constituency –</option>
+                @foreach (var c in Model.Constituencies)
+                { <option value="@c.Id">@c.Name</option> }
+            </select>
+        </div>
+    </form>
+}
+
+@if (Model.TotalResponses == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No survey responses found.
+        @if (!Model.IsAdmin || !Model.SelectedConstituencyId.HasValue)
+        { <span>Please select a constituency.</span> }
+        else
+        { <span>Share the survey link with voters and add candidates/parties in <a asp-page="/Admin/CandidatesParties/Index">Admin ? Candidates &amp; Parties</a>.</span> }
+    </div>
+}
+else
+{
+    <div class="alert alert-primary py-2 mb-4 d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill fs-5"></i>
+        <span>Based on <strong>@Model.TotalResponses</strong> voter survey responses.</span>
+    </div>
+
+    @* ?? Ticket Recommendation ???????????????????????????????? *@
+    @if (!string.IsNullOrEmpty(Model.TicketRecommendation))
+    {
+        <div class="card border-success mb-4 shadow-sm">
+            <div class="card-header bg-success text-white py-2">
+                <i class="bi bi-award-fill me-2"></i><strong>Ticket Recommendation</strong>
+            </div>
+            <div class="card-body py-3 d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="width:56px;height:56px;flex-shrink:0;">
+                    <i class="bi bi-person-check-fill text-success fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-5 fw-bold text-success">@Model.TicketRecommendation</div>
+                    <div class="text-muted small">@Model.TicketRecommendationReason</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        @* ?? Candidate Preference Chart ??????????????????????? *@
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-primary text-white">
+                    <i class="bi bi-person-fill me-2"></i>Candidate Preference
+                </div>
+                <div class="card-body">
+                    @if (!Model.CandidateRows.Any())
+                    {
+                        <p class="text-muted text-center py-4 small"><i class="bi bi-inbox d-block fs-2 mb-2"></i>No candidates added yet.<br /><a asp-page="/Admin/CandidatesParties/Index">Add candidates</a></p>
+                    }
+                    else
+                    {
+                        <canvas id="candChart" height="200"></canvas>
+                        <div class="mt-3">
+                            @foreach (var (row, i) in Model.CandidateRows.Select((r, i) => (r, i)))
+                            {
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="rounded" style="width:12px;height:12px;background:@chartColors[i % chartColors.Length];flex-shrink:0;"></div>
+                                    <div class="flex-grow-1 small fw-semibold">@row.Name @if (row.SubText != null) { <span class="text-muted fw-normal">(@row.SubText)</span> }</div>
+                                    <div class="small text-end" style="min-width:60px">@row.Count <span class="text-muted">(@row.Pct.ToString("F1")%)</span></div>
+                                </div>
+                                <div class="progress mb-2" style="height:6px;">
+                                    <div class="progress-bar" style="width:@row.Pct.ToString("F1")%;background:@chartColors[i % chartColors.Length]"></div>
+                                </div>
+                            }
+                            @if (Model.CandidateNoPreference > 0)
+                            {
+                                <div class="text-muted small mt-1"><i class="bi bi-dash-circle me-1"></i>No preference: @Model.CandidateNoPreference</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ?? Party Preference Chart ??????????????????????????? *@
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-success text-white">
+                    <i class="bi bi-flag-fill me-2"></i>Party Preference
+                </div>
+                <div class="card-body">
+                    @if (!Model.PartyRows.Any())
+                    {
+                        <p class="text-muted text-center py-4 small"><i class="bi bi-inbox d-block fs-2 mb-2"></i>No parties added yet.<br /><a asp-page="/Admin/CandidatesParties/Index">Add parties</a></p>
+                    }
+                    else
+                    {
+                        <canvas id="partyChart" height="200"></canvas>
+                        <div class="mt-3">
+                            @foreach (var (row, i) in Model.PartyRows.Select((r, i) => (r, i)))
+                            {
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="rounded" style="width:12px;height:12px;background:@chartColors[i % chartColors.Length];flex-shrink:0;"></div>
+                                    <div class="flex-grow-1 small fw-semibold">@row.Name @if (row.SubText != null) { <span class="text-muted fw-normal">(@row.SubText)</span> }</div>
+                                    <div class="small text-end" style="min-width:60px">@row.Count <span class="text-muted">(@row.Pct.ToString("F1")%)</span></div>
+                                </div>
+                                <div class="progress mb-2" style="height:6px;">
+                                    <div class="progress-bar" style="width:@row.Pct.ToString("F1")%;background:@chartColors[i % chartColors.Length]"></div>
+                                </div>
+                            }
+                            @if (Model.PartyNoPreference > 0)
+                            {
+                                <div class="text-muted small mt-1"><i class="bi bi-dash-circle me-1"></i>No preference: @Model.PartyNoPreference</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ?? Candidate × Caste cross-tab ??????????????????????????? *@
+    @if (Model.CandidateByCaste.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-2"><i class="bi bi-table me-2 text-primary"></i>Candidate Preference by Caste</div>
+            <div class="card-body p-0">
+                @{ await Html.RenderPartialAsync("_PreferenceCrossTab", Model.CandidateByCaste); }
+            </div>
+        </div>
+    }
+
+    @* ?? Candidate × Religion cross-tab ???????????????????????? *@
+    @if (Model.CandidateByReligion.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-2"><i class="bi bi-table me-2 text-success"></i>Candidate Preference by Religion</div>
+            <div class="card-body p-0">
+                @{ await Html.RenderPartialAsync("_PreferenceCrossTab", Model.CandidateByReligion); }
+            </div>
+        </div>
+    }
+
+    @* ?? Candidate × Age cross-tab ????????????????????????????? *@
+    @if (Model.CandidateByAge.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-2"><i class="bi bi-table me-2 text-warning"></i>Candidate Preference by Age Bracket</div>
+            <div class="card-body p-0">
+                @{ await Html.RenderPartialAsync("_PreferenceCrossTab", Model.CandidateByAge); }
+            </div>
+        </div>
+    }
+
+    @* ?? Booth-level preference ????????????????????????????????? *@
+    @if (Model.CandidateByBooth.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-2"><i class="bi bi-geo-alt-fill me-2 text-danger"></i>Booth-wise Leading Candidate</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Booth</th>
+                                <th>Responses</th>
+                                <th>Leading Candidate</th>
+                                <th>Votes</th>
+                                <th>Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.CandidateByBooth)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary">@r.BoothNumber</span></td>
+                                    <td>@r.TotalResponses</td>
+                                    <td class="fw-semibold">@r.TopCandidate</td>
+                                    <td>@r.TopCount</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height:8px;">
+                                                <div class="progress-bar bg-primary" style="width:@r.TopPct.ToString("F0")%"></div>
+                                            </div>
+                                            <span class="small">@r.TopPct.ToString("F1")%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const colors = @Html.Raw("[" + string.Join(",", chartColors.Select(c => $"\"{c}\"")) + "]");
+
+    @if (Model.CandidateRows.Any())
+    {
+        <text>
+        new Chart(document.getElementById('candChart'), {
+            type: 'doughnut',
+            data: {
+                labels: [@Html.Raw(string.Join(",", candLabels))],
+                datasets: [{ data: [@Html.Raw(string.Join(",", candData))], backgroundColor: colors }]
+            },
+            options: { plugins: { legend: { display: false } }, cutout: '60%' }
+        });
+        </text>
+    }
+    @if (Model.PartyRows.Any())
+    {
+        <text>
+        new Chart(document.getElementById('partyChart'), {
+            type: 'doughnut',
+            data: {
+                labels: [@Html.Raw(string.Join(",", partyLabels))],
+                datasets: [{ data: [@Html.Raw(string.Join(",", partyData))], backgroundColor: colors }]
+            },
+            options: { plugins: { legend: { display: false } }, cutout: '60%' }
+        });
+        </text>
+    }
+</script>
+}

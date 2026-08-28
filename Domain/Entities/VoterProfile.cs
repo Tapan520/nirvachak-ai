@@ -17,4 +17,10 @@ public class VoterProfile
     public bool PhoneVerified { get; set; } = false;   // OTP verification flag
     public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
     public string? IpAddress { get; set; }
+
+    // Candidate & Party Preference (from survey)
+    public int? PreferredCandidateId { get; set; }
+    public SurveyCandidate? PreferredCandidate { get; set; }
+    public int? PreferredPartyId { get; set; }
+    public SurveyParty? PreferredParty { get; set; }
 }

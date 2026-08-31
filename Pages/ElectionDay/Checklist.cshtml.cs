@@ -44,8 +44,8 @@ public class ChecklistModel : PageModel
 
         if (ConstituencyId == 0) return;
 
-        // VoterManager: restrict to assigned booths only
-        var isVoterManager = user?.Role == UserRole.VoterManager;
+        // VoterManager and BoothAgent: restrict to assigned booths only
+        var isVoterManager = user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent;
         var assignedBooths = isVoterManager
             ? (user?.AssignedBoothNumbers ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)

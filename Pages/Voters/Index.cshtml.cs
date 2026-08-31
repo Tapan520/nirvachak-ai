@@ -71,8 +71,8 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             query = query.Where(v => v.ConstituencyId == user.ConstituencyId);
 
-        // VoterManager is restricted to their assigned booths only
-        if (user?.Role == UserRole.VoterManager)
+        // VoterManager and BoothAgent are restricted to their assigned booths only
+        if (user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent)
         {
             var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
             if (assignedBooths.Any())
@@ -120,7 +120,7 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             allVoters = allVoters.Where(v => v.ConstituencyId == user.ConstituencyId);
 
-        if (user?.Role == UserRole.VoterManager)
+        if (user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent)
         {
             var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
             if (assignedBooths.Any())

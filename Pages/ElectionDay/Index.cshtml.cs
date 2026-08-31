@@ -56,8 +56,8 @@ public class IndexModel : PageModel
             ? (ConstituencyFilter ?? Constituencies.FirstOrDefault()?.Id ?? 1)
             : (user?.ConstituencyId ?? 1);
 
-        // VoterManager: restrict to assigned booths only
-        var isVoterManager = user?.Role == UserRole.VoterManager;
+        // VoterManager and BoothAgent: restrict to assigned booths only
+        var isVoterManager = user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent;
         var assignedBooths = isVoterManager
             ? (user?.AssignedBoothNumbers ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)

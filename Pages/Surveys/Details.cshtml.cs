@@ -42,6 +42,20 @@ public class DetailsModel : PageModel
         Survey = survey;
         var user = await _userManager.GetUserAsync(User);
         CanManage = user != null && ManageRoles.Contains(user.Role);
+
+        // Restrict visible responses to assigned booths for BoothAgent / FieldWorker
+        if (user?.Role is UserRole.BoothAgent or UserRole.FieldWorker)
+        {
+            var assignedBooths = (user.AssignedBoothNumbers ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+                .Where(n => n.HasValue).Select(n => n!.Value).ToHashSet();
+            if (assignedBooths.Any())
+                Survey.Responses = survey.Responses
+                    .Where(r => r.BoothNumber.HasValue && assignedBooths.Contains(r.BoothNumber.Value))
+                    .ToList();
+        }
+
         BuildStats();
         return Page();
     }

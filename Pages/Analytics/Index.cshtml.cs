@@ -83,16 +83,26 @@ public class IndexModel : PageModel
         if (cId.HasValue)
             SelectedConstituency = await _db.Constituencies.FindAsync(cId.Value);
 
+        // Pre-parse assigned booths so we can use them for both the dropdown and the data query
+        var assignedBoothsForRestricted = isRestricted
+            ? (user?.AssignedBoothNumbers ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
+                .Where(n => n.HasValue).Select(n => n!.Value).ToList()
+            : new List<int>();
+
         // Load wards for drill-down
         if (cId.HasValue)
             Wards = await _db.Wards.Where(w => w.ConstituencyId == cId.Value).OrderBy(w => w.WardNumber).ToListAsync();
 
-        // Load booths for drill-down (filtered by ward if selected)
+        // Load booths for drill-down (filtered by ward if selected; restricted to assigned booths for BoothAgent/FieldWorker)
         if (cId.HasValue)
         {
             var boothQuery = _db.Booths.Where(b => b.ConstituencyId == cId.Value);
             if (!string.IsNullOrEmpty(SelectedWard))
                 boothQuery = boothQuery.Where(b => b.WardNumber == SelectedWard);
+            if (isRestricted && assignedBoothsForRestricted.Any())
+                boothQuery = boothQuery.Where(b => assignedBoothsForRestricted.Contains(b.BoothNumber));
             Booths = await boothQuery.OrderBy(b => b.BoothNumber).ToListAsync();
         }
 
@@ -102,14 +112,10 @@ public class IndexModel : PageModel
 
         if (isRestricted)
         {
-            var assignedBooths = (user?.AssignedBoothNumbers ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => int.TryParse(s.Trim(), out var n) ? (int?)n : null)
-                .Where(n => n.HasValue).Select(n => n!.Value).ToList();
             var assignedWard = user?.AssignedWard?.Trim();
 
-            if (assignedBooths.Any())
-                query = query.Where(v => assignedBooths.Contains(v.BoothNumber));
+            if (assignedBoothsForRestricted.Any())
+                query = query.Where(v => assignedBoothsForRestricted.Contains(v.BoothNumber));
             else if (!string.IsNullOrEmpty(assignedWard))
                 query = query.Where(v => v.WardNumber == assignedWard);
         }

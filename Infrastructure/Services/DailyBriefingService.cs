@@ -31,6 +31,15 @@ public class DailyBriefingService : BackgroundService
     {
         _logger.LogInformation("[DailyBriefing] Service started.");
 
+        try
+        {
+            await SanitizeTodayBriefingsNowAsync(stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[DailyBriefing] Failed to sanitize existing daily briefings.");
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = TimeUntilNextBriefing();
@@ -65,6 +74,8 @@ public class DailyBriefingService : BackgroundService
         var todayUtc  = DateTime.UtcNow.Date;
         var todayIst  = todayUtc.AddHours(5).AddMinutes(30); // IST date for display
 
+        await SanitizeTodayBriefingsAsync(db, todayUtc);
+
         var constituencies = await db.Constituencies.ToListAsync();
 
         foreach (var c in constituencies)
@@ -76,6 +87,42 @@ public class DailyBriefingService : BackgroundService
 
         await db.SaveChangesAsync();
         _logger.LogInformation("[DailyBriefing] Briefings generated for {Count} constituencies.", constituencies.Count);
+    }
+
+    private async Task SanitizeTodayBriefingsNowAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        await SanitizeTodayBriefingsAsync(db, DateTime.UtcNow.Date);
+        await db.SaveChangesAsync(stoppingToken);
+    }
+
+    private static async Task SanitizeTodayBriefingsAsync(AppDbContext db, DateTime todayUtc)
+    {
+        var todayBriefings = await db.Announcements
+            .Where(a => a.Category == AnnouncementCategory.DailyBriefing
+                     && a.CreatedAt >= todayUtc
+                     && a.CreatedAt < todayUtc.AddDays(1))
+            .ToListAsync();
+
+        if (!todayBriefings.Any()) return;
+
+        foreach (var a in todayBriefings)
+        {
+            a.Title = SanitizeBriefingText(a.Title);
+            a.Body = SanitizeBriefingText(a.Body);
+        }
+    }
+
+    private static string SanitizeBriefingText(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+
+        return value
+            .Replace("??", "•")
+            .Replace("?", "-")
+            .Replace("’", "'");
     }
 
     private static async Task GenerateForConstituencyAsync(

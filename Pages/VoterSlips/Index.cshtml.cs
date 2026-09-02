@@ -40,6 +40,7 @@ public class IndexModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
+        var assignedBooths = ParseAssignedBooths(user?.AssignedBoothNumbers);
 
         IsAdmin = user?.Role == UserRole.SuperAdmin;
 
@@ -55,10 +56,9 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             query = query.Where(v => v.ConstituencyId == user.ConstituencyId);
 
-        // VoterManager is restricted to their assigned booths only
-        if (user?.Role == UserRole.VoterManager)
+        // VoterManager and BoothAgent are restricted to their assigned booths only
+        if (user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent)
         {
-            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
             if (assignedBooths.Any())
                 query = query.Where(v => assignedBooths.Contains(v.BoothNumber));
         }
@@ -80,10 +80,9 @@ public class IndexModel : PageModel
         else if (user?.ConstituencyId.HasValue == true)
             allQuery = allQuery.Where(v => v.ConstituencyId == user.ConstituencyId);
 
-        // Scope booth dropdown to assigned booths for VoterManager
-        if (user?.Role == UserRole.VoterManager)
+        // Scope booth dropdown to assigned booths for VoterManager and BoothAgent
+        if (user?.Role == UserRole.VoterManager || user?.Role == UserRole.BoothAgent)
         {
-            var assignedBooths = ParseAssignedBooths(user.AssignedBoothNumbers);
             if (assignedBooths.Any())
                 allQuery = allQuery.Where(v => assignedBooths.Contains(v.BoothNumber));
         }

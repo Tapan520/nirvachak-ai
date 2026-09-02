@@ -153,6 +153,7 @@ builder.Services.AddScoped<WinProbabilityService>();
 builder.Services.AddScoped<IExotelService, ExotelService>();
 builder.Services.AddScoped<PushNotificationService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<ModuleAccessService>();
 
 // ?? Background Services ??????????????????????????????????????
 builder.Services.AddSingleton<BackupSettings>();
@@ -294,6 +295,7 @@ app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Nirvachak_AI.Infrastructure.Filters.ModuleAccessMiddleware>();
 app.UseMiddleware<Nirvachak_AI.Infrastructure.Filters.VoterManagerAccessMiddleware>();
 
 app.MapRazorPages();

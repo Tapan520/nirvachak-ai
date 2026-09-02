@@ -1,9 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using Nirvachak_AI.Domain.Entities
+@using Nirvachak_AI.Infrastructure.ModuleAccess
 @inject SignInManager<AppUser> SignInManager
 @inject UserManager<AppUser> UserManager
 @inject Nirvachak_AI.Infrastructure.Data.AppDbContext LayoutDb
+@inject Nirvachak_AI.Infrastructure.Services.ModuleAccessService ModuleAccessService
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +52,10 @@
     bool isCampaignManager = User.IsInRole("CampaignManager");
     bool isManagementRole  = isSuperAdmin || isAdmin || isCampaignManager;
     bool isVoterManager    = currentUser?.Role == Nirvachak_AI.Domain.Enums.UserRole.VoterManager;
+    var disabledModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    if (!isSuperAdmin && currentUser?.ConstituencyId is int cId)
+        disabledModules = await ModuleAccessService.GetDisabledSubModulesAsync(cId);
+    bool HasModule(string key) => isSuperAdmin || !disabledModules.Contains(key);
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->
         <nav id="sidebar" class="sidebar d-flex flex-column">
@@ -72,7 +78,7 @@
                 }
                 <ul class="nav flex-column px-2">
                     <!-- Dashboard (standalone) -->
-                    @if (!isVoterManager)
+                    @if (!isVoterManager && HasModule("Dashboard"))
                     {
                     <li class="nav-item">
                         <a class="nav-link sidebar-link @(currentPage == "/Dashboard/Index" ? "active" : "")" asp-page="/Dashboard/Index">
@@ -91,17 +97,23 @@
                 </ul>
                 <div class="collapse @(votersOpen ? "show" : "")" id="sec-voters">
                     <ul class="nav flex-column px-2 sidebar-submenu">
+                        @if (HasModule("VoterList"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Voters/Index") ? "active" : "")" asp-page="/Voters/Index">
                                 <i class="bi bi-people-fill me-2"></i> Voter List
                             </a>
                         </li>
+                        }
+                        @if (HasModule("AddVoter"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/Voters/Create" ? "active" : "")" asp-page="/Voters/Create">
                                 <i class="bi bi-person-plus-fill me-2"></i> Add Voter
                             </a>
                         </li>
-                        @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        }
+                        @if (HasModule("ImportVoters") && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/Voters/Import" ? "active" : "")" asp-page="/Voters/Import">
@@ -109,11 +121,14 @@
                             </a>
                         </li>
                         }
+                        @if (HasModule("VoterSlips"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/VoterSlips/Index" ? "active" : "")" asp-page="/VoterSlips/Index">
                                 <i class="bi bi-printer-fill me-2"></i> Voter Slips
                             </a>
                         </li>
+                        }
                     </ul>
                 </div>
 
@@ -130,7 +145,7 @@
                 </ul>
                 <div class="collapse @(campaignOpen ? "show" : "")" id="sec-campaign">
                     <ul class="nav flex-column px-2 sidebar-submenu">
-                        @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate") || User.IsInRole("FieldWorker") || User.IsInRole("BoothAgent"))
+                        @if (HasModule("PhoneBanking") && (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate") || User.IsInRole("FieldWorker") || User.IsInRole("BoothAgent")))
                         {
                             <li class="nav-item">
                                 <a class="nav-link sidebar-link @(currentPage.StartsWith("/PhoneBanking") ? "active" : "")" asp-page="/PhoneBanking/Index">
@@ -140,32 +155,47 @@
                         }
                         @if (User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
                         {
+                            @if (HasModule("InfluencerNetwork"))
+                            {
                             <li class="nav-item">
                                 <a class="nav-link sidebar-link @(currentPage.StartsWith("/Influencers") ? "active" : "")" asp-page="/Influencers/Index">
                                     <i class="bi bi-people-fill me-2"></i> Influencer Network
                                 </a>
                             </li>
+                            }
+                            @if (HasModule("CompetitorIntel"))
+                            {
                             <li class="nav-item">
                                 <a class="nav-link sidebar-link @(currentPage.StartsWith("/Competitor") ? "active" : "")" asp-page="/Competitor/Index">
                                     <i class="bi bi-eye-fill me-2"></i> Competitor Intel
                                 </a>
                             </li>
+                            }
                         }
+                        @if (HasModule("CampaignEvents"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Campaign") ? "active" : "")" asp-page="/Campaign/Index">
                                 <i class="bi bi-calendar-event-fill me-2"></i> Campaign Events
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Volunteers"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Volunteers") ? "active" : "")" asp-page="/Volunteers/Index">
                                 <i class="bi bi-person-check-fill me-2"></i> Volunteers
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Leaderboard"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Leaderboard") ? "active" : "")" asp-page="/Leaderboard/Index">
                                 <i class="bi bi-trophy-fill me-2 text-warning"></i> Leaderboard
                             </a>
                         </li>
+                        }
                     </ul>
                 </div>
 
@@ -181,6 +211,8 @@
                 </ul>
                 <div class="collapse @(operationsOpen ? "show" : "")" id="sec-operations">
                     <ul class="nav flex-column px-2 sidebar-submenu">
+                        @if (HasModule("Announcements"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Announcements") ? "active" : "")" asp-page="/Announcements/Index">
                                 <i class="bi bi-megaphone-fill me-2"></i> Announcements
@@ -190,70 +222,104 @@
                                 }
                             </a>
                         </li>
+                        }
+                        @if (HasModule("ElectionDay"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/ElectionDay/Index" ? "active" : "")" asp-page="/ElectionDay/Index">
                                 <i class="bi bi-activity me-2"></i> Election Day
                             </a>
                         </li>
+                        }
+                        @if (HasModule("BoothChecklist"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/ElectionDay/Checklist" ? "active" : "")" asp-page="/ElectionDay/Checklist">
                                 <i class="bi bi-clipboard2-check me-2"></i> Booth Checklist
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Analytics"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics") && !currentPage.StartsWith("/Analytics/SurveyDemographics") && !currentPage.StartsWith("/Analytics/EditVoterSurvey") && !currentPage.StartsWith("/Analytics/PreferenceAnalytics") ? "active" : "")" asp-page="/Analytics/Index">
                                 <i class="bi bi-bar-chart-line-fill me-2"></i> Analytics
                             </a>
                         </li>
+                        }
                         @if (!isVoterManager)
                         {
                         @if (isSuperAdmin || User.IsInRole("Admin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        {
+                        @if (HasModule("PredictiveAnalytics"))
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Predictions") ? "active" : "")" asp-page="/Predictions/Index">
                                 <i class="bi bi-graph-up-arrow me-2"></i> Predictive Analytics
                             </a>
                         </li>
+                        }
+                        @if (HasModule("WinProbability"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/WinProbability") ? "active" : "")" asp-page="/WinProbability/Index">
                                 <i class="bi bi-trophy-fill me-2"></i> Win Probability
                             </a>
                         </li>
+                        }
+                        @if (HasModule("SwingVoters"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/SwingVoters") ? "active" : "")" asp-page="/SwingVoters/Index">
                                 <i class="bi bi-arrow-left-right me-2 text-warning"></i> Swing Voters
                             </a>
                         </li>
+                        }
+                        @if (HasModule("BoothHeatMap"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/BoothHeatMap") ? "active" : "")" asp-page="/BoothHeatMap/Index">
                                 <i class="bi bi-map-fill me-2 text-primary"></i> Booth Heat Map
                             </a>
                         </li>
                         }
+                        }
                         @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        {
+                        @if (HasModule("Grievances"))
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Grievances") ? "active" : "")" asp-page="/Grievances/Index">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i> Grievances
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Expenses"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Expenses") ? "active" : "")" asp-page="/Expenses/Index">
                                 <i class="bi bi-cash-coin me-2"></i> Expenses
                             </a>
                         </li>
                         }
+                        }
+                        @if (HasModule("Surveys"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Surveys") ? "active" : "")" asp-page="/Surveys/Index">
                                 <i class="bi bi-clipboard2-data-fill me-2"></i> Surveys &amp; Feedback
                             </a>
                         </li>
+                        }
+                        @if (HasModule("VoterConsentAnalytics"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Analytics/SurveyDemographics") || currentPage.StartsWith("/Analytics/EditVoterSurvey") ? "active" : "")" asp-page="/Analytics/SurveyDemographics">
                                 <i class="bi bi-person-check-fill me-2"></i> Voter Consent Analytics
                             </a>
                         </li>
-                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        }
+                        @if (HasModule("PreferenceAnalytics") && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate")))
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage == "/Analytics/PreferenceAnalytics" ? "active" : "")" asp-page="/Analytics/PreferenceAnalytics">
@@ -261,7 +327,7 @@
                             </a>
                         </li>
                         }
-                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate"))
+                        @if (HasModule("VoterTransport") && (User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate")))
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Transport") ? "active" : "")" asp-page="/Transport/Index">
@@ -269,7 +335,7 @@
                             </a>
                         </li>
                         }
-                        @if (currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
+                        @if (HasModule("ExportReports") && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.FieldWorker && currentUser?.Role != Nirvachak_AI.Domain.Enums.UserRole.BoothAgent)
                         {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Reports") ? "active" : "")" asp-page="/Reports/Export">
@@ -293,46 +359,67 @@
                 </ul>
                 <div class="collapse @(electionOpsOpen ? "show" : "")" id="sec-electionops">
                     <ul class="nav flex-column px-2 sidebar-submenu">
+                        @if (HasModule("PannaPramukh"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/PannaPramukh") ? "active" : "")" asp-page="/PannaPramukh/Index">
                                 <i class="bi bi-journals me-2"></i> Panna Pramukh
                             </a>
                         </li>
+                        }
+                        @if (HasModule("BoothShifts"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/BoothShifts") ? "active" : "")" asp-page="/BoothShifts/Index">
                                 <i class="bi bi-calendar2-check-fill me-2"></i> Booth Shift Planner
                             </a>
                         </li>
+                        }
+                        @if (HasModule("RapidResponse"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/RapidResponse") ? "active" : "")" asp-page="/RapidResponse/Index">
                                 <i class="bi bi-lightning-charge-fill me-2"></i> Rapid Response
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Broadcast"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Broadcast") ? "active" : "")" asp-page="/Broadcast/Index">
                                 <i class="bi bi-whatsapp me-2"></i> Broadcast
                             </a>
                         </li>
+                        }
+                        @if (HasModule("BudgetPlanner"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Budget") ? "active" : "")" asp-page="/Budget/Index">
                                 <i class="bi bi-wallet2 me-2"></i> Budget Planner
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Results"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Results") ? "active" : "")" asp-page="/Results/Index">
                                 <i class="bi bi-trophy-fill me-2"></i> Result Day
                             </a>
                         </li>
+                        }
+                        @if (HasModule("FieldReports"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/FieldReports") ? "active" : "")" asp-page="/FieldReports/Index">
                                 <i class="bi bi-clipboard2-check-fill me-2"></i> Field Reports
                             </a>
                         </li>
+                        }
                     </ul>
                 </div>
                 }
                 @* Field Reports for non-election-ops roles *@
-                @if (!isVoterManager && !(User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate")))
+                @if (HasModule("FieldReports") && !isVoterManager && !(User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("CampaignManager") || User.IsInRole("Candidate")))
                 {
                 <ul class="nav flex-column px-2">
                     <li class="nav-item">
@@ -364,36 +451,54 @@
                                 </a>
                             </li>
                         }
+                        @if (HasModule("Wards"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Wards") ? "active" : "")" asp-page="/Admin/Wards/Index">
                                 <i class="bi bi-map me-2"></i> Wards
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Booths"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Booths") ? "active" : "")" asp-page="/Booths/Index">
                                 <i class="bi bi-geo-alt-fill me-2"></i> Booths
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Users"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin") && !currentPage.StartsWith("/Admin/Constituencies") && !currentPage.StartsWith("/Admin/Wards") && !currentPage.StartsWith("/Admin/Rewards") && !currentPage.StartsWith("/Admin/Exotel") && !currentPage.StartsWith("/Admin/CandidatesParties") ? "active" : "")" asp-page="/Admin/Index">
                                 <i class="bi bi-people me-2"></i> Users
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Rewards"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Rewards") ? "active" : "")" asp-page="/Admin/Rewards/Index">
                                 <i class="bi bi-gift-fill me-2"></i> Rewards
                             </a>
                         </li>
+                        }
+                        @if (HasModule("CandidatesParties"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/CandidatesParties") ? "active" : "")" asp-page="/Admin/CandidatesParties/Index">
                                 <i class="bi bi-person-badge me-2 text-primary"></i> Candidates &amp; Parties
                             </a>
                         </li>
+                        }
+                        @if (HasModule("Exotel"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link sidebar-link @(currentPage.StartsWith("/Admin/Exotel") ? "active" : "")" asp-page="/Admin/Exotel/Index">
                                 <i class="bi bi-telephone-fill me-2"></i> Exotel (Call &amp; SMS)
                             </a>
                         </li>
+                        }
                         @if (isSuperAdmin)
                         {
                         <li class="nav-item">

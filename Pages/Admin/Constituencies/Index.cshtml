@@ -52,6 +52,10 @@
                                    class="btn btn-sm btn-outline-secondary py-0 px-2" title="Manage Wards">
                                     <i class="bi bi-map"></i>
                                 </a>
+                                <a asp-page="/Admin/Constituencies/Modules" asp-route-id="@c.Id"
+                                   class="btn btn-sm btn-outline-dark py-0 px-2" title="Module Access">
+                                    <i class="bi bi-toggles2"></i>
+                                </a>
                                 <form method="post" asp-page-handler="Delete" asp-route-id="@c.Id"
                                       onsubmit="return confirm('Delete constituency \'@c.Name\'? This cannot be undone.');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">

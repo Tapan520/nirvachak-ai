@@ -689,5 +689,575 @@ public static class SeedService
             db.AuditLogs.AddRange(logs);
             await db.SaveChangesAsync();
         }
+
+        // ── Door-to-Door Visits ───────────────────────────────────────────────
+        if (!db.DoorToDoorVisits.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var workerUser   = await userManager.FindByEmailAsync("worker@election.com");
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+            var now          = DateTime.UtcNow;
+
+            var voters = await db.Voters
+                .Where(v => v.ConstituencyId == constituency.Id && !v.IsDeleted)
+                .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
+                .Take(80).ToListAsync();
+
+            var rnd = new Random(77);
+            var statuses   = new[] { VisitStatus.Visited, VisitStatus.Visited, VisitStatus.Visited, VisitStatus.NotAtHome, VisitStatus.Refused };
+            var sentiments = new[] { VoterSentiment.Favour, VoterSentiment.Favour, VoterSentiment.Floating, VoterSentiment.Against, VoterSentiment.Neutral, VoterSentiment.Favour };
+            var notePool   = new[]
+            {
+                "Voter is very enthusiastic. Will bring 4 family members to vote.",
+                "Not at home. Neighbour confirmed they support our candidate.",
+                "Had a long discussion on road issues. Promised to vote.",
+                "Floating voter. Agreed to watch candidate's speech before deciding.",
+                "Against — grievance about drainage still unresolved.",
+                "Very warm response. Fixed a follow-up visit for next week.",
+                "New voter, first election. Explained voting process.",
+                "Elderly couple at home. Arranged transport for election day.",
+                "Discussed water supply issue. Will vote if resolved.",
+                "Strongly in favour. Already convinced 3 neighbours.",
+            };
+
+            var visits = new List<DoorToDoorVisit>();
+            for (int i = 0; i < voters.Count; i++)
+            {
+                var voter     = voters[i];
+                var caller    = i % 4 == 0 ? managerUser : workerUser;
+                var status    = statuses[i % statuses.Length];
+                var sentiment = sentiments[i % sentiments.Length];
+                var daysAgo   = rnd.Next(0, 20);
+                var hoursAgo  = rnd.Next(0, 8);
+                var visitedAt = now.AddDays(-daysAgo).AddHours(-hoursAgo);
+
+                visits.Add(new DoorToDoorVisit
+                {
+                    VoterId             = voter.Id,
+                    WorkerUserId        = caller?.Id ?? "system",
+                    WorkerName          = caller?.FullName ?? "Field Worker 1",
+                    VisitedAt           = visitedAt,
+                    Status              = status,
+                    SentimentAfterVisit = status == VisitStatus.Visited ? sentiment : VoterSentiment.Unknown,
+                    Notes               = notePool[i % notePool.Length],
+                });
+
+                if (status == VisitStatus.Visited)
+                {
+                    voter.LastContactedAt = visitedAt;
+                    voter.Sentiment       = sentiment;
+                }
+            }
+
+            db.DoorToDoorVisits.AddRange(visits);
+            await db.SaveChangesAsync();
+        }
+
+        // ── Panna Pramukhs ────────────────────────────────────────────────────
+        if (!db.PannaPramukhs.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var now          = DateTime.UtcNow;
+            db.PannaPramukhs.AddRange(
+                new PannaPramukh { Name = "Sunil Khedkar",    Phone = "9765400001", BoothNumber = 1, PannaNumber = "1A", TotalVotersAssigned = 10, VotersContacted = 9,  IsActive = true, Notes = "Very active. Covers Gandhi Nagar lane 1.",       ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-25) },
+                new PannaPramukh { Name = "Rekha Dange",      Phone = "9765400002", BoothNumber = 1, PannaNumber = "1B", TotalVotersAssigned = 10, VotersContacted = 7,  IsActive = true, Notes = "Covers Gandhi Nagar lane 2.",                     ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-25) },
+                new PannaPramukh { Name = "Prakash Shinde",   Phone = "9765400003", BoothNumber = 1, PannaNumber = "1C", TotalVotersAssigned = 10, VotersContacted = 10, IsActive = true, Notes = "100% coverage. Excellent coordinator.",           ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-24) },
+                new PannaPramukh { Name = "Anita Gaikwad",    Phone = "9765400004", BoothNumber = 2, PannaNumber = "2A", TotalVotersAssigned = 10, VotersContacted = 6,  IsActive = true, Notes = "Nehru Vihar, first panna.",                       ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-23) },
+                new PannaPramukh { Name = "Vijay Mhatre",     Phone = "9765400005", BoothNumber = 2, PannaNumber = "2B", TotalVotersAssigned = 10, VotersContacted = 8,  IsActive = true, Notes = "Covers market area in Ward 2.",                   ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-22) },
+                new PannaPramukh { Name = "Laxmi Rokade",     Phone = "9765400006", BoothNumber = 2, PannaNumber = "2C", TotalVotersAssigned = 10, VotersContacted = 4,  IsActive = true, Notes = "Needs follow-up. Several voters unreachable.",    ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-22) },
+                new PannaPramukh { Name = "Ganesh Sutar",     Phone = "9765400007", BoothNumber = 3, PannaNumber = "3A", TotalVotersAssigned = 10, VotersContacted = 9,  IsActive = true, Notes = "Shivaji Park — very motivated volunteer.",        ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-20) },
+                new PannaPramukh { Name = "Meera Kamble",     Phone = "9765400008", BoothNumber = 3, PannaNumber = "3B", TotalVotersAssigned = 10, VotersContacted = 5,  IsActive = true, Notes = "Working part-time. Needs support.",               ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-20) },
+                new PannaPramukh { Name = "Raju Patil",       Phone = "9765400009", BoothNumber = 4, PannaNumber = "4A", TotalVotersAssigned = 10, VotersContacted = 10, IsActive = true, Notes = "Ambedkar Colony. All voters confirmed.",          ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-18) },
+                new PannaPramukh { Name = "Sunanda Bhosale",  Phone = "9765400010", BoothNumber = 4, PannaNumber = "4B", TotalVotersAssigned = 10, VotersContacted = 7,  IsActive = true, Notes = "Ward 4. 3 floating voters need a follow-up.",     ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-18) },
+                new PannaPramukh { Name = "Deepak Salve",     Phone = "9765400011", BoothNumber = 5, PannaNumber = "5A", TotalVotersAssigned = 10, VotersContacted = 8,  IsActive = true, Notes = "Tilak Nagar. Regular updates given to manager.",  ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-15) },
+                new PannaPramukh { Name = "Priya Nikam",      Phone = "9765400012", BoothNumber = 5, PannaNumber = "5B", TotalVotersAssigned = 10, VotersContacted = 3,  IsActive = true, Notes = "New volunteer. Needs coaching.",                  ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-15) },
+                new PannaPramukh { Name = "Sachin More",      Phone = "9765400013", BoothNumber = 6, PannaNumber = "6A", TotalVotersAssigned = 10, VotersContacted = 9,  IsActive = true, Notes = "Subhash Chowk. Excellent network in the area.",   ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-12) },
+                new PannaPramukh { Name = "Kavitha Jadhav",   Phone = "9765400014", BoothNumber = 7, PannaNumber = "7A", TotalVotersAssigned = 10, VotersContacted = 6,  IsActive = true, Notes = "Patel Wadi. Some voters difficult to reach.",     ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-10) },
+                new PannaPramukh { Name = "Narayan Deshpande", Phone = "9765400015", BoothNumber = 8, PannaNumber = "8A", TotalVotersAssigned = 10, VotersContacted = 8, IsActive = true, Notes = "Laxmi Nagar. Senior citizen votes confirmed.",    ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-8)  }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Booth Shift Assignments ───────────────────────────────────────────
+        if (!db.BoothShiftAssignments.Any())
+        {
+            var constituency  = db.Constituencies.First();
+            var volunteers    = await db.Volunteers.Where(v => v.ConstituencyId == constituency.Id && v.IsActive).ToListAsync();
+            var electionDay   = constituency.ElectionDate != default ? constituency.ElectionDate : DateTime.Today.AddDays(30);
+            var morningStart  = electionDay.Date.AddHours(7);
+            var afternoonStart= electionDay.Date.AddHours(12);
+            var eveningStart  = electionDay.Date.AddHours(15);
+
+            var shifts = new List<BoothShiftAssignment>();
+            foreach (var vol in volunteers.Take(12))
+            {
+                var boothNums = (vol.AssignedBoothNumbers ?? "1")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s.Trim(), out var n) ? n : 1).First();
+
+                shifts.Add(new BoothShiftAssignment
+                {
+                    VolunteerId    = vol.Id,
+                    BoothNumber    = boothNums,
+                    ShiftStart     = morningStart,
+                    ShiftEnd       = afternoonStart,
+                    Role           = vol.Task == VolunteerTask.BoothManagement ? ShiftRole.BoothAgent
+                                   : vol.Task == VolunteerTask.Transport       ? ShiftRole.Transport
+                                   : ShiftRole.Coordinator,
+                    IsConfirmed    = true,
+                    Notes          = $"Morning shift — {vol.AssignedArea ?? "General"}",
+                    ConstituencyId = constituency.Id
+                });
+            }
+            // Add afternoon shifts for 6 volunteers
+            foreach (var vol in volunteers.Skip(2).Take(6))
+            {
+                var boothNums = (vol.AssignedBoothNumbers ?? "1")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s.Trim(), out var n) ? n : 1).First();
+
+                shifts.Add(new BoothShiftAssignment
+                {
+                    VolunteerId    = vol.Id,
+                    BoothNumber    = boothNums,
+                    ShiftStart     = afternoonStart,
+                    ShiftEnd       = eveningStart.AddHours(2),
+                    Role           = ShiftRole.Observer,
+                    IsConfirmed    = false,
+                    Notes          = "Afternoon shift — pending confirmation",
+                    ConstituencyId = constituency.Id
+                });
+            }
+
+            db.BoothShiftAssignments.AddRange(shifts);
+            await db.SaveChangesAsync();
+        }
+
+        // ── Rapid Response Items ──────────────────────────────────────────────
+        if (!db.RapidResponseItems.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+            var adminUser    = await userManager.FindByEmailAsync("admin@election.com");
+            var now          = DateTime.UtcNow;
+
+            db.RapidResponseItems.AddRange(
+                new RapidResponseItem
+                {
+                    Title          = "Viral WhatsApp Message: False Claim About Candidate",
+                    Description    = "A fabricated WhatsApp forward is circulating claiming the candidate has been arrested. The message includes a doctored news screenshot. It is spreading rapidly in Ward 3 & Ward 5 groups.",
+                    Source         = "WhatsApp",
+                    AffectedWards  = "3,5",
+                    ThreatLevel    = RapidResponseThreat.Critical,
+                    Status         = RapidResponseStatus.ResponseDrafted,
+                    ResponseText   = "Official clarification issued: The candidate is actively campaigning and this message is completely false. Screenshot of the fake post has been reported to WhatsApp. Counter-message sent to all volunteer group admins.",
+                    AssignedToName = managerUser?.FullName ?? "Campaign Manager",
+                    AssignedToUserId = managerUser?.Id,
+                    LoggedByUserId = managerUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddHours(-3),
+                    CreatedAt      = now.AddHours(-3)
+                },
+                new RapidResponseItem
+                {
+                    Title          = "Competitor Rally Disrupted Our Booth Agent in Ward 7",
+                    Description    = "Reports from Ward 7 indicate that competitor supporters surrounded and intimidated our booth agent during their road show. The agent has reported this to us. May affect volunteer morale.",
+                    Source         = "Local Media",
+                    AffectedWards  = "7",
+                    ThreatLevel    = RapidResponseThreat.High,
+                    Status         = RapidResponseStatus.Deployed,
+                    ResponseText   = "Incident reported to Election Commission. Additional security volunteer deployed to Ward 7. Booth agent reassigned with a buddy system.",
+                    AssignedToName = managerUser?.FullName ?? "Campaign Manager",
+                    AssignedToUserId = managerUser?.Id,
+                    LoggedByUserId = managerUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddDays(-2),
+                    CreatedAt      = now.AddDays(-2)
+                },
+                new RapidResponseItem
+                {
+                    Title          = "Local Newspaper Negative Story on Water Supply Delay",
+                    Description    = "A local Marathi newspaper ran a front-page story attributing the Ward 3 water supply failure to our candidate's inaction. The story is factually incorrect — work was sanctioned 2 months ago.",
+                    Source         = "Local Media",
+                    AffectedWards  = "3",
+                    ThreatLevel    = RapidResponseThreat.High,
+                    Status         = RapidResponseStatus.Resolved,
+                    ResponseText   = "Press release issued with work order details and timeline. Campaign team visited Ward 3 and distributed the official response. Follow-up story published on day 3 with correction.",
+                    AssignedToName = adminUser?.FullName ?? "System Administrator",
+                    AssignedToUserId = adminUser?.Id,
+                    LoggedByUserId = adminUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddDays(-8),
+                    ResolvedAt     = now.AddDays(-5),
+                    CreatedAt      = now.AddDays(-8)
+                },
+                new RapidResponseItem
+                {
+                    Title          = "Rumour: Candidate Promised Land to Builder in Ward 4",
+                    Description    = "Rumour spreading door-to-door in Ward 4 (Ambedkar Colony) that the candidate has secretly given land clearance to a builder, displacing local residents. No evidence exists.",
+                    Source         = "Competitor",
+                    AffectedWards  = "4",
+                    ThreatLevel    = RapidResponseThreat.Medium,
+                    Status         = RapidResponseStatus.Detected,
+                    ResponseText   = null,
+                    LoggedByUserId = managerUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddHours(-1),
+                    CreatedAt      = now.AddHours(-1)
+                },
+                new RapidResponseItem
+                {
+                    Title          = "Social Media: #VoteAgainstCorruption Trend Targeting Our Candidate",
+                    Description    = "Twitter and Instagram hashtag #VoteAgainstCorruption is trending locally with posts tagging our candidate. Mostly driven by competitor party handles. About 500+ posts in last 6 hours.",
+                    Source         = "Other",
+                    AffectedWards  = null,
+                    ThreatLevel    = RapidResponseThreat.Medium,
+                    Status         = RapidResponseStatus.ResponseDrafted,
+                    ResponseText   = "Counter-campaign launched on social media with #DevelopmentWithHonesty. Influencer network activated to share candidate's track record posts. Youth volunteers creating response reels.",
+                    AssignedToName = managerUser?.FullName ?? "Campaign Manager",
+                    AssignedToUserId = managerUser?.Id,
+                    LoggedByUserId = managerUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddDays(-1),
+                    CreatedAt      = now.AddDays(-1)
+                },
+                new RapidResponseItem
+                {
+                    Title          = "Fake Voter Slip Distributed in Ward 6",
+                    Description    = "Fake voter slips with wrong booth numbers have been distributed in Ward 6. Voters will be misdirected on election day. Multiple residents have reported this on phone.",
+                    Source         = "WhatsApp",
+                    AffectedWards  = "6",
+                    ThreatLevel    = RapidResponseThreat.Critical,
+                    Status         = RapidResponseStatus.Deployed,
+                    ResponseText   = "Genuine voter slips redistributed door-to-door in Ward 6 by our volunteers. EC notified with physical evidence of fake slips. Booth agent instructed to guide any confused voters.",
+                    AssignedToName = adminUser?.FullName ?? "System Administrator",
+                    AssignedToUserId = adminUser?.Id,
+                    LoggedByUserId = adminUser?.Id,
+                    ConstituencyId = constituency.Id,
+                    DetectedAt     = now.AddDays(-3),
+                    CreatedAt      = now.AddDays(-3)
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Field Reports ─────────────────────────────────────────────────────
+        if (!db.FieldReports.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var workerUser   = await userManager.FindByEmailAsync("worker@election.com");
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+            var now          = DateTime.UtcNow;
+
+            db.FieldReports.AddRange(
+                new FieldReport
+                {
+                    WorkerUserId      = workerUser?.Id ?? "system",
+                    WorkerName        = workerUser?.FullName ?? "Field Worker 1",
+                    ReportDate        = now.AddDays(-1).Date,
+                    ContactsMade      = 28,
+                    FavourContacts    = 18,
+                    FloatingContacts  = 6,
+                    AgainstContacts   = 4,
+                    IssuesLogged      = 3,
+                    Highlights        = "Covered all of Ward 1 Lane 3 today. Voters in this area are very enthusiastic. Found 3 households that had shifted — updated voter list accordingly.",
+                    Challenges        = "Two addresses had locked houses. Will retry tomorrow morning.",
+                    PlannedForTomorrow= "Complete Ward 1 Lane 4 and start Lane 5. Follow up on the 2 uncontacted Favour voters from today.",
+                    Status            = FieldReportStatus.Reviewed,
+                    ReviewerNotes     = "Good coverage. Keep up the pace. Prioritise floating voters in Lane 4.",
+                    ReviewedByUserId  = managerUser?.Id,
+                    ReviewedAt        = now.AddHours(-10),
+                    ConstituencyId    = constituency.Id,
+                    CreatedAt         = now.AddDays(-1)
+                },
+                new FieldReport
+                {
+                    WorkerUserId      = workerUser?.Id ?? "system",
+                    WorkerName        = workerUser?.FullName ?? "Field Worker 1",
+                    ReportDate        = now.AddDays(-2).Date,
+                    ContactsMade      = 32,
+                    FavourContacts    = 22,
+                    FloatingContacts  = 5,
+                    AgainstContacts   = 5,
+                    IssuesLogged      = 2,
+                    Highlights        = "Met the local temple trust committee members. All 7 confirmed support. Also met a group of auto drivers — 5 out of 7 are in favour.",
+                    Challenges        = "One voter was very hostile and asked us not to visit again. Logged grievance about road near his house.",
+                    PlannedForTomorrow= "Follow up with floating voters identified today. Visit the senior citizens welfare group in the morning.",
+                    Status            = FieldReportStatus.Reviewed,
+                    ReviewerNotes     = "Excellent day. The temple trust endorsement is valuable — publicise it on WhatsApp groups.",
+                    ReviewedByUserId  = managerUser?.Id,
+                    ReviewedAt        = now.AddDays(-1),
+                    ConstituencyId    = constituency.Id,
+                    CreatedAt         = now.AddDays(-2)
+                },
+                new FieldReport
+                {
+                    WorkerUserId      = workerUser?.Id ?? "system",
+                    WorkerName        = workerUser?.FullName ?? "Field Worker 1",
+                    ReportDate        = now.AddDays(-3).Date,
+                    ContactsMade      = 20,
+                    FavourContacts    = 12,
+                    FloatingContacts  = 4,
+                    AgainstContacts   = 4,
+                    IssuesLogged      = 5,
+                    Highlights        = "Distributed voter awareness material in Ward 2. Several voters were not aware of the correct booth location — corrected them.",
+                    Challenges        = "Rain in the afternoon stopped fieldwork for 2 hours. Many voters in building societies are difficult to access without appointment.",
+                    PlannedForTomorrow= "Focus on Ward 2 apartments. Coordinate with society chairman for group meeting.",
+                    Status            = FieldReportStatus.Submitted,
+                    ConstituencyId    = constituency.Id,
+                    CreatedAt         = now.AddDays(-3)
+                },
+                new FieldReport
+                {
+                    WorkerUserId      = managerUser?.Id ?? "system",
+                    WorkerName        = managerUser?.FullName ?? "Campaign Manager",
+                    ReportDate        = now.AddDays(-1).Date,
+                    ContactsMade      = 15,
+                    FavourContacts    = 10,
+                    FloatingContacts  = 3,
+                    AgainstContacts   = 2,
+                    IssuesLogged      = 1,
+                    Highlights        = "Conducted phone banking session with 8 volunteers. Covered Ward 5 & 6 floating voters. Conversion rate was 60% — better than expected.",
+                    Challenges        = "Some voter mobile numbers in the list are outdated. Need data clean-up.",
+                    PlannedForTomorrow= "Phone banking for Ward 7 & 8. Update phone numbers in the system for contacted voters.",
+                    Status            = FieldReportStatus.Flagged,
+                    ReviewerNotes     = "Flagged: Please update the voter mobile numbers as mentioned. Also check if Exotel integration can automate this.",
+                    ReviewedByUserId  = managerUser?.Id,
+                    ReviewedAt        = now.AddHours(-5),
+                    ConstituencyId    = constituency.Id,
+                    CreatedAt         = now.AddDays(-1)
+                },
+                new FieldReport
+                {
+                    WorkerUserId      = workerUser?.Id ?? "system",
+                    WorkerName        = workerUser?.FullName ?? "Field Worker 1",
+                    ReportDate        = now.Date,
+                    ContactsMade      = 12,
+                    FavourContacts    = 9,
+                    FloatingContacts  = 2,
+                    AgainstContacts   = 1,
+                    IssuesLogged      = 1,
+                    Highlights        = "Morning session very productive. Met 3 panna pramukhs for coordination. Verified voter list for Panna 2A — all voters confirmed.",
+                    Challenges        = "One voter requested transport for election day. Added to transport request list.",
+                    PlannedForTomorrow= "Continue door-to-door in Ward 2. Meeting with Panna Pramukhs for Booth 2 in the evening.",
+                    Status            = FieldReportStatus.Submitted,
+                    ConstituencyId    = constituency.Id,
+                    CreatedAt         = now
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Message Templates & Broadcasts ────────────────────────────────────
+        if (!db.MessageTemplates.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+
+            db.MessageTemplates.AddRange(
+                new MessageTemplate
+                {
+                    Title             = "Election Day Voting Reminder",
+                    Body              = "🗳️ Dear {VoterName}, today is Election Day! Your vote matters.\n\n📍 Your Booth: Booth {BoothNumber} — {BoothName}\n🕐 Polling Hours: 7 AM – 6 PM\n\nPlease carry your Voter ID card. #YourVoteYourFuture",
+                    Language          = "English",
+                    Category          = MessageCategory.ElectionReminder,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-10)
+                },
+                new MessageTemplate
+                {
+                    Title             = "मतदान दिवस स्मरणपत्र (Marathi)",
+                    Body              = "🗳️ प्रिय {VoterName}, आज मतदान दिवस आहे!\n\n📍 आपले मतदान केंद्र: बूथ {BoothNumber} — {BoothName}\n🕐 मतदानाची वेळ: सकाळी ७ ते संध्याकाळी ६\n\nमतदार ओळखपत्र सोबत आणा. तुमचे मत, तुमचे भवितव्य! 🙏",
+                    Language          = "Marathi",
+                    Category          = MessageCategory.ElectionReminder,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-10)
+                },
+                new MessageTemplate
+                {
+                    Title             = "Rally Event Invitation",
+                    Body              = "🎉 You are invited to the Grand Public Rally!\n\n📍 Venue: Patel Wadi Sports Ground, Ward 7\n📅 Date: This Saturday\n🕓 Time: 4:00 PM\n\nCome and hear the vision for our constituency's future. Bring your family and friends! Free entry.",
+                    Language          = "English",
+                    Category          = MessageCategory.EventInvite,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-8)
+                },
+                new MessageTemplate
+                {
+                    Title             = "Voter Outreach — First-Time Voters",
+                    Body              = "👋 Hello {VoterName}! Welcome to your first election.\n\nVoting is easy:\n1️⃣ Carry your Voter ID (EPIC card)\n2️⃣ Go to Booth {BoothNumber}\n3️⃣ Show ID, get ballot, vote in the EVM\n\nNeed any help? Call us: {CampaignPhone}. We are here for you! 🗳️",
+                    Language          = "English",
+                    Category          = MessageCategory.VoterOutreach,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-7)
+                },
+                new MessageTemplate
+                {
+                    Title             = "Thank You Message — Post Election",
+                    Body              = "🙏 Dear {VoterName},\n\nThank you for exercising your democratic right and voting today.\n\nYour support and trust mean everything to us. Together, we will build a better {ConstituencyName}.\n\nWith gratitude,\nDemo Candidate & Campaign Team 🇮🇳",
+                    Language          = "English",
+                    Category          = MessageCategory.ThankYou,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-5)
+                },
+                new MessageTemplate
+                {
+                    Title             = "EC Silence Period Notice",
+                    Body              = "⚠️ Important Notice: The Election Commission's silent period begins tonight at midnight.\n\nNo campaign activities, rallies, or canvassing permitted for the next 48 hours as per the Model Code of Conduct.\n\nPlease comply with EC guidelines. Thank you.",
+                    Language          = "English",
+                    Category          = MessageCategory.Announcement,
+                    ConstituencyId    = constituency.Id,
+                    CreatedByUserId   = managerUser?.Id ?? "system",
+                    CreatedAt         = DateTime.UtcNow.AddDays(-3)
+                }
+            );
+            await db.SaveChangesAsync();
+
+            // Seed broadcasts for the templates just created
+            var templates = await db.MessageTemplates.Where(t => t.ConstituencyId == constituency.Id).ToListAsync();
+            if (templates.Any())
+            {
+                db.MessageBroadcasts.AddRange(
+                    new MessageBroadcast
+                    {
+                        TemplateId         = templates[0].Id,
+                        TargetFilter       = "{\"sentiment\":\"Favour\"}",
+                        TargetDescription  = "All Favour voters with mobile numbers",
+                        TotalTargeted      = 85,
+                        SentCount          = 82,
+                        FailedCount        = 3,
+                        Status             = BroadcastStatus.Sent,
+                        ScheduledAt        = DateTime.UtcNow.AddDays(-1),
+                        SentAt             = DateTime.UtcNow.AddDays(-1).AddMinutes(5),
+                        ConstituencyId     = constituency.Id,
+                        CreatedByUserId    = managerUser?.Id ?? "system",
+                        CreatedByName      = managerUser?.FullName ?? "Campaign Manager",
+                        CreatedAt          = DateTime.UtcNow.AddDays(-1)
+                    },
+                    new MessageBroadcast
+                    {
+                        TemplateId         = templates[2].Id,
+                        TargetFilter       = "{\"wards\":[\"7\"]}",
+                        TargetDescription  = "All voters in Ward 7 with mobile numbers",
+                        TotalTargeted      = 110,
+                        SentCount          = 107,
+                        FailedCount        = 3,
+                        Status             = BroadcastStatus.Sent,
+                        ScheduledAt        = DateTime.UtcNow.AddDays(-6),
+                        SentAt             = DateTime.UtcNow.AddDays(-6).AddMinutes(3),
+                        ConstituencyId     = constituency.Id,
+                        CreatedByUserId    = managerUser?.Id ?? "system",
+                        CreatedByName      = managerUser?.FullName ?? "Campaign Manager",
+                        CreatedAt          = DateTime.UtcNow.AddDays(-6)
+                    },
+                    new MessageBroadcast
+                    {
+                        TemplateId         = templates[3].Id,
+                        TargetFilter       = "{\"sentiment\":\"Unknown\",\"ageGroup\":\"18-25\"}",
+                        TargetDescription  = "First-time voters (18-25) with Unknown sentiment",
+                        TotalTargeted      = 45,
+                        SentCount          = 0,
+                        FailedCount        = 0,
+                        Status             = BroadcastStatus.Draft,
+                        ConstituencyId     = constituency.Id,
+                        CreatedByUserId    = managerUser?.Id ?? "system",
+                        CreatedByName      = managerUser?.FullName ?? "Campaign Manager",
+                        CreatedAt          = DateTime.UtcNow.AddHours(-2)
+                    }
+                );
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ── Voter Transport Requests ──────────────────────────────────────────
+        if (!db.VoterTransportRequests.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var vehicles     = await db.TransportVehicles.Where(v => v.ConstituencyId == constituency.Id).ToListAsync();
+            var voters       = await db.Voters
+                .Where(v => v.ConstituencyId == constituency.Id && !v.IsDeleted)
+                .OrderBy(v => v.BoothNumber).Take(20).ToListAsync();
+            var now          = DateTime.UtcNow;
+
+            if (voters.Any() && vehicles.Any())
+            {
+                var requests = new List<VoterTransportRequest>();
+                var statusList = new[] { TransportStatus.Voted, TransportStatus.PickedUp, TransportStatus.Assigned, TransportStatus.Pending, TransportStatus.Pending, TransportStatus.Cancelled };
+
+                for (int i = 0; i < Math.Min(voters.Count, 15); i++)
+                {
+                    var voter   = voters[i];
+                    var vehicle = vehicles[i % vehicles.Count];
+                    var status  = statusList[i % statusList.Length];
+
+                    requests.Add(new VoterTransportRequest
+                    {
+                        VoterId        = voter.Id,
+                        VehicleId      = status == TransportStatus.Pending ? null : vehicle.Id,
+                        PickupAddress  = voter.Address,
+                        PickupNotes    = i % 3 == 0 ? "Senior citizen — needs assistance getting in vehicle."
+                                       : i % 3 == 1 ? "Wheelchair user — requires accessible vehicle."
+                                       : "Regular request.",
+                        Status         = status,
+                        RequestedAt    = now.AddDays(-1).AddHours(-i),
+                        AssignedAt     = status != TransportStatus.Pending ? now.AddDays(-1).AddHours(-i + 1) : null,
+                        PickedUpAt     = status == TransportStatus.PickedUp || status == TransportStatus.Voted
+                                         ? now.AddHours(-i) : null,
+                        ConstituencyId = constituency.Id
+                    });
+                }
+
+                db.VoterTransportRequests.AddRange(requests);
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ── Budget Plans ──────────────────────────────────────────────────────
+        if (!db.BudgetPlans.Any())
+        {
+            var constituency = db.Constituencies.First();
+            db.BudgetPlans.AddRange(
+                new BudgetPlan { Category = ExpenseCategory.Publicity,      PlannedAmount = 1_200_000m, Notes = "Flex banners, hoardings, pamphlets, social media ads.",      ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) },
+                new BudgetPlan { Category = ExpenseCategory.Transport,       PlannedAmount = 500_000m,  Notes = "Vehicle hire for campaign team, election day voter transport.", ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) },
+                new BudgetPlan { Category = ExpenseCategory.Food,            PlannedAmount = 400_000m,  Notes = "Refreshments at rallies and volunteer coordination meetings.",   ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) },
+                new BudgetPlan { Category = ExpenseCategory.Communication,   PlannedAmount = 600_000m,  Notes = "SMS campaigns, WhatsApp broadcast, phone banking setup.",        ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) },
+                new BudgetPlan { Category = ExpenseCategory.Printing,        PlannedAmount = 700_000m,  Notes = "Voter slips, manifesto copies, letter pads, receipts.",          ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) },
+                new BudgetPlan { Category = ExpenseCategory.Miscellaneous,   PlannedAmount = 300_000m,  Notes = "Contingency, stationary, unforeseen campaign needs.",            ConstituencyId = constituency.Id, CreatedAt = DateTime.UtcNow.AddDays(-30) }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // ── Expenses ──────────────────────────────────────────────────────────
+        if (!db.Expenses.Any())
+        {
+            var constituency = db.Constituencies.First();
+            var adminUser    = await userManager.FindByEmailAsync("admin@election.com");
+            var managerUser  = await userManager.FindByEmailAsync("manager@election.com");
+            var now          = DateTime.UtcNow;
+
+            db.Expenses.AddRange(
+                new Expense { Description = "Flex banners for Ward 1–4 (200 pcs)",          Category = ExpenseCategory.Publicity,    Amount = 48_000m,  ExpenseDate = now.AddDays(-25).Date, PayeeName = "Shree Print Works",       VoucherNumber = "SPW-001", IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-25) },
+                new Expense { Description = "Patel Wadi Rally — sound system hire",          Category = ExpenseCategory.Publicity,    Amount = 25_000m,  ExpenseDate = now.AddDays(-20).Date, PayeeName = "Ganesh Sound Services",   VoucherNumber = "GSS-045", IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-20) },
+                new Expense { Description = "Vehicle hire — campaign team (5 days)",         Category = ExpenseCategory.Transport,    Amount = 35_000m,  ExpenseDate = now.AddDays(-18).Date, PayeeName = "Ravi Travels",            VoucherNumber = "RT-112",  IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-18) },
+                new Expense { Description = "Nehru Vihar Rally — food for 500 volunteers",   Category = ExpenseCategory.Food,         Amount = 22_500m,  ExpenseDate = now.AddDays(-15).Date, PayeeName = "Laxmi Caterers",          VoucherNumber = "LC-088",  IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-15) },
+                new Expense { Description = "Manifesto booklet printing (2000 copies)",      Category = ExpenseCategory.Printing,     Amount = 18_000m,  ExpenseDate = now.AddDays(-14).Date, PayeeName = "City Offset Press",       VoucherNumber = "COP-201", IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-14) },
+                new Expense { Description = "WhatsApp broadcast campaign setup",              Category = ExpenseCategory.Communication,Amount = 15_000m,  ExpenseDate = now.AddDays(-12).Date, PayeeName = "Digital Edge Solutions",  VoucherNumber = "DES-077", IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-12) },
+                new Expense { Description = "Hoardings — Ward 5, 6, 7 (15 hoardings)",      Category = ExpenseCategory.Publicity,    Amount = 60_000m,  ExpenseDate = now.AddDays(-10).Date, PayeeName = "Outdoor Media Co.",       VoucherNumber = "OMC-055", IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-10) },
+                new Expense { Description = "Voter slip printing (5000 copies with QR)",     Category = ExpenseCategory.Printing,     Amount = 12_500m,  ExpenseDate = now.AddDays(-9).Date,  PayeeName = "City Offset Press",       VoucherNumber = "COP-209", IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-9) },
+                new Expense { Description = "Field worker daily allowance (10 workers, 5 days)", Category = ExpenseCategory.Miscellaneous, Amount = 25_000m, ExpenseDate = now.AddDays(-8).Date, PayeeName = "Staff Payments",        VoucherNumber = "SP-003",  IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-8) },
+                new Expense { Description = "Tilak Nagar Nukkad Natak — props & costumes",   Category = ExpenseCategory.Publicity,    Amount = 8_500m,   ExpenseDate = now.AddDays(-6).Date,  PayeeName = "Kala Kendra",             VoucherNumber = "KK-019",  IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-6) },
+                new Expense { Description = "SMS blast — 10,000 messages (Exotel)",           Category = ExpenseCategory.Communication,Amount = 3_200m,   ExpenseDate = now.AddDays(-5).Date,  PayeeName = "Exotel Technologies",     VoucherNumber = "EXT-441", IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-5) },
+                new Expense { Description = "Refreshments — panna pramukh training session",  Category = ExpenseCategory.Food,         Amount = 4_800m,   ExpenseDate = now.AddDays(-4).Date,  PayeeName = "Laxmi Caterers",          VoucherNumber = "LC-091",  IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-4) },
+                new Expense { Description = "Campaign office stationery & supplies",          Category = ExpenseCategory.Miscellaneous,Amount = 6_200m,   ExpenseDate = now.AddDays(-3).Date,  PayeeName = "National Stationery",     VoucherNumber = "NS-102",  IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-3) },
+                new Expense { Description = "Fuel reimbursement — volunteer vehicles",        Category = ExpenseCategory.Transport,    Amount = 12_000m,  ExpenseDate = now.AddDays(-2).Date,  PayeeName = "Volunteer Pool",          VoucherNumber = "VP-015",  IsECCompliant = true,  ApprovedByUserId = managerUser?.Id, ApprovedByName = managerUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-2) },
+                new Expense { Description = "Final rally — PA system, generator, stage",      Category = ExpenseCategory.Publicity,    Amount = 95_000m,  ExpenseDate = now.AddDays(-1).Date,  PayeeName = "Event Masters Pvt Ltd",   VoucherNumber = "EM-333",  IsECCompliant = true,  ApprovedByUserId = adminUser?.Id, ApprovedByName = adminUser?.FullName, ConstituencyId = constituency.Id, CreatedAt = now.AddDays(-1) }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 }

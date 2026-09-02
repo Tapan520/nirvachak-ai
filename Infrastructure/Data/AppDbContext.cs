@@ -59,6 +59,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<BoothChecklist> BoothChecklists => Set<BoothChecklist>();
     public DbSet<UserPushToken> UserPushTokens => Set<UserPushToken>();
     public DbSet<VolunteerLocation> VolunteerLocations => Set<VolunteerLocation>();
+    public DbSet<ConstituencyModulePermission> ConstituencyModulePermissions => Set<ConstituencyModulePermission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -214,6 +215,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<VolunteerLocation>()
             .HasIndex(l => l.UserId)
+            .IsUnique();
+
+        builder.Entity<ConstituencyModulePermission>()
+            .HasOne(p => p.Constituency)
+            .WithMany()
+            .HasForeignKey(p => p.ConstituencyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ConstituencyModulePermission>()
+            .HasIndex(p => new { p.ConstituencyId, p.ModuleKey, p.SubModuleKey })
             .IsUnique();
     }
 }

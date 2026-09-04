@@ -299,10 +299,12 @@ app.MapGet("/health", async (AppDbContext db) =>
     var canConnect = false;
     double dbQueryMs = -1;
     int voterCount = -1;
+    string? dataSource = null;
 
     try
     {
         canConnect = await db.Database.CanConnectAsync();
+        dataSource = db.Database.GetDbConnection().DataSource;
         var dbQueryStart = DateTime.UtcNow;
         voterCount = await db.Voters.CountAsync();
         dbQueryMs = (DateTime.UtcNow - dbQueryStart).TotalMilliseconds;
@@ -314,14 +316,18 @@ app.MapGet("/health", async (AppDbContext db) =>
 
     var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
     var memoryMB = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
+    var assemblyVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown";
 
     return Results.Ok(new
     {
         status = canConnect ? "ok" : "degraded",
         provider = "mysql",
+        build = "mysql-pomelo-20260904",
+        assemblyVersion,
         time = DateTime.UtcNow,
         responseTimeMs = Math.Round(responseTime, 2),
         dbReady = canConnect,
+        dbHost = dataSource,
         dbQueryMs = Math.Round(dbQueryMs, 2),
         voterCount,
         memoryUsageMB = Math.Round(memoryMB, 2),

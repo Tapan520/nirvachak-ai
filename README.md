@@ -11,7 +11,7 @@
 | **Web Backend** | ASP.NET Core 8 · Razor Pages |
 | **REST API** | ASP.NET Core 8 · Web API + JWT Auth |
 | **Real-time** | SignalR (live election day turnout) |
-| **Database** | SQLite via Entity Framework Core 8 |
+| **Database** | MySQL via Entity Framework Core 8 (Pomelo) |
 | **Auth** | ASP.NET Core Identity + JWT Bearer |
 | **API Docs** | Swagger / OpenAPI |
 | **Mobile** | React Native + Expo SDK 51 (TypeScript) |
@@ -179,11 +179,11 @@ Nirvachak_AI/
 | **Type** | India MLA & Ward Election Campaign Management System |
 | **Web Stack** | ASP.NET Core 8 · Razor Pages (UI) + Web API (mobile REST) |
 | **Mobile** | React Native + Expo SDK (TypeScript) in `mobile/` |
-| **Database** | SQLite via EF Core 8 (`AppDbContext`) |
+| **Database** | MySQL via EF Core 8 + Pomelo (`AppDbContext`) |
 | **Auth (Web)** | ASP.NET Core Identity + Cookie (12 h sliding) |
 | **Auth (API)** | JWT Bearer (24 h, zero clock-skew) |
 | **Real-time** | SignalR hub at `/hubs/electionday` (`ElectionDayHub`) |
-| **Hosting** | Railway.app — DB persisted at `/data/election.db` (volume) |
+| **Hosting** | Railway.app — MySQL service via MYSQL_CONNECTION_STRING |
 | **API Docs** | Swagger at `/swagger` (dev only) |
 
 ### 2. Roles & Permissions
@@ -366,7 +366,7 @@ Score = (Visits × 2) + (Calls × 1) + (Favour Conversions × 3)
 
 | Service | Type | Purpose |
 |---|---|---|
-| `DatabaseBackupService` | `IHostedService` (Singleton) | Scheduled SQLite DB backup |
+| `DatabaseBackupService` | `IHostedService` (Singleton) | Scheduled MySQL dump backup (`mysqldump`) |
 | `ExpenseBudgetAlertService` | `IHostedService` | Alert when expense cap is near |
 | `SwingVoterAlertService` | `IHostedService` | Alert on significant sentiment swings |
 | `DailyBriefingService` | `IHostedService` | Auto-post morning briefing announcement |
@@ -422,10 +422,7 @@ _audit.Track(userId, userName, "Action", "EntityType", entityId, "Details", cons
 
 ### 12. Database Initialization Strategy (Program.cs)
 
-- **Fresh install** (no DB file): `EnsureCreatedAsync()` → stamps all migration IDs as applied.
-- **Existing DB**: `MigrateAsync()` — applies only pending migrations, never deletes data.
-- **WAL mode** enabled after init: `PRAGMA journal_mode=WAL`
-- DB path priority: `DATABASE_PATH` env var → `/data/election.db` (prod) → `appsettings.json` (dev)
+- **Startup:** `MigrateAsync()` applies pending EF migrations safely (never drops data).
 
 ### 13. Mobile App (React Native / Expo)
 
@@ -444,11 +441,11 @@ Update this to your LAN IP for physical device testing.
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_PATH` | Absolute path to SQLite file (e.g. `/data/election.db`) |
+| `MYSQL_CONNECTION_STRING` | Full MySQL connection string |
 | `Jwt__Key` | JWT signing secret (min 32 chars) |
 | `Jwt__Issuer` | JWT issuer string |
 | `Jwt__Audience` | JWT audience string |
-| `ConnectionStrings__DefaultConnection` | Fallback DB path (dev only) |
+| `ConnectionStrings__DefaultConnection` | Local MySQL connection string (dev) |
 
 ### 15. Common Gotchas
 
@@ -463,4 +460,6 @@ Update this to your LAN IP for physical device testing.
 | AuditService | Call on every create/update/delete of sensitive data (users, votes, expenses) |
 | JWT vs Cookie | Web pages use cookies; `/api/*` routes use JWT — never mix them |
 | DB migrations | Add via `dotnet ef migrations add <Name>`; deploy handles apply automatically |
+
+
 

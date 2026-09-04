@@ -7,7 +7,10 @@ healthcheckTimeout = 60
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
-# REQUIRED: Persistent Volume setup (Railway Dashboard)
+# REQUIRED: MySQL on Railway
 # Steps:
-#   1. Service -> Volumes tab -> Add Volume -> Mount Path: /data
-#   2. Service -> Variables tab -> Add: DATABASE_PATH = /data/election.db
+#   1. Add a MySQL plugin/service in the Railway project
+#   2. App service Variables:
+#        MYSQL_CONNECTION_STRING=Server=<host>;Port=3306;Database=nirvachak_ai;User=<user>;Password=<password>;CharSet=utf8mb4;
+#   3. Optional backups folder variable:
+#        Backup__Directory=/data/backups

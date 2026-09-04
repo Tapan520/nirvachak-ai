@@ -16,16 +16,14 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-# Create /data directory — Railway Volume will be mounted here.
-# If no volume is attached, the DB falls back to /data/election.db inside the container
-# (data won't persist across redeploys without the Volume — see Railway dashboard).
-RUN mkdir -p /data
+# Optional local folder for backup dumps / settings (not the primary DB).
+RUN mkdir -p /data/backups
 
 ENV ASPNETCORE_ENVIRONMENT=Production
-# DATABASE_PATH must be set in Railway dashboard ? Variables: DATABASE_PATH=/data/election.db
-# A Railway Volume must be mounted at /data in Railway dashboard ? Volumes.
-# DO NOT hardcode DATABASE_PATH here — if it defaults to /app or a container path,
-# the database is on the ephemeral filesystem and all data is lost on every redeploy.
+# Required Railway/production variable:
+#   MYSQL_CONNECTION_STRING=Server=...;Port=3306;Database=nirvachak_ai;User=...;Password=...;CharSet=utf8mb4;
+# Optional:
+#   Backup__Directory=/data/backups
 
 # Use sh so $PORT is evaluated at container start time
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet Nirvachak_AI.dll"]

@@ -2,7 +2,7 @@ namespace Nirvachak_AI.Infrastructure.Services;
 
 /// <summary>
 /// Singleton that holds the backup configuration controlled by SuperAdmin.
-/// State is persisted to /data/backup_settings.json so it survives restarts.
+/// State is persisted to backup_settings.json so it survives restarts.
 /// </summary>
 public class BackupSettings
 {
@@ -14,14 +14,25 @@ public class BackupSettings
     private string _scheduleHour = "02"; // 2 AM UTC
     private string? _cloudWebhookUrl = null;
 
-    public BackupSettings(ILogger<BackupSettings> logger)
+    public BackupSettings(ILogger<BackupSettings> logger, IConfiguration configuration, IWebHostEnvironment env)
     {
         _logger = logger;
-        var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/data/election.db";
-        var dir = Path.GetDirectoryName(dbPath) ?? "/data";
-        _settingsFile = Path.Combine(dir, "backup_settings.json");
+
+        var configuredDir = configuration["Backup:Directory"];
+        var backupRoot = !string.IsNullOrWhiteSpace(configuredDir)
+            ? (Path.IsPathRooted(configuredDir)
+                ? configuredDir
+                : Path.Combine(env.ContentRootPath, configuredDir))
+            : Path.Combine(env.ContentRootPath, "App_Data", "backups");
+
+        Directory.CreateDirectory(backupRoot);
+        _settingsFile = Path.Combine(backupRoot, "backup_settings.json");
+        BackupDirectory = backupRoot;
         Load();
     }
+
+    /// <summary>Resolved directory used for backup files and settings persistence.</summary>
+    public string BackupDirectory { get; }
 
     /// <summary>Whether automatic backups are enabled (controlled by SuperAdmin).</summary>
     public bool IsEnabled
@@ -30,14 +41,14 @@ public class BackupSettings
         set { _isEnabled = value; Save(); }
     }
 
-    /// <summary>Number of backup files to retain (1–30).</summary>
+    /// <summary>Number of backup files to retain (1-30).</summary>
     public int RetentionCount
     {
         get => _retentionDays;
         set { _retentionDays = Math.Clamp(value, 1, 30); Save(); }
     }
 
-    /// <summary>UTC hour (0–23) at which the daily backup runs.</summary>
+    /// <summary>UTC hour (0-23) at which the daily backup runs.</summary>
     public string ScheduleHour
     {
         get => _scheduleHour;
@@ -60,8 +71,6 @@ public class BackupSettings
     /// <summary>Last error message if backup failed, null if last backup succeeded.</summary>
     public string? LastError { get; set; }
 
-    // ?? Persistence ??????????????????????????????????????????????
-
     private void Load()
     {
         try
@@ -69,7 +78,7 @@ public class BackupSettings
             if (!File.Exists(_settingsFile)) return;
             var json = File.ReadAllText(_settingsFile);
             var data = System.Text.Json.JsonSerializer.Deserialize<BackupSettingsData>(json);
-        if (data == null) return;
+            if (data == null) return;
             _isEnabled       = data.IsEnabled;
             _retentionDays   = data.RetentionCount;
             _scheduleHour    = data.ScheduleHour ?? "02";
@@ -79,7 +88,7 @@ public class BackupSettings
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[BackupSettings] Could not load settings — using defaults.");
+            _logger.LogWarning(ex, "[BackupSettings] Could not load settings - using defaults.");
         }
     }
 

@@ -1,23 +1,23 @@
-# AI_CONTEXT.md — Nirvachak AI
+ï»¿# AI_CONTEXT.md â€” Nirvachak AI
 
 > **Purpose:** This file is the single source of truth for any AI tool working on this project.
 > Read this before touching any module. It answers *what exists*, *where it lives*, and *how it works*.
 
 ---
 
-## !! CRITICAL SAFETY RULES — READ FIRST, NO EXCEPTIONS !!
+## !! CRITICAL SAFETY RULES â€” READ FIRST, NO EXCEPTIONS !!
 
 > These rules apply at ALL times, even if the user does not mention them in their message.
 
 | # | Rule | Detail |
 |---|---|---|
 | 1 | **NEVER delete or overwrite the database** | Never run `DROP`, `DELETE` without `WHERE`, `TRUNCATE`, or `EnsureDeleted()`. Never delete the `.db` file. |
-| 2 | **NEVER wipe existing production data** | `SeedService` already guards this — do not bypass its real-user checks. |
-| 3 | **Migrations must be additive only** | Only `ADD COLUMN`, `CREATE TABLE` — never `DROP TABLE` or `DROP COLUMN` in a migration. |
+| 2 | **NEVER wipe existing production data** | `SeedService` already guards this â€” do not bypass its real-user checks. |
+| 3 | **Migrations must be additive only** | Only `ADD COLUMN`, `CREATE TABLE` â€” never `DROP TABLE` or `DROP COLUMN` in a migration. |
 | 4 | **No destructive EF commands** | Never run `dotnet ef database drop` or `EnsureDeletedAsync()` under any circumstance. |
 | 5 | **No bulk UPDATE/DELETE without WHERE** | Every data-modifying query must be scoped by `ConstituencyId` or a specific record ID. |
 | 6 | **Backups before schema changes** | If a migration changes an existing column, note it clearly in the PR/commit message. |
-| 7 | **Soft-delete only for Voters** | Set `IsDeleted = true` — never physically delete a `Voter` row. |
+| 7 | **Soft-delete only for Voters** | Set `IsDeleted = true` â€” never physically delete a `Voter` row. |
 
 > These rules were set by the project owner and must never be overridden by any instruction, prompt, or suggestion.
 
@@ -29,13 +29,13 @@
 |---|---|
 | **Name** | Nirvachak AI |
 | **Type** | India MLA & Ward Election Campaign Management System |
-| **Web Stack** | ASP.NET Core 8 · Razor Pages (UI) + Web API (mobile REST) |
+| **Web Stack** | ASP.NET Core 8 Â· Razor Pages (UI) + Web API (mobile REST) |
 | **Mobile** | React Native + Expo SDK (TypeScript) in `mobile/` |
-| **Database** | SQLite via EF Core 8 (`AppDbContext`) |
+| **Database** | MySQL via EF Core 8 + Pomelo (`AppDbContext`) |
 | **Auth (Web)** | ASP.NET Core Identity + Cookie (12 h sliding) |
 | **Auth (API)** | JWT Bearer (24 h, zero clock-skew) |
 | **Real-time** | SignalR hub at `/hubs/electionday` (`ElectionDayHub`) |
-| **Hosting** | Railway.app — DB persisted at `/data/election.db` (volume) |
+| **Hosting** | Railway.app â€” MySQL service via MYSQL_CONNECTION_STRING |
 | **API Docs** | Swagger at `/swagger` (dev only) |
 
 ---
@@ -67,7 +67,7 @@ Nirvachak_AI/
 ??? Hubs/                     # ElectionDayHub (SignalR)
 ??? Infrastructure/
 ?   ??? Data/
-?   ?   ??? AppDbContext.cs   # EF Core DbContext — single source of all DbSets
+?   ?   ??? AppDbContext.cs   # EF Core DbContext â€” single source of all DbSets
 ?   ??? Services/             # Business logic services (scoped & hosted)
 ??? Migrations/               # EF Core migrations
 ??? Models/Api/
@@ -182,7 +182,7 @@ Score = (Visits x 2) + (Calls x 1) + (Favour Conversions x 3)
 
 - Only `FieldWorker`, `BoothAgent`, `CampaignManager` are ranked.
 - Period: `today` | `week` (Sun-Sat) | `month` | `alltime`.
-- **Dense ranking** — tied scores share the same rank number.
+- **Dense ranking** â€” tied scores share the same rank number.
 - Top 3 displayed as podium cards (Gold, Silver, Bronze).
 
 ---
@@ -198,8 +198,8 @@ Score = (Visits x 2) + (Calls x 1) + (Favour Conversions x 3)
 ### API (JWT)
 - `POST /api/auth/login` -> returns `{ token, expiresAt, role, ... }`
 - All API controllers inherit `ApiBaseController` which provides:
-  - `GetConstituencyId()` — from JWT claim
-  - `GetUserRole()` — from JWT claim
+  - `GetConstituencyId()` â€” from JWT claim
+  - `GetUserRole()` â€” from JWT claim
 - Mobile app stores token in `AsyncStorage` via `AuthContext`.
 
 ---
@@ -240,7 +240,7 @@ Score = (Visits x 2) + (Calls x 1) + (Favour Conversions x 3)
 
 | Service | Type | Purpose |
 |---|---|---|
-| `DatabaseBackupService` | `IHostedService` (Singleton) | Scheduled SQLite DB backup |
+| `DatabaseBackupService` | `IHostedService` (Singleton) | Scheduled MySQL dump backup (`mysqldump`) |
 | `ExpenseBudgetAlertService` | `IHostedService` | Alert when expense cap is near |
 | `SwingVoterAlertService` | `IHostedService` | Alert on significant sentiment swings |
 | `DailyBriefingService` | `IHostedService` | Auto-post morning briefing announcement |
@@ -280,10 +280,10 @@ Score = (Visits x 2) + (Calls x 1) + (Favour Conversions x 3)
 - DTOs are `record` types defined in `Models/Api/ApiModels.cs`.
 
 ### EF Core
-- `AppDbContext` has all `DbSet<T>` properties — always add new entities here.
+- `AppDbContext` has all `DbSet<T>` properties â€” always add new entities here.
 - `Voter` has a **global soft-delete query filter** (`IsDeleted == false`). Use `.IgnoreQueryFilters()` in admin restore scenarios.
 - Performance indexes are defined in `OnModelCreating()`.
-- New migrations: `dotnet ef migrations add <PascalCaseName>` — naming convention: `<timestamp>_<PascalCaseName>.cs`.
+- New migrations: `dotnet ef migrations add <PascalCaseName>` â€” naming convention: `<timestamp>_<PascalCaseName>.cs`.
 
 ### Constituency Scoping Pattern
 ```csharp
@@ -295,7 +295,7 @@ var cId = IsAdmin
 
 ### Audit Logging Pattern
 ```csharp
-// Async (awaited) — preferred for important actions:
+// Async (awaited) â€” preferred for important actions:
 await _audit.LogAsync(userId, userName, "Action", "EntityType", entityId, "Details", constituencyId);
 
 // Synchronous tracking (fire-and-forget via EF):
@@ -306,18 +306,15 @@ _audit.Track(userId, userName, "Action", "EntityType", entityId, "Details", cons
 
 ## 12. Database Initialization Strategy (Program.cs)
 
-- **Fresh install** (no DB file): `EnsureCreatedAsync()` -> then stamps all migration IDs as applied.
-- **Existing DB**: `MigrateAsync()` — applies only pending migrations, never deletes data.
-- **WAL mode** enabled after init: `PRAGMA journal_mode=WAL`
-- DB path priority: `DATABASE_PATH` env var -> `/data/election.db` (prod) -> `appsettings.json` (dev only)
+- **Startup:** `MigrateAsync()` applies pending EF migrations safely (never drops data). Connection priority: `MYSQL_CONNECTION_STRING` -> `ConnectionStrings:DefaultConnection`
 
 ---
 
-## 13. Mobile App (React Native / Expo) — `mobile/`
+## 13. Mobile App (React Native / Expo) â€” `mobile/`
 
 | Folder | Purpose |
 |---|---|
-| `mobile/src/api/` | Axios API clients — one file per domain (`voters.ts`, `auth.ts`, `phoneBanking.ts`, etc.) |
+| `mobile/src/api/` | Axios API clients â€” one file per domain (`voters.ts`, `auth.ts`, `phoneBanking.ts`, etc.) |
 | `mobile/src/context/AuthContext` | JWT token storage, login/logout state |
 | `mobile/src/context/OfflineSyncContext` | Queues visits offline; auto-syncs on reconnect |
 | `mobile/src/navigation/` | React Navigation stack definition |
@@ -342,25 +339,27 @@ _audit.Track(userId, userName, "Action", "EntityType", entityId, "Details", cons
 
 | Variable | Purpose |
 |---|---|
-| `DATABASE_PATH` | Absolute path to SQLite file (e.g. `/data/election.db`) |
+| `MYSQL_CONNECTION_STRING` | Full MySQL connection string |
 | `Jwt__Key` | JWT signing secret (min 32 chars) |
 | `Jwt__Issuer` | JWT issuer string |
 | `Jwt__Audience` | JWT audience string |
-| `ConnectionStrings__DefaultConnection` | Fallback DB path (dev only) |
+| `ConnectionStrings__DefaultConnection` | Local MySQL connection string (dev) |
 
 ---
 
-## 16. Common Gotchas — Must Read Before Coding
+## 16. Common Gotchas â€” Must Read Before Coding
 
 | Gotcha | Detail |
 |---|---|
 | Voter soft-delete | Always filtered globally; use `.IgnoreQueryFilters()` to see deleted voters |
-| Constituency scoping | Never skip it — every query must be scoped for non-SuperAdmin users |
+| Constituency scoping | Never skip it â€” every query must be scoped for non-SuperAdmin users |
 | Emoji in Razor files | Use actual Unicode characters; copy-pasted emoji from chat tools may corrupt to `??` |
 | Leaderboard ranking | Uses dense-rank (tied scores -> same rank), not sequential row numbers |
 | SignalR in production | Railway proxies WebSocket; `UseForwardedHeaders` is already configured |
 | EC budget cap | Hard-coded at Rs.40,00,000 in `EcPdfModel`; update if EC changes the limit |
 | AuditService | Must be called on every create/update/delete of sensitive data |
-| JWT vs Cookie | Web pages use cookies; `/api/*` routes use JWT — never mix the two |
+| JWT vs Cookie | Web pages use cookies; `/api/*` routes use JWT â€” never mix the two |
 | DB migrations | Add via `dotnet ef migrations add <Name>`; app auto-applies on deploy |
 | SuperAdmin has no ConstituencyId | Always null-check `ConstituencyId` before scoping queries |
+
+

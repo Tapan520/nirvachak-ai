@@ -134,3 +134,7 @@ desktop.ini
 *.code-workspace
 
 appsettings.Development.json
+
+# MySQL local backups/settings
+App_Data/
+*.sql

@@ -12,58 +12,49 @@ using Nirvachak_AI.Hubs;
 using Nirvachak_AI.Infrastructure;
 using Nirvachak_AI.Infrastructure.Data;
 using Nirvachak_AI.Infrastructure.Services;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ?? Database ??????????????????????????????????????????????????
-// On Railway: set DATABASE_PATH=/data/election.db  (volume mounted at /data)
-// Locally:    defaults to election.db in working directory
-var isProduction = !builder.Environment.IsDevelopment();
+// ?? Database (MySQL) ??????????????????????????????????????????
+// Priority:
+//   1) MYSQL_CONNECTION_STRING env var (Railway / production)
+//   2) ConnectionStrings:DefaultConnection (appsettings)
+var connectionString =
+    Environment.GetEnvironmentVariable("MYSQL_CONNECTION_STRING")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "MySQL connection string is not configured. Set MYSQL_CONNECTION_STRING or ConnectionStrings:DefaultConnection.");
 
-// Resolve the raw DB path from env var or config.
-// IMPORTANT: In production we must NOT fall back to the relative "election.db" path
-// from appsettings.json — that resolves to /app/election.db inside the ephemeral
-// container filesystem and data is lost on every redeploy.
-// Priority: DATABASE_PATH env var → /data/election.db (Railway volume) in prod → appsettings fallback in dev only.
-var dbPathRaw = Environment.GetEnvironmentVariable("DATABASE_PATH")
-    ?? (isProduction
-        ? "/data/election.db"
-        : builder.Configuration.GetConnectionString("DefaultConnection") ?? "election.db");
-
-// Strip "Data Source=" prefix to get the bare file path
-var dbFilePart = dbPathRaw.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
-    ? dbPathRaw["Data Source=".Length..].Trim()
-    : dbPathRaw.Trim();
-
-// Always resolve relative paths against the app's content root (project directory).
-// This guarantees the same DB file is used regardless of the working directory —
-// i.e., whether the app is launched via "dotnet run", Visual Studio, IIS Express, etc.
-var dbFile = Path.IsPathRooted(dbFilePart)
-    ? dbFilePart
-    : Path.Combine(builder.Environment.ContentRootPath, dbFilePart);
-
-// Build the final absolute connection string
-var dbPath = $"Data Source={dbFile}";
-
-// Log the active database path on every startup so it is visible in Railway deploy logs.
-Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine($"[DB] Active database path: {dbFile}");
-if (isProduction && Environment.GetEnvironmentVariable("DATABASE_PATH") == null)
+// Avoid AutoDetect at design-time/startup failures when DB is temporarily unavailable.
+// Prefer configured version; fall back to AutoDetect only when available.
+ServerVersion serverVersion;
+try
 {
-    Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine("[WARNING] DATABASE_PATH env var is not set. Defaulting to /data/election.db.");
-    Console.WriteLine("[WARNING] Ensure a Railway Volume is mounted at /data for data persistence.");
+    serverVersion = ServerVersion.AutoDetect(connectionString);
 }
-Console.ResetColor();
+catch
+{
+    serverVersion = ServerVersion.Parse("8.0.36-mysql");
+}
 
-// Ensure the directory exists (important for Railway volume path /data/)
-var dbDir = Path.GetDirectoryName(dbFile);
-if (!string.IsNullOrEmpty(dbDir) && !Directory.Exists(dbDir))
-    Directory.CreateDirectory(dbDir);
+Console.ForegroundColor = ConsoleColor.Cyan;
+Console.WriteLine("[DB] Provider: MySQL (Pomelo EF Core)");
+Console.WriteLine($"[DB] ServerVersion: {serverVersion}");
+Console.WriteLine($"[DB] Connection: {MaskConnectionString(connectionString)}");
+Console.ResetColor();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlite(dbPath);
+    options.UseMySql(connectionString, serverVersion, mySqlOptions =>
+    {
+        mySqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null);
+        mySqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore);
+    });
+
     // Child entities (DoorToDoorVisit, PhoneCallLog, etc.) have non-nullable VoterId FKs.
     // The global Voter query filter is intentional — child rows of a soft-deleted voter
     // are unreachable by design. Suppress the EF model-validation warning.
@@ -130,7 +121,6 @@ builder.Services.AddAuthentication()
     });
 
 // ?? CORS (React Native / Expo) ????????????????????????????????
-// Restrict to configured origins in production; fall back to AllowAnyOrigin in dev.
 builder.Services.AddCors(o => o.AddPolicy(Constants.Policy.CorsAllowAll, p =>
 {
     var allowedOrigins = builder.Configuration.GetSection(Constants.Cors.AllowedOriginsKey)
@@ -221,7 +211,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Election Campaign Tool API",
         Version = "v1",
-        Description = "REST API for Web & Mobile App � India MLA & Ward Elections"
+        Description = "REST API for Web & Mobile App - India MLA & Ward Elections"
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -258,8 +248,6 @@ builder.Services.AddRazorPages(options =>
 var app = builder.Build();
 
 // ?? Middleware Pipeline ???????????????????????????????????????
-// Always expose Swagger (useful for Railway health-check & mobile API docs)
-// Only expose Swagger in Development — do not expose API docs in production.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -273,10 +261,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Railway terminates SSL at the load balancer — trust forwarded headers so
-// Request.Scheme and Request.Host reflect the public HTTPS URL.
-// KnownNetworks/KnownProxies are cleared so headers from Railway's non-loopback
-// proxy are accepted (otherwise ASP.NET Core ignores them by default).
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -285,7 +269,6 @@ forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
-// Only redirect in local dev (Railway handles HTTPS at the load balancer)
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -302,7 +285,6 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapHub<ElectionDayHub>("/hubs/electionday");
 
-// Apply rate limit to public survey pages
 app.MapGet("/Survey/{**slug}", () => Results.Ok())
    .RequireRateLimiting("survey")
    .WithDisplayName("Survey-GET-RateLimit");
@@ -314,119 +296,84 @@ app.MapPost("/Survey/{**slug}", () => Results.Ok())
 app.MapGet("/health", async (AppDbContext db) =>
 {
     var startTime = DateTime.UtcNow;
-    var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/data/election.db";
-    var dbExists = File.Exists(dbPath);
-    var dbSize = dbExists ? new FileInfo(dbPath).Length : 0;
-    
-    // Quick DB query test to measure response time
-    var dbQueryStart = DateTime.UtcNow;
-    var voterCount = await db.Voters.CountAsync();
-    var dbQueryMs = (DateTime.UtcNow - dbQueryStart).TotalMilliseconds;
-    
+    var canConnect = false;
+    double dbQueryMs = -1;
+    int voterCount = -1;
+
+    try
+    {
+        canConnect = await db.Database.CanConnectAsync();
+        var dbQueryStart = DateTime.UtcNow;
+        voterCount = await db.Voters.CountAsync();
+        dbQueryMs = (DateTime.UtcNow - dbQueryStart).TotalMilliseconds;
+    }
+    catch
+    {
+        canConnect = false;
+    }
+
     var responseTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
     var memoryMB = GC.GetTotalMemory(false) / 1024.0 / 1024.0;
-    
+
     return Results.Ok(new
     {
-        status  = "ok",
-        time    = DateTime.UtcNow,
+        status = canConnect ? "ok" : "degraded",
+        provider = "mysql",
+        time = DateTime.UtcNow,
         responseTimeMs = Math.Round(responseTime, 2),
-        db      = dbPath,
-        dbReady = dbExists,
-        dbSizeMB = Math.Round(dbSize / 1024.0 / 1024.0, 2),
+        dbReady = canConnect,
         dbQueryMs = Math.Round(dbQueryMs, 2),
         voterCount,
         memoryUsageMB = Math.Round(memoryMB, 2),
-        performance = dbQueryMs < 100 ? "good" : dbQueryMs < 500 ? "acceptable" : "slow"
+        performance = dbQueryMs < 0 ? "unknown"
+            : dbQueryMs < 100 ? "good"
+            : dbQueryMs < 500 ? "acceptable"
+            : "slow"
     });
 }).AllowAnonymous();
 
-// ?? Database Schema Initialisation ??????????????????????????
-// Strategy (SAFE — never deletes existing data):
-//   Fresh install (no DB file) → EnsureCreatedAsync() builds full schema, then
-//                                 stamps all migration IDs so MigrateAsync is a no-op.
-//   Existing DB               → MigrateAsync() safely applies only pending migrations
-//                                 (adds columns / tables) without touching existing data.
-//
-// ⚠️  IMPORTANT: We intentionally do NOT delete the DB file on schema mismatch.
-//     A missing column just means a pending migration — MigrateAsync handles it safely.
-//     Deleting the DB would wipe all production data on Railway on every redeploy.
+// ?? Database Schema Initialisation (MySQL) ?????????????????
+// Always apply pending EF migrations safely. Never drop or recreate the database.
 using (var dbInitScope = app.Services.CreateScope())
 {
     var initDb = dbInitScope.ServiceProvider.GetRequiredService<AppDbContext>();
-    bool dbExists = File.Exists(dbFile);
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("[DB] Applying pending MySQL migrations (data preserved).");
+    Console.ResetColor();
 
-    if (!dbExists)
+    try
     {
-        // ── Brand-new installation ─────────────────────────────────────────
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("[DB] No database found — creating fresh schema via EnsureCreated.");
-        Console.ResetColor();
-
-        // Creates ALL tables/columns/indexes from the current EF model in one step.
-        await initDb.Database.EnsureCreatedAsync();
-
-        // Stamp every known migration as applied so future MigrateAsync calls are no-ops.
-        await initDb.Database.ExecuteSqlRawAsync(@"
-            CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
-                ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
-                ""ProductVersion"" TEXT NOT NULL
-            );");
-
-        foreach (var migrationId in initDb.Database.GetMigrations())
-        {
-#pragma warning disable EF1002 // Migration IDs come from EF's own GetMigrations() — value is safe
-            await initDb.Database.ExecuteSqlRawAsync(
-                $"INSERT OR IGNORE INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('{migrationId}', '8.0.11');");
-#pragma warning restore EF1002
-        }
-
+        await initDb.Database.MigrateAsync();
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("[DB] Fresh schema created and all migrations stamped successfully.");
+        Console.WriteLine("[DB] MySQL migrations applied successfully.");
         Console.ResetColor();
     }
-    else
+    catch (Exception ex)
     {
-        // ── Existing database — apply pending migrations SAFELY ────────────
-        // MigrateAsync() only adds missing tables/columns — it never deletes data.
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("[DB] Existing database found — applying any pending migrations (data preserved).");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[DB] Migration failed: {ex.Message}");
+        Console.WriteLine("[DB] The application will continue; fix connection/migration before production use.");
         Console.ResetColor();
-
-        try
-        {
-            await initDb.Database.MigrateAsync();
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("[DB] Migrations applied successfully.");
-            Console.ResetColor();
-        }
-        catch (Exception ex)
-        {
-            // Log the migration error but do NOT delete the DB — data is too valuable.
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"[DB] Migration failed: {ex.Message}");
-            Console.WriteLine("[DB] The application will continue with the existing schema.");
-            Console.ResetColor();
-        }
     }
-}
-
-// ?? WAL Mode ???????????????????????????????????????????????????
-// Enable WAL (Write-Ahead Logging) so concurrent reads are not blocked by writes.
-// Applied via PRAGMA because the connection string keyword is not supported by Microsoft.Data.Sqlite.
-using (var walScope = app.Services.CreateScope())
-{
-    var walDb = walScope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await walDb.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
 }
 
 // ?? Seed Data ?????????????????????????????????????????????????
 await SeedService.SeedAsync(app.Services);
 
-// ?? PWA Icons � generated at startup (cross-platform, no external libs) ??
+// ?? PWA Icons ?????????????????????????????????????????????????
 var wwwroot = app.Environment.WebRootPath
     ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 PwaIconGenerator.EnsureIconsExist(wwwroot);
 
 app.Run();
+
+static string MaskConnectionString(string value)
+{
+    // Hide password in logs while still showing host/db/user.
+    return System.Text.RegularExpressions.Regex.Replace(
+        value,
+        "(Password|Pwd)=([^;]*)",
+        "$1=****",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+}
 

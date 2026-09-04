@@ -73,12 +73,12 @@ public class BackupModel : PageModel
     {
         try
         {
-            var dbPath    = ResolveDbPath();
-            var backupDir = Path.Combine(Path.GetDirectoryName(dbPath)!, "backups");
-            var fullPath  = Path.Combine(backupDir, fileName);
+            var backupDir = _settings.BackupDirectory;
+            var fullPath = Path.GetFullPath(Path.Combine(backupDir, fileName));
+            var allowedRoot = Path.GetFullPath(backupDir);
 
             // Prevent path traversal
-            if (!fullPath.StartsWith(backupDir, StringComparison.OrdinalIgnoreCase))
+            if (!fullPath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
                 return Forbid();
 
             if (System.IO.File.Exists(fullPath))
@@ -105,23 +105,13 @@ public class BackupModel : PageModel
         LastBackupFile  = _settings.LastBackupFile;
         LastError       = _settings.LastError;
 
-        var dbPath    = ResolveDbPath();
-        var backupDir = Path.Combine(Path.GetDirectoryName(dbPath) ?? "/data", "backups");
-
+        var backupDir = _settings.BackupDirectory;
         if (Directory.Exists(backupDir))
         {
-            BackupFiles = Directory.GetFiles(backupDir, "election_backup_*.db")
+            BackupFiles = Directory.GetFiles(backupDir, "election_backup_*.sql")
                 .Select(f => new FileInfo(f))
                 .OrderByDescending(f => f.LastWriteTimeUtc)
                 .ToList();
         }
-    }
-
-    private static string ResolveDbPath()
-    {
-        var raw = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/data/election.db";
-        return raw.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
-            ? raw["Data Source=".Length..].Trim()
-            : raw.Trim();
     }
 }

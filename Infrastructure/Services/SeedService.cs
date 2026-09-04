@@ -1181,7 +1181,8 @@ public static class SeedService
             var vehicles     = await db.TransportVehicles.Where(v => v.ConstituencyId == constituency.Id).ToListAsync();
             var voters       = await db.Voters
                 .Where(v => v.ConstituencyId == constituency.Id && !v.IsDeleted)
-                .OrderBy(v => v.BoothNumber).Take(20).ToListAsync();
+                .OrderBy(v => v.BoothNumber).Take(20)
+                .ToListAsync();
             var now          = DateTime.UtcNow;
 
             if (voters.Any() && vehicles.Any())
@@ -1259,5 +1260,298 @@ public static class SeedService
             );
             await db.SaveChangesAsync();
         }
+
+        // ── Survey Candidates & Parties (Preference Analytics) ────────────────
+        if (!await db.SurveyCandidates.AnyAsync() || !await db.SurveyParties.AnyAsync())
+        {
+            var constituency = await db.Constituencies.FirstAsync();
+
+            if (!await db.SurveyParties.AnyAsync())
+            {
+                db.SurveyParties.AddRange(
+                    new SurveyParty { Name = "Demo Party",        Symbol = "Lotus",   Notes = "Incumbent alliance partner",        ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyParty { Name = "Vikas Party",       Symbol = "Hand",    Notes = "Main opposition",                   ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyParty { Name = "Jan Shakti Front",  Symbol = "Cycle",   Notes = "Regional challenger",               ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyParty { Name = "Independent / Other", Symbol = "Other", Notes = "Independents and undecided party", ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) }
+                );
+                await db.SaveChangesAsync();
+            }
+
+            if (!await db.SurveyCandidates.AnyAsync())
+            {
+                db.SurveyCandidates.AddRange(
+                    new SurveyCandidate { Name = "Demo Candidate",     PartyAffiliation = "Demo Party",       Notes = "Our candidate",              ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyCandidate { Name = "Suresh Waghmare",    PartyAffiliation = "Vikas Party",      Notes = "Main competitor",           ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyCandidate { Name = "Meera Khandare",     PartyAffiliation = "Jan Shakti Front", Notes = "Women-focused challenger",  ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyCandidate { Name = "Deepak Sarpotdar",   PartyAffiliation = "Rashtra Sena",     Notes = "Smaller third candidate",   ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) },
+                    new SurveyCandidate { Name = "Not Decided / None", PartyAffiliation = null,               Notes = "Indecisive or no party preference", ConstituencyId = constituency.Id, IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-20) }
+                );
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ── Reward config + coupons (Consent Analytics / survey rewards) ──────
+        if (!await db.RewardConfigs.AnyAsync())
+        {
+            var constituency = await db.Constituencies.FirstAsync();
+            var reward = new RewardConfig
+            {
+                ConstituencyId   = constituency.Id,
+                Title            = "Voter Survey Thank-You Coupon",
+                Description      = "₹50 partner coupon for completing the self-survey",
+                PartnerBrand     = "Nirvachak Partner Store",
+                CouponCodePrefix = "NIRV",
+                ExpiryDate       = DateTime.UtcNow.AddMonths(3),
+                IsActive         = true,
+                CreatedAt        = DateTime.UtcNow.AddDays(-15)
+            };
+            db.RewardConfigs.Add(reward);
+            await db.SaveChangesAsync();
+
+            var coupons = new List<CouponPool>();
+            for (int i = 1; i <= 80; i++)
+            {
+                coupons.Add(new CouponPool
+                {
+                    RewardConfigId = reward.Id,
+                    CouponCode     = $"NIRV{i:D4}",
+                    IsIssued       = false,
+                    IsRedeemed     = false
+                });
+            }
+            db.CouponPools.AddRange(coupons);
+            await db.SaveChangesAsync();
+        }
+
+        // ── Voter Profiles, Consents, Survey Completions ─────────────────────
+        // Powers: Preference Analytics + Voter Consent Analytics pages
+        if (!await db.VoterProfiles.AnyAsync())
+        {
+            var constituency = await db.Constituencies.FirstAsync();
+            var candidates = await db.SurveyCandidates
+                .Where(c => c.ConstituencyId == constituency.Id && c.IsActive)
+                .OrderBy(c => c.Id).ToListAsync();
+            var parties = await db.SurveyParties
+                .Where(p => p.ConstituencyId == constituency.Id && p.IsActive)
+                .OrderBy(p => p.Id).ToListAsync();
+            var voters = await db.Voters
+                .Where(v => v.ConstituencyId == constituency.Id && !v.IsDeleted)
+                .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
+                .Take(70)
+                .ToListAsync();
+
+            if (voters.Any() && candidates.Any() && parties.Any())
+            {
+                var rnd = new Random(123);
+                var ageBrackets = new[] { "18–25", "26–35", "36–50", "51–65", "65+" };
+                var castes      = new[] { "General", "OBC", "SC", "ST", "NT" };
+                var religions   = new[] { "Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain" };
+                var education   = new[] { "Below 10th", "10th", "12th", "Graduate", "PG+" };
+                var occupation  = new[] { "Farmer", "Service", "Business", "Student", "Homemaker", "Other" };
+                var incomes     = new[] { "<10K", "10-25K", "25-50K", "50K+" };
+                var languages   = new[] { "Marathi", "Hindi", "English" };
+                var concernPool = new[]
+                {
+                    "Roads & Transport", "Water Supply", "Electricity", "Garbage & Sanitation",
+                    "Employment", "Healthcare", "Education", "Women Safety", "Housing", "Pensions"
+                };
+
+                // Weighted candidate preference: Demo Candidate most popular
+                int PickCandidateIndex(int i) => (i % 10) switch
+                {
+                    0 or 1 or 2 or 3 => 0, // Demo Candidate ~40%
+                    4 or 5 or 6      => 1, // Suresh ~30%
+                    7 or 8           => 2, // Meera ~20%
+                    9               => i % 2 == 0 ? 3 : 4, // Deepak / Undecided
+                    _               => 0
+                };
+
+                var profiles = new List<VoterProfile>();
+                var consents = new List<VoterConsent>();
+                var completions = new List<SurveyCompletion>();
+
+                var reward = await db.RewardConfigs
+                    .FirstOrDefaultAsync(r => r.ConstituencyId == constituency.Id && r.IsActive);
+                var availableCoupons = reward == null
+                    ? new List<CouponPool>()
+                    : await db.CouponPools
+                        .Where(c => c.RewardConfigId == reward.Id && !c.IsIssued)
+                        .OrderBy(c => c.Id)
+                        .Take(voters.Count)
+                        .ToListAsync();
+
+                int couponIdx = 0;
+                for (int i = 0; i < voters.Count; i++)
+                {
+                    var voter = voters[i];
+                    var candIdx = Math.Min(PickCandidateIndex(i), candidates.Count - 1);
+                    var partyIdx = Math.Min(candIdx, parties.Count - 1);
+                    // Align party loosely with candidate party name when possible
+                    var cand = candidates[candIdx];
+                    var matchedParty = parties.FirstOrDefault(p =>
+                        !string.IsNullOrEmpty(cand.PartyAffiliation) &&
+                        p.Name.Contains(cand.PartyAffiliation.Split(' ')[0], StringComparison.OrdinalIgnoreCase))
+                        ?? parties[partyIdx];
+
+                    var concerns = concernPool
+                        .OrderBy(_ => rnd.Next())
+                        .Take(rnd.Next(1, 4))
+                        .ToList();
+
+                    profiles.Add(new VoterProfile
+                    {
+                        VoterId                = voter.Id,
+                        AgeBracket             = ageBrackets[i % ageBrackets.Length],
+                        CasteCategory          = castes[i % castes.Length],
+                        Religion               = religions[i % religions.Length],
+                        Education              = education[i % education.Length],
+                        Occupation             = occupation[i % occupation.Length],
+                        MonthlyIncomeBracket   = incomes[i % incomes.Length],
+                        PrimaryConcerns        = System.Text.Json.JsonSerializer.Serialize(concerns),
+                        PreferredLanguage      = languages[i % languages.Length],
+                        PhoneVerified          = i % 3 != 0,
+                        PreferredCandidateId   = cand.Id,
+                        PreferredPartyId       = matchedParty.Id,
+                        CompletedAt            = DateTime.UtcNow.AddDays(-(i % 18)).AddHours(-(i % 12)),
+                        IpAddress              = $"10.0.{(i / 50) + 1}.{i % 50 + 10}"
+                    });
+
+                    // Varied consent mix for analytics charts
+                    consents.Add(new VoterConsent
+                    {
+                        VoterId                     = voter.Id,
+                        AllowThirdPartyAdvertising  = i % 4 != 0, // ~75%
+                        AllowCampaignOutreach       = i % 5 != 0, // ~80%
+                        AllowWhatsAppMessages       = i % 3 != 0, // ~66%
+                        AllowSchemeNotifications    = i % 2 == 0, // ~50%
+                        AllowDataForAnalytics       = i % 6 != 0, // ~83%
+                        ConsentGivenAt              = DateTime.UtcNow.AddDays(-(i % 18)).AddHours(-(i % 12)),
+                        IpAddress                   = $"10.0.{(i / 50) + 1}.{i % 50 + 10}"
+                    });
+
+                    int? couponId = null;
+                    if (couponIdx < availableCoupons.Count && i % 5 != 4) // ~80% get a coupon
+                    {
+                        var coupon = availableCoupons[couponIdx++];
+                        coupon.IsIssued = true;
+                        coupon.IssuedToVoterId = voter.Id;
+                        coupon.IssuedAt = DateTime.UtcNow.AddDays(-(i % 18));
+                        if (i % 7 == 0)
+                        {
+                            coupon.IsRedeemed = true;
+                            coupon.RedeemedAt = DateTime.UtcNow.AddDays(-(i % 10));
+                        }
+                        couponId = coupon.Id;
+                    }
+
+                    completions.Add(new SurveyCompletion
+                    {
+                        VoterId         = voter.Id,
+                        ConstituencyId  = constituency.Id,
+                        CouponId        = couponId,
+                        CompletedAt     = DateTime.UtcNow.AddDays(-(i % 18)).AddHours(-(i % 12)),
+                        IpAddress       = $"10.0.{(i / 50) + 1}.{i % 50 + 10}"
+                    });
+
+                    if (string.IsNullOrEmpty(voter.MobileNumber))
+                        voter.MobileNumber = $"98{(70000000 + i):D8}";
+                }
+
+                db.VoterProfiles.AddRange(profiles);
+                db.VoterConsents.AddRange(consents);
+                db.SurveyCompletions.AddRange(completions);
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ── Swing Voters demo pattern ─────────────────────────────────────────
+        // Swing Voters page needs: current Floating/Against AND at least one past Favour visit.
+        // Generic visit seed often ends voters on their last sentiment, so ensure a clear set.
+        {
+            var constituency = await db.Constituencies.FirstAsync();
+            var workerUser = await userManager.FindByEmailAsync("worker@election.com")
+                          ?? await userManager.FindByEmailAsync("manager@election.com");
+            var workerId = workerUser?.Id ?? "system";
+            var workerName = workerUser?.FullName ?? "Field Worker 1";
+
+            var floatingOrAgainst = await db.Voters
+                .Where(v => v.ConstituencyId == constituency.Id
+                            && !v.IsDeleted
+                            && (v.Sentiment == VoterSentiment.Floating || v.Sentiment == VoterSentiment.Against))
+                .Select(v => v.Id)
+                .ToListAsync();
+
+            var favourVisitIds = await db.DoorToDoorVisits
+                .Where(v => floatingOrAgainst.Contains(v.VoterId)
+                            && v.SentimentAfterVisit == VoterSentiment.Favour)
+                .Select(v => v.VoterId)
+                .Distinct()
+                .ToListAsync();
+
+            // If fewer than 12 true swing voters, create/repair the pattern
+            if (favourVisitIds.Count < 12)
+            {
+                var candidatesForSwing = await db.Voters
+                    .Where(v => v.ConstituencyId == constituency.Id && !v.IsDeleted)
+                    .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
+                    .Take(40)
+                    .ToListAsync();
+
+                var now = DateTime.UtcNow;
+                var newVisits = new List<DoorToDoorVisit>();
+                int made = favourVisitIds.Count;
+
+                for (int i = 0; i < candidatesForSwing.Count && made < 20; i++)
+                {
+                    var voter = candidatesForSwing[i];
+                    if (favourVisitIds.Contains(voter.Id))
+                        continue;
+
+                    // Past Favour visit (makes them a "true swing" once current sentiment changes)
+                    newVisits.Add(new DoorToDoorVisit
+                    {
+                        VoterId             = voter.Id,
+                        WorkerUserId        = workerId,
+                        WorkerName          = workerName,
+                        VisitedAt           = now.AddDays(-(18 - (i % 10))).AddHours(-(i % 6)),
+                        Status              = VisitStatus.Visited,
+                        SentimentAfterVisit = VoterSentiment.Favour,
+                        Notes               = "Earlier visit: voter was supportive / leaning Favour."
+                    });
+
+                    // Later visit that swung away
+                    var nowSentiment = i % 3 == 0 ? VoterSentiment.Against : VoterSentiment.Floating;
+                    newVisits.Add(new DoorToDoorVisit
+                    {
+                        VoterId             = voter.Id,
+                        WorkerUserId        = workerId,
+                        WorkerName          = workerName,
+                        VisitedAt           = now.AddDays(-(3 - (i % 3))).AddHours(-(i % 5)),
+                        Status              = VisitStatus.Visited,
+                        SentimentAfterVisit = nowSentiment,
+                        Notes               = nowSentiment == VoterSentiment.Against
+                            ? "Follow-up: voter shifted Against after competitor outreach / unresolved grievance."
+                            : "Follow-up: voter is now Floating — needs priority re-engagement."
+                    });
+
+                    voter.Sentiment = nowSentiment;
+                    voter.LastContactedAt = now.AddDays(-(3 - (i % 3)));
+                    if (string.IsNullOrEmpty(voter.MobileNumber))
+                        voter.MobileNumber = $"99{(80000000 + i):D8}";
+
+                    made++;
+                }
+
+                if (newVisits.Count > 0)
+                {
+                    db.DoorToDoorVisits.AddRange(newVisits);
+                    await db.SaveChangesAsync();
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine($"[SEED] Added {newVisits.Count} swing-voter visit records ({made} swing voters).");
+                    Console.ResetColor();
+                }
+            }
+        }
     }
 }
+

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Data Security Addendum – Nirvachak AI</title>
+<style>
+  @page { size: A4; margin: 14mm 15mm; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.35;
+    color: #111;
+  }
+  h1 {
+    font-size: 13pt;
+    margin: 0 0 2mm 0;
+    text-align: center;
+    letter-spacing: .3px;
+  }
+  .sub {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #444;
+    margin-bottom: 3mm;
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+    padding: 1.2mm 0;
+    font-size: 8.5pt;
+    margin-bottom: 3mm;
+  }
+  h2 {
+    font-size: 9.4pt;
+    margin: 2.2mm 0 1mm 0;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: .5px solid #333;
+  }
+  p, li { margin: 0 0 1.2mm 0; text-align: justify; }
+  ol { padding-left: 4.5mm; margin: 0 0 1.5mm 0; }
+  ul { padding-left: 4.5mm; margin: 0 0 1.5mm 0; }
+  .cols { column-count: 2; column-gap: 5mm; }
+  .sign {
+    margin-top: 3mm;
+    display: flex;
+    gap: 6mm;
+    border-top: 1px solid #333;
+    padding-top: 2mm;
+  }
+  .sign > div { flex: 1; font-size: 8.5pt; }
+  .sign .line { border-bottom: 1px solid #333; height: 8mm; margin-bottom: 1mm; }
+  .footer {
+    position: fixed;
+    bottom: 5mm; left: 15mm; right: 15mm;
+    font-size: 7.5pt; color: #666;
+    display: flex; justify-content: space-between;
+    border-top: .5px solid #ccc; padding-top: 1mm;
+  }
+  .placeholder { color: #b30000; }
+</style>
+</head>
+<body>
+
+<h1>Data Security Addendum</h1>
+<div class="sub">Annex to the Master Services Agreement – Nirvachak AI Platform</div>
+
+<div class="meta">
+  <span><strong>Provider:</strong> <span class="placeholder">[Provider Legal Name]</span></span>
+  <span><strong>Customer:</strong> <span class="placeholder">[Customer Legal Name]</span></span>
+  <span><strong>Effective Date:</strong> <span class="placeholder">[YYYY-MM-DD]</span></span>
+</div>
+
+<p>This Data Security Addendum (“<strong>Addendum</strong>”) supplements the Master Services Agreement between the parties and governs the processing and protection of Customer Data (including voter, volunteer, and campaign data) handled by the Nirvachak AI platform. In case of conflict with the Agreement, this Addendum controls with respect to data security matters.</p>
+
+<div class="cols">
+
+<h2>1. Definitions</h2>
+<p><strong>Customer Data</strong> means any personal or operational data submitted by, or generated on behalf of, Customer through the Platform. <strong>Personal Data</strong>, <strong>Processing</strong>, <strong>Data Controller</strong>, and <strong>Data Processor</strong> have the meanings given under applicable data protection laws (including the DPDP Act, 2023 and, where applicable, the GDPR).</p>
+
+<h2>2. Roles &amp; Scope</h2>
+<p>Customer is the Data Controller/Fiduciary of Customer Data. Provider acts as Data Processor/Data Processor-equivalent, Processing Customer Data solely to deliver the Services and per Customer’s documented instructions.</p>
+
+<h2>3. Security Program</h2>
+<p>Provider maintains a written information security program aligned with ISO/IEC 27001 and SOC 2 (Security) principles, reviewed at least annually and covering governance, risk management, and personnel security.</p>
+
+<h2>4. Technical Safeguards</h2>
+<ul>
+  <li>Encryption in transit (TLS 1.2+) and at rest (AES-256) for all Customer Data stores and backups.</li>
+  <li>Role-based access control, least-privilege enforcement, and MFA for administrative access.</li>
+  <li>Segregation of production, staging, and development environments; no production data in non-production.</li>
+  <li>Centralized logging, tamper-evident audit trails (see AuditLog), and 12-month retention minimum.</li>
+  <li>Vulnerability scanning (monthly) and independent penetration testing (annual).</li>
+  <li>Secure SDLC: code review, dependency scanning, and secrets management.</li>
+</ul>
+
+<h2>5. Organizational Safeguards</h2>
+<ul>
+  <li>Background checks and confidentiality agreements for all personnel with data access.</li>
+  <li>Mandatory annual security &amp; privacy training.</li>
+  <li>Documented access provisioning, quarterly access reviews, and prompt de-provisioning on role change or exit.</li>
+</ul>
+
+<h2>6. Hosting &amp; Data Residency</h2>
+<p>Customer Data is hosted in <span class="placeholder">[Region, e.g., India (Mumbai/Hyderabad)]</span>. Cross-border transfer, if any, occurs only under lawful transfer mechanisms and with Customer’s prior written consent.</p>
+
+<h2>7. Sub-processors</h2>
+<p>Provider may engage vetted sub-processors (e.g., cloud hosting, email/SMS gateways, telephony) under written contracts imposing equivalent obligations. A current list is available on request; Customer will receive at least 30 days’ notice of material changes.</p>
+
+<h2>8. Incident Response</h2>
+<p>Provider will notify Customer of a confirmed Security Incident affecting Customer Data without undue delay and no later than <strong>72 hours</strong> after confirmation, including known scope, impact, and remediation steps. Provider will reasonably cooperate with Customer’s statutory reporting obligations.</p>
+
+<h2>9. Business Continuity</h2>
+<p>Encrypted backups performed daily; documented RPO ? 24 hours and RTO ? 24 hours for the production environment. Disaster recovery procedures are tested at least annually.</p>
+
+<h2>10. Data Subject Rights</h2>
+<p>Provider will assist Customer, at Customer’s reasonable request, in responding to data-principal requests for access, correction, erasure, and portability, using Platform features where available.</p>
+
+<h2>11. Retention &amp; Deletion</h2>
+<p>Customer Data is retained for the term of the Agreement and up to <span class="placeholder">[30]</span> days thereafter to permit export, after which it is securely deleted or anonymized within a further <span class="placeholder">[60]</span> days, subject to legal-hold requirements.</p>
+
+<h2>12. Audit</h2>
+<p>Provider will make available summaries of third-party audit reports (e.g., SOC 2, ISO 27001) once per year under NDA. Where legally required, Customer may conduct a proportionate on-site audit on reasonable prior notice, at Customer’s cost.</p>
+
+<h2>13. Confidentiality &amp; Compliance</h2>
+<p>All Customer Data is treated as Confidential Information. Provider complies with applicable laws including the DPDP Act, 2023 and the IT Act, 2000 and applicable Election Commission of India guidance regarding voter information handling.</p>
+
+</div>
+
+<div class="sign">
+  <div>
+    <strong>For Provider</strong>
+    <div class="line"></div>
+    Name / Title / Date
+  </div>
+  <div>
+    <strong>For Customer</strong>
+    <div class="line"></div>
+    Name / Title / Date
+  </div>
+</div>
+
+<div class="footer">
+  <span>Nirvachak AI – Data Security Addendum v1.0</span>
+  <span>CONFIDENTIAL – Contract Pack</span>
+</div>
+
+</body>
+</html>

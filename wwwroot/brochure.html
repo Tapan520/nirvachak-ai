@@ -49,6 +49,11 @@ body{font-family:Inter,sans-serif;background:#f0f2f5;display:flex;justify-conten
 .pill.b{background:#dbe4ff;color:#3b5bdb;border-color:#bac8ff}
 .pill.g{background:#d3f9d8;color:#2f9e44;border-color:#b2f2bb}
 .pill.o{background:#fff3bf;color:#e67700;border-color:#ffe066}
+.sec-box{background:#f8f9ff;border:1px solid #bac8ff;border-radius:10px;padding:12px 14px;margin-bottom:18px}
+.sec-box .sec-title{font-size:.72rem;font-weight:800;color:#3b5bdb;margin-bottom:8px;letter-spacing:.3px;text-transform:uppercase}
+.sec-items{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.sec-items div{font-size:.68rem;color:#343a40;line-height:1.4;display:flex;gap:6px}
+.sec-items .ck{color:#2f9e44;font-weight:700;flex-shrink:0}
 .ftr{background:#1a1f2e;color:#fff;padding:16px 36px;display:flex;justify-content:space-between;align-items:center}
 .ftr .brand{font-size:.95rem;font-weight:800}
 .ftr .brand span{color:#74c0fc}
@@ -140,16 +145,16 @@ body{font-family:Inter,sans-serif;background:#f0f2f5;display:flex;justify-conten
         </ul>
       </div>
       <div>
-        <div class="sec">Pricing (Per Election Cycle)</div>
+        <div class="sec">Plan (Per Election Cycle)</div>
         <div class="pricing">
-          <div class="plan">
-            <div><div class="name">Starter</div><div class="det">1 constituency &bull; up to 5 users</div></div>
-            <div class="price">Rs. 140,000</div>
-          </div>
-          <div class="plan hi">
-            <div><div class="name">Pro &#11088; Most Popular</div><div class="det">1 constituency &bull; unlimited users</div></div>
-            <div class="price">Rs. 240,000</div>
-          </div>
+            <div class="plan">
+                <div><div class="name">Starter</div><div class="det">1 constituency &bull; up to 5 users</div></div>
+                <!--<div class="price">Rs. 140,000</div>-->
+            </div>
+            <div class="plan hi">
+                <div><div class="name">Pro &#11088; Most Popular</div><div class="det">1 constituency &bull; unlimited users</div></div>
+                <!--<div class="price">Rs. 240,000</div>-->
+            </div>
           <div class="plan">
             <div><div class="name">Party Plan</div><div class="det">Multiple constituencies <!-- &bull; SuperAdmin--></div></div>
             <div class="price">Custom</div>
@@ -162,12 +167,26 @@ body{font-family:Inter,sans-serif;background:#f0f2f5;display:flex;justify-conten
       </div>
     </div>
 
+    <div class="sec">Data Security</div>
+    <div class="sec-box">
+      <div class="sec-title">Your campaign data stays inside your campaign</div>
+      <div class="sec-items">
+        <div><span class="ck">&#10003;</span><span><strong>Role-based access</strong> &mdash; workers only see what they need</span></div>
+        <div><span class="ck">&#10003;</span><span><strong>Module control</strong> &mdash; sensitive tools per constituency</span></div>
+        <div><span class="ck">&#10003;</span><span><strong>Named users + 2FA</strong> &mdash; no shared passwords</span></div>
+        <div><span class="ck">&#10003;</span><span><strong>Audit trail</strong> &mdash; know who changed what</span></div>
+        <div><span class="ck">&#10003;</span><span><strong>Instant offboarding</strong> &mdash; disable leavers same day</span></div>
+        <div><span class="ck">&#10003;</span><span><strong>You own the data</strong> &mdash; no resale; export/delete on request</span></div>
+      </div>
+      <div style="margin-top:8px;font-size:.62rem;color:#6c757d;line-height:1.5">
+        Safer than Excel + WhatsApp groups. Ask for our Data Security Addendum (ownership, access, breach notice).
+      </div>
+    </div>
+
     <div class="sec">Why Nirvachak AI</div>
     <div class="pills">
         <span class="pill b">Real-time Voter Sentiment</span>
         <span class="pill b">Panna Pramukh Tracker</span>
-        <!-- <span class="pill g">Offline Mobile App</span>-->
-        <span class="pill g">GPS Visit Logging</span>
         <span class="pill o">AI Win Probability</span>
         <span class="pill o">Swing Voter Alerts</span>
         <span class="pill b">Phone Banking Module</span>
@@ -176,6 +195,9 @@ body{font-family:Inter,sans-serif;background:#f0f2f5;display:flex;justify-conten
         <span class="pill o">EC Expense Compliance</span>
         <span class="pill b">Influencer Network</span>
         <span class="pill g">Live Election Turnout</span>
+        <span class="pill b">Role-Based Security</span>
+        <span class="pill g">Audit Trail + 2FA</span>
+        <span class="pill o">Module Access Control</span>
     </div>
 
   </div>

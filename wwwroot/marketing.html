@@ -34,7 +34,7 @@ h1 span{color:#74c0fc}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap}
 .btn-primary{background:#3b5bdb;color:#fff;border:none;border-radius:10px;padding:14px 28px;font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
 .btn-primary:hover{background:#2f4fbf;transform:translateY(-2px)}
-.btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:10px;padding:12px 28px;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
+.btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:10px;padding:12px 28px;font-size:.95rem,font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-block}
 .btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.05)}
 .btn-tour{background:rgba(116,192,252,.15);color:#74c0fc;border:2px solid rgba(116,192,252,.4);border-radius:10px;padding:12px 28px;font-size:.95rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
 .btn-tour:hover{background:rgba(116,192,252,.25);border-color:#74c0fc}
@@ -66,6 +66,10 @@ h2{font-size:2rem;font-weight:800;color:#1a1f2e;margin-bottom:12px;letter-spacin
 .feat-icon{width:48px;height:48px;border-radius:12px;background:#dbe4ff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px}
 .feat-card h3{font-size:.95rem;font-weight:700;color:#1a1f2e;margin-bottom:8px}
 .feat-card p{font-size:.82rem;color:#6c757d;line-height:1.6}
+.feat-cat{font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#3b5bdb;margin:36px 0 14px;display:flex;align-items:center;gap:10px}
+.feat-cat:first-of-type{margin-top:8px}
+.feat-cat::after{content:'';flex:1;height:1px;background:#e9ecef}
+.feat-tag{display:inline-block;background:#f1f3f5;color:#495057;border-radius:6px;padding:2px 8px;font-size:.65rem;font-weight:600;margin-top:10px}
 
 /* PLATFORM TOUR BANNER */
 .tour-banner{background:linear-gradient(135deg,#161b22,#21262d);border-top:1px solid rgba(116,192,252,.15);border-bottom:1px solid rgba(116,192,252,.15);padding:40px;text-align:center}
@@ -127,6 +131,23 @@ h2{font-size:2rem;font-weight:800;color:#1a1f2e;margin-bottom:12px;letter-spacin
 .t-card .role{font-size:.72rem;color:#6c757d}
 .stars{color:#f59f00;font-size:.85rem;margin-bottom:10px}
 
+/* SECURITY */
+.sec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.sec-card{background:#fff;border:1px solid #e9ecef;border-radius:14px;padding:22px;transition:all .25s}
+.sec-card:hover{border-color:#3b5bdb;box-shadow:0 8px 28px rgba(59,91,219,.1);transform:translateY(-3px)}
+.sec-card .sec-icon{width:44px;height:44px;border-radius:10px;background:#dbe4ff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:12px}
+.sec-card h3{font-size:.9rem;font-weight:700;color:#1a1f2e;margin-bottom:6px}
+.sec-card p{font-size:.78rem;color:#6c757d;line-height:1.55}
+.sec-compare{margin-top:28px;background:#f8f9ff;border:1px solid #e9ecef;border-radius:14px;padding:20px 22px}
+.sec-compare h4{font-size:.85rem;font-weight:700;color:#1a1f2e;margin-bottom:12px}
+.sec-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sec-compare ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.sec-compare li{font-size:.78rem;color:#495057;line-height:1.45;display:flex;gap:8px;align-items:flex-start}
+.sec-compare li .mk{font-weight:700;flex-shrink:0}
+.sec-compare .bad .mk{color:#e03131}
+.sec-compare .good .mk{color:#2f9e44}
+.sec-note{margin-top:14px;font-size:.72rem;color:#868e96;line-height:1.5}
+
 /* CTA */
 .cta-sec{background:linear-gradient(135deg,#3b5bdb,#1a1f2e);padding:80px 40px;text-align:center}
 .cta-sec h2{color:#fff;font-size:2.2rem;margin-bottom:12px}
@@ -146,7 +167,7 @@ footer ul a:hover{color:#74c0fc}
 .footer-bottom p{font-size:.72rem;color:#495057}
 
 @media(max-width:768px){
-  .hero-content,.features-grid,.steps,.roles-grid,.plans,.test-grid{grid-template-columns:1fr}
+  .hero-content,.features-grid,.steps,.roles-grid,.plans,.test-grid,.sec-grid,.sec-compare-grid{grid-template-columns:1fr}
   .steps::before{display:none}
   h1{font-size:2rem}
   nav{padding:0 20px}
@@ -164,8 +185,9 @@ footer ul a:hover{color:#74c0fc}
         <ul class="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#how">How It Works</a></li>
+            <li><a href="#security">Security</a></li>
             <li><a href="#pricing">Pricing</a></li>
-            <li><a href="/static-demo.html" class="nav-tour-link">&#9654; Platform Tour</a></li>
+            <li><a href="/static-demo.html" class="nav-tour-link">&#9654; Platform Tour</a>
             <li><a href="#contact">Contact</a></li>
         </ul>
         <a href="mailto:merudigitallabs@gmail.com?subject=Demo Request - Nirvachak AI&body=Hi, I watched the platform tour and would like to schedule a live demo. My constituency: " class="nav-cta">Request Demo</a>
@@ -218,16 +240,46 @@ footer ul a:hover{color:#74c0fc}
         <div class="section">
             <div class="sec-badge">Platform Features</div>
             <h2>Everything Your Campaign Needs</h2>
-            <p class="sec-sub">From first voter visit to result day &mdash; one platform replaces your WhatsApp groups, Excel sheets, and manual booth reports.</p>
+            <p class="sec-sub">From first voter visit to result day &mdash; one platform replaces your WhatsApp groups, Excel sheets, and manual booth reports. Built to help candidates win and manage elections end-to-end.</p>
+
+            <div class="feat-cat">Intelligence &amp; Analytics</div>
             <div class="features-grid">
-                <div class="feat-card"><div class="feat-icon">&#128506;</div><h3>Voter Intelligence</h3><p>Track Favour, Against, Neutral, Floating sentiment for every voter. Filter by booth, ward, gender. Identify swing voters instantly.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#127942;</div><h3>Field Leaderboard</h3><p>Real-time worker performance ranking. Score = Visits x2 + Calls x1 + Favour Conversions x3. Motivate your team daily.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128202;</div><h3>AI Win Probability</h3><p>Live win score calculated from voter sentiment, booth coverage, floating voter potential and contact rate. Know where you stand every day.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128373;</div><h3>Competitor Intelligence</h3><p>Log competitor rallies, door-to-door campaigns, social media threats. Track threat levels (Low to Critical). Plan your counter-strategy.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128176;</div><h3>EC Expense Compliance</h3><p>Track every rupee against the Rs.40L EC cap. Auto-generate EC-compliant PDF expense reports ready for submission.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128222;</div><h3>Phone Banking</h3><p>Log every voter call. Track outcomes (Talked, No Answer, Call Back). Update sentiment after call. Full call history per voter.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128317;</div><h3>Panna Pramukh Tracker</h3><p>Manage Panna Pramukhs booth-wise and panna-wise. Track voters assigned vs contacted. Monitor coverage in real-time.</p></div>
-                <div class="feat-card"><div class="feat-icon">&#128640;</div><h3>Election Day Live Hub</h3><p>Real-time booth-wise voter turnout via SignalR. Mark voters as Voted / Absent. Coordinate transport for voters who need pickup.</p></div>
+                <div class="feat-card"><div class="feat-icon">&#128506;</div><h3>Voter Intelligence</h3><p>Track Favour, Against, Neutral and Floating sentiment for every voter. Filter by booth, ward and gender. Build a complete ground picture.</p><span class="feat-tag">Voters</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128200;</div><h3>Analytics Dashboard</h3><p>Booth-wise and ward-wise coverage, sentiment mix and team activity at a glance. Spot weak areas early and reallocate resources fast.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#129302;</div><h3>Predictive Analytics</h3><p>Forecast booth outcomes and turnout pressure using live field data. Plan last-mile strategy with numbers, not gut feel.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#127942;</div><h3>Win Probability AI</h3><p>Live win score from voter sentiment, booth coverage, floating-voter potential and contact rate. Know where you stand every day.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#9878;</div><h3>Swing Voter Intelligence</h3><p>Identify undecided and floating voters instantly. Prioritize conversion lists for field workers and phone banking teams.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128205;</div><h3>Booth Heat Map</h3><p>Color-coded booth strength map. See strong, weak and contested booths visually so leadership can act in minutes.</p><span class="feat-tag">Operations</span></div>
+            </div>
+
+            <div class="feat-cat">Field Operations &amp; Booth Control</div>
+            <div class="features-grid">
+                <div class="feat-card"><div class="feat-icon">&#128317;</div><h3>Booth &amp; Panna Pramukh Management</h3><p>Manage booth agents and Panna Pramukhs booth-wise and panna-wise. Track voters assigned vs contacted and coverage in real time.</p><span class="feat-tag">Election Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#9989;</div><h3>Booth Readiness Checklist</h3><p>Pre-poll readiness checklist for every booth &mdash; materials, agents, transport and logistics. Nothing critical is left unchecked on voting day.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128337;</div><h3>Booth Shift Planner</h3><p>Plan and assign booth shifts for agents and volunteers. Avoid gaps in coverage across morning, afternoon and evening slots.</p><span class="feat-tag">Election Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128221;</div><h3>Field Activity Reports</h3><p>Daily field reports from workers &mdash; visits, issues, competitor notes and ground feedback. Leadership gets structured updates, not scattered WhatsApp messages.</p><span class="feat-tag">Election Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128640;</div><h3>Election Day Live Hub</h3><p>Real-time booth-wise turnout. Mark Voted / Absent, coordinate pickups and respond to ground issues as they happen.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128663;</div><h3>Voter Transport</h3><p>Capture pickup requests, assign vehicles and track completion so favourable voters actually reach the booth.</p><span class="feat-tag">Operations</span></div>
+            </div>
+
+            <div class="feat-cat">Campaign Execution</div>
+            <div class="features-grid">
+                <div class="feat-card"><div class="feat-icon">&#128196;</div><h3>Voter Slip</h3><p>Generate and print booth-wise voter slips for door-to-door distribution. Faster reach, cleaner turnout mobilisation on polling day.</p><span class="feat-tag">Voters</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128222;</div><h3>Phone Banking</h3><p>Log every voter call with outcome (Talked, No Answer, Call Back). Update sentiment after the call and keep full history per voter.</p><span class="feat-tag">Campaign</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128172;</div><h3>Broadcast &amp; WhatsApp</h3><p>Create templates and run targeted broadcasts to voters and workers. Keep messaging consistent across the entire organisation.</p><span class="feat-tag">Election Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128373;</div><h3>Competitor Intelligence</h3><p>Log competitor rallies, door-to-door drives and social threats. Track threat levels from Low to Critical and plan counters.</p><span class="feat-tag">Campaign</span></div>
+                <div class="feat-card"><div class="feat-icon">&#127942;</div><h3>Field Leaderboard</h3><p>Real-time worker ranking. Score = Visits &times;2 + Calls &times;1 + Favour Conversions &times;3. Motivate the team every single day.</p><span class="feat-tag">Campaign</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128101;</div><h3>Volunteers &amp; Influencers</h3><p>Manage volunteers, events and local influencer networks. Assign work, track delivery and amplify reach booth by booth.</p><span class="feat-tag">Campaign</span></div>
+            </div>
+
+            <div class="feat-cat">Budget, Compliance &amp; Reporting</div>
+            <div class="features-grid">
+                <div class="feat-card"><div class="feat-icon">&#128176;</div><h3>Budget Planning vs Actuals</h3><p>Plan category-wise budgets and track actual spends live. See overspend early and keep the campaign financially controlled.</p><span class="feat-tag">Election Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128179;</div><h3>EC Expense Compliance</h3><p>Track every rupee against the EC cap. Auto-generate EC-compliant PDF expense reports ready for submission.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128202;</div><h3>Daily &amp; Reports</h3><p>Export daily activity, booth, expense and election-day reports. Give candidates and consultants board-ready numbers on demand.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128226;</div><h3>Announcements &amp; Rapid Response</h3><p>Push directives to the full team and escalate ground issues instantly. Close the loop from field problem to leadership action.</p><span class="feat-tag">Ops</span></div>
+                <div class="feat-card"><div class="feat-icon">&#128203;</div><h3>Surveys &amp; Preference Analytics</h3><p>Run surveys, capture feedback and analyse preference cross-tabs by age, gender and booth for sharper messaging.</p><span class="feat-tag">Operations</span></div>
+                <div class="feat-card"><div class="feat-icon">&#127991;</div><h3>Result Day Tracker</h3><p>Capture booth-wise results as they arrive. Compare against predictions and build a clear post-poll performance picture.</p><span class="feat-tag">Election Ops</span></div>
             </div>
         </div>
     </div>
@@ -292,10 +344,71 @@ footer ul a:hover{color:#74c0fc}
                 <div class="role-card" style="border-color:#74c0fc;background:#f0f8ff"><div class="role-icon">&#128203;</div><div class="role-name" style="color:#1971c2">Campaign Manager</div><div class="role-desc">Full access to all modules. Manages field team, events, expenses, announcements and strategy.</div></div>
                 <div class="role-card" style="border-color:#69db7c;background:#f0fff4"><div class="role-icon">&#128694;</div><div class="role-name" style="color:#2f9e44">Field Worker</div><div class="role-desc">Mobile app for logging visits, calls and voter sentiment. Works offline with GPS verification.</div></div>
                 <div class="role-card" style="border-color:#f783ac;background:#fff0f6"><div class="role-icon">&#128681;</div><div class="role-name" style="color:#c2255c">Booth Agent</div><div class="role-desc">Booth-level voter management, checklist, transport coordination and election day turnout.</div></div>
+                <div class="role-card" style="border-color:#ffd43b;background:#fffbeb"><div class="role-icon">&#127942;</div><div class="role-name" style="color:#e67700">Voter Manager</div><div class="role-desc">Booth-level voter management, Get and distribute Voter Slip etc</div></div>
                 <div class="role-card" style="border-color:#a9e34b;background:#f4fce3"><div class="role-icon">&#128736;</div><div class="role-name" style="color:#5c940d">Admin</div><div class="role-desc">Manages users, booths, wards, expenses and all constituency-level settings.</div></div>
             </div>
         </div>
     </div>
+
+    <!-- SECURITY -->
+    <div id="security" style="background:#fff;padding:80px 0">
+        <div class="section">
+            <div class="sec-badge">Data Security</div>
+            <h2>Your Campaign Data Stays Inside Your Campaign</h2>
+            <p class="sec-sub">Voter lists and strategy data are campaign-critical. Nirvachak AI is built so the right people see the right data &mdash; not everyone on a WhatsApp group.</p>
+            <div class="sec-grid">
+                <div class="sec-card">
+                    <div class="sec-icon">&#128274;</div>
+                    <h3>Role-Based Access</h3>
+                    <p>Candidate, Manager, Field Worker, Booth Agent, Voter Manager and Admin each get a different view. Field staff do not get the full war-room stack.</p>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-icon">&#128736;</div>
+                    <h3>Module-Level Control</h3>
+                    <p>Enable or disable modules per constituency. Budget, Swing Voters, Analytics and other sensitive tools open only for approved users.</p>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-icon">&#128221;</div>
+                    <h3>Audit Trail</h3>
+                    <p>Important actions are attributable to named users. If something looks wrong, you can see who changed what &mdash; not &ldquo;someone on the group chat.&rdquo;</p>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-icon">&#128272;</div>
+                    <h3>Login + 2FA Ready</h3>
+                    <p>Named user logins replace shared passwords. Two-factor authentication strengthens Candidate, Manager and Admin accounts.</p>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-icon">&#128100;</div>
+                    <h3>Instant Offboarding</h3>
+                    <p>When a worker leaves the campaign, disable the account the same day. Access ends with the login &mdash; unlike Excel copies that live forever.</p>
+                </div>
+                <div class="sec-card">
+                    <div class="sec-icon">&#128203;</div>
+                    <h3>Client Data Ownership</h3>
+                    <p>You own your voter and campaign data. No resale. Export and post-election cleanup can be written into the engagement terms.</p>
+                </div>
+            </div>
+            <div class="sec-compare">
+                <h4>Safer than Excel + WhatsApp</h4>
+                <div class="sec-compare-grid">
+                    <ul class="bad">
+                        <li><span class="mk">&#10007;</span><span>Voter Excel on laptops, USBs and personal drives</span></li>
+                        <li><span class="mk">&#10007;</span><span>Shared passwords and untracked group forwards</span></li>
+                        <li><span class="mk">&#10007;</span><span>No way to revoke access after screenshots and copies</span></li>
+                    </ul>
+                    <ul class="good">
+                        <li><span class="mk">&#10003;</span><span>Central system with named users and role limits</span></li>
+                        <li><span class="mk">&#10003;</span><span>Module permissions and accountable activity</span></li>
+                        <li><span class="mk">&#10003;</span><span>Disable a user and cut platform access immediately</span></li>
+                    </ul>
+                </div>
+                <p class="sec-note">Security is not hiding data &mdash; it is controlling who can see and change it. Ask for our Data Security Addendum covering ownership, access, export/delete and breach notification.</p>
+            </div>
+        </div>
+    </div>
+
+
+
 
     <!-- PRICING -->
     <section id="pricing" class="pricing-sec">
@@ -305,7 +418,7 @@ footer ul a:hover{color:#74c0fc}
         <div class="plans">
             <div class="plan-card">
                 <div class="plan-name">Starter</div>
-                <div class="plan-price"><span class="curr">Rs. </span>140,000</div>
+                <!--<div class="plan-price"><span class="curr">Rs. </span>140,000</div>-->
                 <div class="plan-cycle">per election cycle</div>
                 <ul class="plan-feats">
                     <li><span class="ck">&#10003;</span> 1 Constituency</li>
@@ -320,7 +433,7 @@ footer ul a:hover{color:#74c0fc}
             <div class="plan-card popular">
                 <div class="pop-badge">&#11088; Most Popular</div>
                 <div class="plan-name">Pro</div>
-                <div class="plan-price"><span class="curr">Rs. </span>240,000</div>
+                <!--<div class="plan-price"><span class="curr">Rs. </span>240,000</div>-->
                 <div class="plan-cycle">per election cycle</div>
                 <ul class="plan-feats">
                     <li><span class="ck">&#10003;</span> 1 Constituency, Unlimited users</li>
@@ -380,6 +493,7 @@ footer ul a:hover{color:#74c0fc}
         </div>
     </div>
 
+
     <!-- CTA -->
     <section id="contact" class="cta-sec">
         <h2>Ready to Run a Smarter Campaign?</h2>
@@ -403,7 +517,9 @@ footer ul a:hover{color:#74c0fc}
             <ul>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how">How It Works</a></li>
-                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#security">Security</a></li>
+                <!-- <li><a href="#pricing">Pricing</a></li>-->
+                <li><a href="#pricing">Plan</a></li>
                 <li><a href="/static-demo.html">Platform Tour</a></li>
                 <li><a href="https://nirvachakai-production.up.railway.app" target="_blank">Live Demo</a></li>
             </ul>

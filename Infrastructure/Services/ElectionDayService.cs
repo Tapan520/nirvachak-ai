@@ -51,17 +51,37 @@ public class ElectionDayService
 
     public async Task<List<BoothTurnoutDto>> GetLiveTurnoutAsync(int constituencyId)
     {
-        return await _db.Booths
+        // Compute counts live from Voters so booths whose stored Booth.TotalVoters
+        // / VotedCount columns are stale (e.g. booths added after voter import)
+        // still show correct numbers.
+        var booths = await _db.Booths
             .Where(b => b.ConstituencyId == constituencyId)
             .OrderBy(b => b.BoothNumber)
-            .Select(b => new BoothTurnoutDto
+            .Select(b => new { b.BoothNumber, b.BoothName })
+            .ToListAsync();
+
+        var stats = await _db.Voters
+            .Where(v => v.ConstituencyId == constituencyId && !v.IsDeleted)
+            .GroupBy(v => v.BoothNumber)
+            .Select(g => new
+            {
+                BoothNumber = g.Key,
+                Total = g.Count(),
+                Voted = g.Count(v => v.ElectionDayStatus == ElectionDayStatus.Voted)
+            })
+            .ToDictionaryAsync(x => x.BoothNumber);
+
+        return booths.Select(b =>
+        {
+            stats.TryGetValue(b.BoothNumber, out var s);
+            return new BoothTurnoutDto
             {
                 BoothNumber = b.BoothNumber,
-                BoothName = b.BoothName,
-                TotalVoters = b.TotalVoters,
-                VotedCount = b.VotedCount
-            })
-            .ToListAsync();
+                BoothName   = b.BoothName,
+                TotalVoters = s?.Total ?? 0,
+                VotedCount  = s?.Voted ?? 0
+            };
+        }).ToList();
     }
 
     public async Task<(int total, int voted, double percent)> GetConstituencyTurnoutAsync(int constituencyId)

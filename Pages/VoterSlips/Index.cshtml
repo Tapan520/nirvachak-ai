@@ -136,11 +136,15 @@
                         </div>
 
                         @* Row 4: S/O or W/O *@
+                        @{
+                            var rel   = v.Gender == "F" ? (v.Age < 30 ? "D/O" : "W/O") : "S/O";
+                            var relHi = v.Gender == "F" ? (v.Age < 30 ? "पुत्री:" : "पत्नी:") : "पुत्र:";
+                        }
                         <div style="font-size:0.78rem; color:#111; line-height:1.35;">
                             <span class="slip-label"
-                                  data-en="@(v.Gender == "F" ? "W/O:" : "S/O:")"
-                                  data-hi="@(v.Gender == "F" ? "पत्नी:" : "पुत्र:")"
-                                  style="font-weight:700;">@(v.Gender == "F" ? "W/O" : "S/O"):&nbsp;</span>
+                                  data-en="@(rel):"
+                                  data-hi="@relHi"
+                                  style="font-weight:700;">@rel:&nbsp;</span>
                             <span class="slip-val" data-en="@(v.FatherHusbandName ?? "-")">@(v.FatherHusbandName ?? "-")</span>
                         </div>
 

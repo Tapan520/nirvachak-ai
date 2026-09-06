@@ -235,7 +235,10 @@
                             <div class="fw-semibold">@v.Name</div>
                             @if (!string.IsNullOrEmpty(v.FatherHusbandName))
                             {
-                                <div class="text-muted" style="font-size:0.75rem">S/O @v.FatherHusbandName</div>
+                                var rel = v.Gender == "F"
+                                          ? (v.Age < 30 ? "D/O" : "W/O")
+                                          : "S/O";
+                                <div class="text-muted" style="font-size:0.75rem">@rel @v.FatherHusbandName</div>
                             }
                             @if (v.IsSelfRegistered)
                             {

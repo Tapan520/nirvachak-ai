@@ -20,7 +20,17 @@ public class IndexModel : PageModel
         _userManager = userManager;
     }
 
-    public List<Booth> Booths { get; set; } = new();
+    public class BoothCardVm
+    {
+        public Booth Booth { get; set; } = null!;
+        public int TotalVoters { get; set; }
+        public int MaleVoters { get; set; }
+        public int FemaleVoters { get; set; }
+        public int OtherVoters { get; set; }
+        public int VotedCount { get; set; }
+    }
+
+    public List<BoothCardVm> Booths { get; set; } = new();
     public List<Constituency> Constituencies { get; set; } = new();
     public bool IsAdmin { get; set; }
     public bool CanManage { get; set; }
@@ -58,6 +68,45 @@ public class IndexModel : PageModel
                 query = query.Where(b => assignedBooths.Contains(b.BoothNumber));
         }
 
-        Booths = await query.ToListAsync();
+        var booths = await query.ToListAsync();
+
+        // Live counts from Voters table (source of truth) — grouped per (ConstituencyId, BoothNumber)
+        // so counts stay correct even if the stored Booth.TotalVoters/... are stale.
+        var boothKeys = booths.Select(b => new { b.ConstituencyId, b.BoothNumber }).ToList();
+        var constituencyIds = boothKeys.Select(k => k.ConstituencyId).Distinct().ToList();
+        var boothNumbers    = boothKeys.Select(k => k.BoothNumber).Distinct().ToList();
+
+        var stats = await _db.Voters
+            .Where(v => !v.IsDeleted
+                        && constituencyIds.Contains(v.ConstituencyId)
+                        && boothNumbers.Contains(v.BoothNumber))
+            .GroupBy(v => new { v.ConstituencyId, v.BoothNumber })
+            .Select(g => new
+            {
+                g.Key.ConstituencyId,
+                g.Key.BoothNumber,
+                Total  = g.Count(),
+                Male   = g.Count(v => v.Gender == "M"),
+                Female = g.Count(v => v.Gender == "F"),
+                Other  = g.Count(v => v.Gender != "M" && v.Gender != "F"),
+                Voted  = g.Count(v => v.ElectionDayStatus == ElectionDayStatus.Voted)
+            })
+            .ToListAsync();
+
+        var statsLookup = stats.ToDictionary(s => (s.ConstituencyId, s.BoothNumber));
+
+        Booths = booths.Select(b =>
+        {
+            statsLookup.TryGetValue((b.ConstituencyId, b.BoothNumber), out var s);
+            return new BoothCardVm
+            {
+                Booth        = b,
+                TotalVoters  = s?.Total  ?? 0,
+                MaleVoters   = s?.Male   ?? 0,
+                FemaleVoters = s?.Female ?? 0,
+                OtherVoters  = s?.Other  ?? 0,
+                VotedCount   = s?.Voted  ?? 0
+            };
+        }).ToList();
     }
 }

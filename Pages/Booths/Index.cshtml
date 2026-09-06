@@ -30,9 +30,10 @@
 </div>
 
 <div class="row g-3">
-@foreach (var b in Model.Booths)
+@foreach (var vm in Model.Booths)
 {
-    var pct = b.TotalVoters > 0 ? (int)Math.Round((double)b.VotedCount / b.TotalVoters * 100) : 0;
+    var b = vm.Booth;
+    var pct = vm.TotalVoters > 0 ? (int)Math.Round((double)vm.VotedCount / vm.TotalVoters * 100) : 0;
     <div class="col-md-6 col-lg-4">
         <div class="card h-100">
             <div class="card-body">
@@ -50,21 +51,21 @@
                 </div>
                 <div class="row g-2 mb-2 text-center">
                     <div class="col-4">
-                        <div class="fw-bold">@b.TotalVoters</div>
+                        <div class="fw-bold">@vm.TotalVoters</div>
                         <div class="text-muted" style="font-size:0.7rem">Total</div>
                     </div>
                     <div class="col-4">
-                        <div class="fw-bold text-primary">@b.MaleVoters</div>
+                        <div class="fw-bold text-primary">@vm.MaleVoters</div>
                         <div class="text-muted" style="font-size:0.7rem">Male</div>
                     </div>
                     <div class="col-4">
-                        <div class="fw-bold text-danger">@b.FemaleVoters</div>
+                        <div class="fw-bold text-danger">@vm.FemaleVoters</div>
                         <div class="text-muted" style="font-size:0.7rem">Female</div>
                     </div>
                 </div>
                 <div class="mb-2">
                     <div class="d-flex justify-content-between small mb-1">
-                        <span>Turnout</span><span>@b.VotedCount / @b.TotalVoters (@pct%)</span>
+                        <span>Turnout</span><span>@vm.VotedCount / @vm.TotalVoters (@pct%)</span>
                     </div>
                     <div class="turnout-bar">
                         <div class="turnout-bar-fill" style="width:@pct%"></div>

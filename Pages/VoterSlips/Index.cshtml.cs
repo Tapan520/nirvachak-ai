@@ -37,6 +37,14 @@ public class IndexModel : PageModel
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public int? BoothFilter { get; set; }
 
+    [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+    public bool IncludeCandidatePhotos { get; set; }
+
+    [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+    public string? SelectedCandidateIds { get; set; }
+
+    public List<SurveyCandidate> Candidates { get; set; } = new();
+
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -100,6 +108,29 @@ public class IndexModel : PageModel
 
         foreach (var v in Voters)
             _qrCache[v.Id] = _slipService.GenerateQrCodeBase64(v);
+
+        // Candidate photo strip (optional)
+        int? candidateConstituencyId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
+        if (IncludeCandidatePhotos && candidateConstituencyId.HasValue)
+        {
+            var candQuery = _db.SurveyCandidates
+                .Where(c => c.ConstituencyId == candidateConstituencyId.Value
+                         && c.IsActive
+                         && c.PhotoUrl != null && c.PhotoUrl != "");
+
+            if (!string.IsNullOrWhiteSpace(SelectedCandidateIds))
+            {
+                var ids = SelectedCandidateIds
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
+                    .Where(n => n > 0).ToList();
+                if (ids.Any()) candQuery = candQuery.Where(c => ids.Contains(c.Id));
+            }
+
+            Candidates = await candQuery
+                .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
+                .ToListAsync();
+        }
 
         return Page();
     }

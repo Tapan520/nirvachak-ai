@@ -6,6 +6,7 @@ public class SurveyCandidate
     public string Name { get; set; } = string.Empty;
     public string? PartyAffiliation { get; set; }
     public string? PhotoUrl { get; set; }
+    public int DisplayOrder { get; set; }
     public string? Notes { get; set; }
     public int ConstituencyId { get; set; }
     public Constituency? Constituency { get; set; }

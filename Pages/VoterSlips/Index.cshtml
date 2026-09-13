@@ -48,6 +48,24 @@
 
         @* Column-count toggle *@
         <div class="col-auto ms-auto d-flex align-items-end gap-2">
+            @* Candidate photos toggle *@
+            <div>
+                <label class="form-label form-label-sm mb-1 fw-semibold d-block">Candidate Photos</label>
+                <form method="get" class="d-inline">
+                    <input type="hidden" name="ConstituencyFilter" value="@Model.ConstituencyFilter" />
+                    <input type="hidden" name="BoothFilter" value="@Model.BoothFilter" />
+                    <input type="hidden" name="SelectedCandidateIds" value="@Model.SelectedCandidateIds" />
+                    <div class="form-check form-switch mt-1">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               id="chkPhotos" name="IncludeCandidatePhotos" value="true"
+                               @(Model.IncludeCandidatePhotos ? "checked" : "")
+                               onchange="this.form.submit()" />
+                        <label class="form-check-label small" for="chkPhotos">
+                            @(Model.IncludeCandidatePhotos ? "On" : "Off")
+                        </label>
+                    </div>
+                </form>
+            </div>
             @* Language toggle *@
             <div>
                 <label class="form-label form-label-sm mb-1 fw-semibold d-block">Language</label>
@@ -108,6 +126,28 @@
             <div class="voter-slip-card border border-dark rounded p-2">
                 <div class="d-flex gap-1 align-items-start">
                     <div class="flex-grow-1 overflow-hidden">
+
+                        @* Optional: Candidate photo strip *@
+                        @if (Model.IncludeCandidatePhotos && Model.Candidates.Any())
+                        {
+                            <div class="candidate-strip d-flex justify-content-around align-items-end mb-1"
+                                 style="border-bottom:1px solid #000; padding-bottom:2px;">
+                                @foreach (var cand in Model.Candidates)
+                                {
+                                    <div class="text-center px-1" style="flex:1 1 0; min-width:0;">
+                                        <img src="@cand.PhotoUrl" alt="@cand.Name"
+                                             style="width:26px;height:26px;object-fit:cover;border:0.5px solid #333;border-radius:2px;" />
+                                        <div style="font-size:0.55rem; line-height:1.05; color:#000; word-break:break-word;">
+                                            @cand.Name
+                                            @if (!string.IsNullOrEmpty(cand.PartyAffiliation))
+                                            {
+                                                <div style="color:#333">@cand.PartyAffiliation</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
 
                         @* Row 1: Sr | Ward No | Panna *@
                         <div style="font-size:0.78rem; color:#111; line-height:1.35;">
@@ -230,6 +270,11 @@
             border-bottom: 1.5px dashed #000 !important;
             padding: 6px 8px !important;
         }
+        .candidate-strip img {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .candidate-strip { border-bottom: 1px solid #000 !important; }
         /* nth-child rule overridden per column count by JS */
     }
 </style>

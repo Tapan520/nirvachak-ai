@@ -38,12 +38,19 @@ public class IndexModel : PageModel
     public int? BoothFilter { get; set; }
 
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+    public string? Search { get; set; }
+
+    [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public bool IncludeCandidatePhotos { get; set; }
 
     [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
     public string? SelectedCandidateIds { get; set; }
 
     public List<SurveyCandidate> Candidates { get; set; } = new();
+
+    // Printer's personal candidate profile (Voter/Booth Manager use case).
+    // When present, takes priority over the constituency-wide Candidates list.
+    public AppUser? PrinterProfile { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -73,6 +80,13 @@ public class IndexModel : PageModel
 
         if (BoothFilter.HasValue)
             query = query.Where(v => v.BoothNumber == BoothFilter);
+
+        if (!string.IsNullOrWhiteSpace(Search))
+        {
+            var s = Search.Trim();
+            query = query.Where(v => v.Name.Contains(s) || v.VoterId.Contains(s) ||
+                (v.MobileNumber != null && v.MobileNumber.Contains(s)));
+        }
 
         Voters = await query
             .OrderBy(v => v.BoothNumber).ThenBy(v => v.SerialNumber)
@@ -111,25 +125,34 @@ public class IndexModel : PageModel
 
         // Candidate photo strip (optional)
         int? candidateConstituencyId = IsAdmin ? ConstituencyFilter : user?.ConstituencyId;
-        if (IncludeCandidatePhotos && candidateConstituencyId.HasValue)
+        if (IncludeCandidatePhotos)
         {
-            var candQuery = _db.SurveyCandidates
-                .Where(c => c.ConstituencyId == candidateConstituencyId.Value
-                         && c.IsActive
-                         && c.PhotoUrl != null && c.PhotoUrl != "");
-
-            if (!string.IsNullOrWhiteSpace(SelectedCandidateIds))
+            // Priority 1 — current user's own candidate profile (Panchayat / party-agent flow)
+            if (user != null && !string.IsNullOrEmpty(user.CandidatePhotoUrl))
             {
-                var ids = SelectedCandidateIds
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
-                    .Where(n => n > 0).ToList();
-                if (ids.Any()) candQuery = candQuery.Where(c => ids.Contains(c.Id));
+                PrinterProfile = user;
             }
+            // Priority 2 — constituency-wide SurveyCandidates
+            else if (candidateConstituencyId.HasValue)
+            {
+                var candQuery = _db.SurveyCandidates
+                    .Where(c => c.ConstituencyId == candidateConstituencyId.Value
+                             && c.IsActive
+                             && c.PhotoUrl != null && c.PhotoUrl != "");
 
-            Candidates = await candQuery
-                .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
-                .ToListAsync();
+                if (!string.IsNullOrWhiteSpace(SelectedCandidateIds))
+                {
+                    var ids = SelectedCandidateIds
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => int.TryParse(s.Trim(), out var n) ? n : 0)
+                        .Where(n => n > 0).ToList();
+                    if (ids.Any()) candQuery = candQuery.Where(c => ids.Contains(c.Id));
+                }
+
+                Candidates = await candQuery
+                    .OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name)
+                    .ToListAsync();
+            }
         }
 
         return Page();

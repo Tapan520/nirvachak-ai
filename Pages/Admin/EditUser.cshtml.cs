@@ -18,12 +18,14 @@ public class EditUserModel : PageModel
     private readonly UserManager<AppUser> _userManager;
     private readonly AppDbContext _db;
     private readonly AuditService _audit;
+    private readonly IWebHostEnvironment _env;
 
-    public EditUserModel(UserManager<AppUser> userManager, AppDbContext db, AuditService audit)
+    public EditUserModel(UserManager<AppUser> userManager, AppDbContext db, AuditService audit, IWebHostEnvironment env)
     {
         _userManager = userManager;
         _db          = db;
         _audit       = audit;
+        _env         = env;
     }
 
     [BindProperty]
@@ -34,6 +36,8 @@ public class EditUserModel : PageModel
 
     public List<SelectListItem> ConstituencyItems { get; set; } = new();
     public List<SelectListItem> RoleItems { get; set; } = new();
+
+    public string? CandidatePhotoUrl { get; set; }
 
     public class InputModel
     {
@@ -73,6 +77,19 @@ public class EditUserModel : PageModel
 
         [Display(Name = "Account Active")]
         public bool IsActive { get; set; } = true;
+
+        // Candidate profile (used for Voter Slip party-branded strip)
+        [Display(Name = "Candidate Name"), MaxLength(100)]
+        public string? CandidateName { get; set; }
+
+        [Display(Name = "Party / Symbol"), MaxLength(100)]
+        public string? CandidatePartyOrSymbol { get; set; }
+
+        [Display(Name = "Candidate Slogan"), MaxLength(200)]
+        public string? CandidateSlogan { get; set; }
+
+        [Display(Name = "Candidate Photo")]
+        public IFormFile? CandidatePhoto { get; set; }
     }
 
     public async Task<IActionResult> OnGetAsync(string id)
@@ -110,15 +127,19 @@ public class EditUserModel : PageModel
         UserId = id;
         Input = new InputModel
         {
-            FullName             = targetUser.FullName,
-            Email                = targetUser.Email ?? string.Empty,
-            PhoneNumber          = targetUser.PhoneNumber,
-            Role                 = targetUser.Role,
-            ConstituencyId       = targetUser.ConstituencyId,
-            AssignedBoothNumbers = targetUser.AssignedBoothNumbers,
-            AssignedWard         = targetUser.AssignedWard,
-            IsActive             = targetUser.IsActive
+            FullName               = targetUser.FullName,
+            Email                  = targetUser.Email ?? string.Empty,
+            PhoneNumber            = targetUser.PhoneNumber,
+            Role                   = targetUser.Role,
+            ConstituencyId         = targetUser.ConstituencyId,
+            AssignedBoothNumbers   = targetUser.AssignedBoothNumbers,
+            AssignedWard           = targetUser.AssignedWard,
+            IsActive               = targetUser.IsActive,
+            CandidateName          = targetUser.CandidateName,
+            CandidatePartyOrSymbol = targetUser.CandidatePartyOrSymbol,
+            CandidateSlogan        = targetUser.CandidateSlogan
         };
+        CandidatePhotoUrl = targetUser.CandidatePhotoUrl;
 
         await LoadFormDataAsync(isSuperAdmin, isAdmin, currentUser);
         return Page();
@@ -218,6 +239,27 @@ public class EditUserModel : PageModel
         targetUser.AssignedBoothNumbers = Input.AssignedBoothNumbers;
         targetUser.AssignedWard         = Input.AssignedWard;
 
+        // Candidate profile (optional; used for party-branded voter slips)
+        targetUser.CandidateName          = Input.CandidateName?.Trim();
+        targetUser.CandidatePartyOrSymbol = Input.CandidatePartyOrSymbol?.Trim();
+        targetUser.CandidateSlogan        = Input.CandidateSlogan?.Trim();
+
+        if (Input.CandidatePhoto is { Length: > 0 })
+        {
+            var saved = await SaveCandidatePhotoAsync(Input.CandidatePhoto, targetUser.Id);
+            if (saved != null)
+            {
+                // Delete previous photo if replaced with a different extension
+                if (!string.IsNullOrEmpty(targetUser.CandidatePhotoUrl) &&
+                    !string.Equals(targetUser.CandidatePhotoUrl, saved, StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDeleteCandidatePhoto(targetUser.CandidatePhotoUrl);
+                }
+                targetUser.CandidatePhotoUrl = saved;
+                changes.Add("Candidate photo updated");
+            }
+        }
+
         if (targetUser.IsActive != Input.IsActive)
         {
             changes.Add(Input.IsActive ? "Account re-activated" : "Account deactivated");
@@ -288,5 +330,62 @@ public class EditUserModel : PageModel
         RoleItems = allowedRoles
             .Select(r => new SelectListItem { Value = r.ToString(), Text = r.ToString() })
             .ToList();
+    }
+
+    public async Task<IActionResult> OnPostRemoveCandidatePhotoAsync(string userId)
+    {
+        var targetUser = await _userManager.FindByIdAsync(userId);
+        if (targetUser == null) return NotFound();
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        bool isSuperAdmin = User.IsInRole(nameof(UserRole.SuperAdmin));
+        bool isAdmin      = User.IsInRole(nameof(UserRole.Admin));
+        if (!isSuperAdmin && targetUser.ConstituencyId != currentUser?.ConstituencyId) return Forbid();
+        if (!isSuperAdmin && !isAdmin &&
+            targetUser.Role != UserRole.FieldWorker && targetUser.Role != UserRole.BoothAgent && targetUser.Role != UserRole.VoterManager)
+            return Forbid();
+
+        if (!string.IsNullOrEmpty(targetUser.CandidatePhotoUrl))
+        {
+            TryDeleteCandidatePhoto(targetUser.CandidatePhotoUrl);
+            targetUser.CandidatePhotoUrl = null;
+            await _userManager.UpdateAsync(targetUser);
+            TempData["Message"] = $"Candidate photo removed for '{targetUser.FullName}'.";
+        }
+        return RedirectToPage(new { id = userId });
+    }
+
+    private async Task<string?> SaveCandidatePhotoAsync(IFormFile file, string userId)
+    {
+        const long maxBytes = 500 * 1024;
+        var allowed = new[] { ".jpg", ".jpeg", ".png" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowed.Contains(ext) || file.Length > maxBytes)
+        {
+            TempData["Error"] = "Candidate photo must be JPG/PNG and under 500 KB.";
+            return null;
+        }
+
+        var relDir = Path.Combine("uploads", "managers");
+        var absDir = Path.Combine(_env.WebRootPath, relDir);
+        Directory.CreateDirectory(absDir);
+
+        var fileName = $"{userId}{ext}";
+        var absPath = Path.Combine(absDir, fileName);
+        await using (var stream = System.IO.File.Create(absPath))
+            await file.CopyToAsync(stream);
+
+        return "/" + relDir.Replace('\\', '/') + "/" + fileName;
+    }
+
+    private void TryDeleteCandidatePhoto(string? photoUrl)
+    {
+        if (string.IsNullOrEmpty(photoUrl)) return;
+        var rel = photoUrl.TrimStart('/');
+        var abs = Path.Combine(_env.WebRootPath, rel.Replace('/', Path.DirectorySeparatorChar));
+        if (System.IO.File.Exists(abs))
+        {
+            try { System.IO.File.Delete(abs); } catch { /* ignore */ }
+        }
     }
 }

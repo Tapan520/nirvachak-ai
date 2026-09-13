@@ -138,3 +138,5 @@ appsettings.Development.json
 # MySQL local backups/settings
 App_Data/
 *.sql
+
+wwwroot/uploads/

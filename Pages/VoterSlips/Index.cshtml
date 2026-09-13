@@ -10,7 +10,7 @@
 <div class="no-print">
     <div class="row align-items-end g-2 mb-3">
         <div class="col-auto">
-            <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-start">
                 @if (Model.IsAdmin)
                 {
                     <div>
@@ -25,6 +25,11 @@
                     </div>
                 }
                 <div>
+                    <label class="form-label form-label-sm mb-1 fw-semibold">Search</label>
+                    <input asp-for="Search" class="form-control form-control-sm"
+                           placeholder="Name / EPIC / Mobile" style="min-width:200px" />
+                </div>
+                <div>
                     <label class="form-label form-label-sm mb-1 fw-semibold">Booth</label>
                     <select asp-for="BoothFilter" class="form-select form-select-sm" style="min-width:130px">
                         <option value="">All Booths</option>
@@ -34,11 +39,12 @@
                         }
                     </select>
                 </div>
-                <div class="align-self-end">
+                <div>
+                    <label class="form-label form-label-sm mb-1 fw-semibold d-block" style="visibility:hidden">.</label>
                     <button type="submit" class="btn btn-primary btn-sm">
                         <i class="bi bi-funnel me-1"></i>Apply
                     </button>
-                    @if (Model.BoothFilter.HasValue || Model.ConstituencyFilter.HasValue)
+                    @if (Model.BoothFilter.HasValue || Model.ConstituencyFilter.HasValue || !string.IsNullOrWhiteSpace(Model.Search))
                     {
                         <a href="?" class="btn btn-outline-secondary btn-sm ms-1">Clear</a>
                     }
@@ -47,13 +53,14 @@
         </div>
 
         @* Column-count toggle *@
-        <div class="col-auto ms-auto d-flex align-items-end gap-2">
+        <div class="col-auto ms-auto d-flex flex-wrap align-items-start gap-2">
             @* Candidate photos toggle *@
             <div>
                 <label class="form-label form-label-sm mb-1 fw-semibold d-block">Candidate Photos</label>
                 <form method="get" class="d-inline">
                     <input type="hidden" name="ConstituencyFilter" value="@Model.ConstituencyFilter" />
                     <input type="hidden" name="BoothFilter" value="@Model.BoothFilter" />
+                    <input type="hidden" name="Search" value="@Model.Search" />
                     <input type="hidden" name="SelectedCandidateIds" value="@Model.SelectedCandidateIds" />
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" role="switch"
@@ -78,17 +85,29 @@
                 <span id="langSpinner" class="spinner-border spinner-border-sm text-primary ms-1 align-self-center" role="status" style="display:none;" title="Translating..."></span>
             </div>
             <div>
-                <label class="form-label form-label-sm mb-1 fw-semibold">Columns</label>
+                <label class="form-label form-label-sm mb-1 fw-semibold d-block">
+                    Photo Size (<span id="photoSizeLabel">80</span>px)
+                </label>
+                <input type="range" class="form-range" id="photoSizeRange"
+                       min="40" max="180" step="5" value="80"
+                       style="width:140px; vertical-align:middle;"
+                       oninput="setPhotoSize(this.value)" />
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 fw-semibold d-block">Columns</label>
                 <div class="btn-group btn-group-sm" role="group" id="colToggle">
                     <button type="button" class="btn btn-outline-secondary" onclick="setColumns(2)" id="col2Btn">2</button>
                     <button type="button" class="btn btn-primary active"    onclick="setColumns(3)" id="col3Btn">3</button>
                     <button type="button" class="btn btn-outline-secondary" onclick="setColumns(4)" id="col4Btn">4</button>
                 </div>
             </div>
-            <button onclick="window.print()" class="btn btn-success btn-sm">
-                <i class="bi bi-printer-fill me-1"></i>Print / PDF
-                <span class="badge bg-white text-success ms-1">@Model.Voters.Count</span>
-            </button>
+            <div>
+                <label class="form-label form-label-sm mb-1 fw-semibold d-block" style="visibility:hidden">.</label>
+                <button onclick="window.print()" class="btn btn-success btn-sm">
+                    <i class="bi bi-printer-fill me-1"></i>Print / PDF
+                    <span class="badge bg-white text-success ms-1">@Model.Voters.Count</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -123,21 +142,46 @@
                         ? $"Booth {v.BoothNumber} \u2013 {booth.Address}"
                         : $"Booth {v.BoothNumber}";
         <div class="col-4 slip-col" id="slipWrap_@v.Id">
-            <div class="voter-slip-card border border-dark rounded p-2">
+            <div class="voter-slip-card border border-dark rounded p-2 position-relative">
+                <button type="button" class="btn btn-sm btn-outline-primary no-print position-absolute"
+                        style="top:2px; right:2px; padding:0 6px; font-size:0.65rem; line-height:1.4; z-index:2;"
+                        title="Print only this slip"
+                        onclick="printSingleSlip(@v.Id)">
+                    <i class="bi bi-printer"></i>
+                </button>
                 <div class="d-flex gap-1 align-items-start">
                     <div class="flex-grow-1 overflow-hidden">
 
                         @* Optional: Candidate photo strip *@
-                        @if (Model.IncludeCandidatePhotos && Model.Candidates.Any())
+                        @if (Model.IncludeCandidatePhotos && Model.PrinterProfile != null)
+                        {
+                            <div class="candidate-strip d-flex align-items-center mb-1"
+                                 style="border-bottom:1px solid #000; padding-bottom:3px; gap:8px;">
+                                <img class="candidate-photo" src="@Model.PrinterProfile.CandidatePhotoUrl" alt="@Model.PrinterProfile.CandidateName"
+                                     style="width:var(--candidate-photo-size,80px);height:var(--candidate-photo-size,80px);object-fit:cover;border:0.5px solid #333;border-radius:3px;flex-shrink:0" />
+                                <div style="font-size:0.78rem; line-height:1.25; color:#000; min-width:0;">
+                                    <div class="fw-bold" style="font-size:0.9rem;">@(Model.PrinterProfile.CandidateName ?? Model.PrinterProfile.FullName)</div>
+                                    @if (!string.IsNullOrEmpty(Model.PrinterProfile.CandidatePartyOrSymbol))
+                                    {
+                                        <div style="color:#333; font-size:0.75rem;">@Model.PrinterProfile.CandidatePartyOrSymbol</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.PrinterProfile.CandidateSlogan))
+                                    {
+                                        <div class="fst-italic" style="color:#555; font-size:0.7rem;">@Model.PrinterProfile.CandidateSlogan</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else if (Model.IncludeCandidatePhotos && Model.Candidates.Any())
                         {
                             <div class="candidate-strip d-flex justify-content-around align-items-end mb-1"
                                  style="border-bottom:1px solid #000; padding-bottom:2px;">
                                 @foreach (var cand in Model.Candidates)
                                 {
                                     <div class="text-center px-1" style="flex:1 1 0; min-width:0;">
-                                        <img src="@cand.PhotoUrl" alt="@cand.Name"
-                                             style="width:26px;height:26px;object-fit:cover;border:0.5px solid #333;border-radius:2px;" />
-                                        <div style="font-size:0.55rem; line-height:1.05; color:#000; word-break:break-word;">
+                                        <img class="candidate-photo" src="@cand.PhotoUrl" alt="@cand.Name"
+                                             style="width:var(--candidate-photo-size,80px);height:var(--candidate-photo-size,80px);object-fit:cover;border:0.5px solid #333;border-radius:2px;" />
+                                        <div style="font-size:0.62rem; line-height:1.1; color:#000; word-break:break-word;">
                                             @cand.Name
                                             @if (!string.IsNullOrEmpty(cand.PartyAffiliation))
                                             {
@@ -247,6 +291,14 @@
     }
 </style>
 
+@* Dynamic candidate photo size style (screen + print) - updated by setPhotoSize() *@
+<style id="photoSizeStyle">
+    .candidate-photo { width: 80px !important; height: 80px !important; }
+    @@media print {
+        .candidate-photo { width: 80px !important; height: 80px !important; }
+    }
+</style>
+
 @* Cut-line styles (screen + print) *@
 <style>
     /* Each slip cell gets dashed cut borders on all sides */
@@ -270,6 +322,7 @@
             border-bottom: 1.5px dashed #000 !important;
             padding: 6px 8px !important;
         }
+        .print-hide-slip { display: none !important; }
         .candidate-strip img {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -373,6 +426,77 @@
                 el.textContent = el.getAttribute('data-en') || '';
             });
         }
+    }
+
+    function setPhotoSize(px) {
+        const v = parseInt(px, 10) || 80;
+        document.documentElement.style.setProperty('--candidate-photo-size', v + 'px');
+        const styleEl = document.getElementById('photoSizeStyle');
+        if (styleEl) {
+            // NOTE: We use a high-specificity selector (.voter-slip-card img.candidate-photo)
+            // because wwwroot/css/app.css has a print rule ".voter-slip-card img { width:36px!important; height:36px!important; }"
+            // which would otherwise win on specificity (0,1,1 vs 0,1,0) and clamp the photo to 36px in PDF.
+            const imgRule =
+                '.voter-slip-card img.candidate-photo {' +
+                '  width: ' + v + 'px !important;' +
+                '  height: ' + v + 'px !important;' +
+                '  min-width: ' + v + 'px !important;' +
+                '  min-height: ' + v + 'px !important;' +
+                '  max-width: none !important;' +
+                '  max-height: none !important;' +
+                '  flex-shrink: 0 !important;' +
+                '  object-fit: cover !important;' +
+                '}';
+            // Neutralize container clipping so the enlarged photo is not cropped
+            // by .voter-slip-card (overflow:hidden in print), .flex-grow-1.overflow-hidden,
+            // or the inner flex container of the candidate strip.
+            const parentRule =
+                '.voter-slip-card { overflow: visible !important; }' +
+                '.voter-slip-card .overflow-hidden { overflow: visible !important; }' +
+                '.candidate-strip { overflow: visible !important; }' +
+                '.candidate-strip > div { min-width: 0 !important; overflow: visible !important; }';
+            styleEl.textContent =
+                imgRule + '\n' + parentRule + '\n' +
+                AT + 'media print {\n' +
+                '  ' + imgRule + '\n' +
+                '  ' + parentRule + '\n' +
+                '}';
+        }
+        const lbl = document.getElementById('photoSizeLabel');
+        if (lbl) lbl.textContent = v;
+        try { localStorage.setItem('voterSlipPhotoSize', String(v)); } catch { }
+    }
+
+    // Restore saved size on load
+    (function initPhotoSize() {
+        try {
+            const saved = parseInt(localStorage.getItem('voterSlipPhotoSize') || '', 10);
+            if (!isNaN(saved) && saved >= 40 && saved <= 180) {
+                const r = document.getElementById('photoSizeRange');
+                if (r) r.value = saved;
+                setPhotoSize(saved);
+            }
+        } catch { }
+    })();
+
+    // Print only a single voter slip: temporarily hide all other slips,
+    // trigger window.print(), then restore.
+    function printSingleSlip(voterId) {
+        const container = document.getElementById('slipContainer');
+        if (!container) return;
+        const cols = container.querySelectorAll('.slip-col');
+        const targetId = 'slipWrap_' + voterId;
+
+        cols.forEach(el => {
+            if (el.id !== targetId) el.classList.add('print-hide-slip');
+        });
+
+        const afterPrint = () => {
+            cols.forEach(el => el.classList.remove('print-hide-slip'));
+            window.removeEventListener('afterprint', afterPrint);
+        };
+        window.addEventListener('afterprint', afterPrint);
+        window.print();
     }
 
     function setColumns(n) {

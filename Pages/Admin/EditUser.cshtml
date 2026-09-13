@@ -12,7 +12,7 @@
                 <span class="text-muted ms-1 small">- @Model.Input.FullName</span>
             </div>
             <div class="card-body">
-                <form method="post" autocomplete="off">
+                <form method="post" autocomplete="off" enctype="multipart/form-data">
                     <input type="hidden" asp-for="UserId" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
 
@@ -129,6 +129,63 @@
                             <div class="form-text text-warning">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                 Deactivating will prevent this user from logging in.
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Section 5 - Candidate Profile (Voter Slip party-branded strip) *@
+                    <hr class="my-3" />
+                    <h6 class="text-muted text-uppercase small fw-semibold mb-1">
+                        <i class="bi bi-person-badge me-1"></i>Candidate Profile
+                        <span class="badge bg-secondary ms-1 fw-normal" style="font-size:0.65rem">Optional</span>
+                    </h6>
+                    <p class="text-muted small mb-3">
+                        When this user prints Voter Slips with the &ldquo;Candidate Photos&rdquo; toggle enabled,
+                        this photo &amp; name will appear on top of every slip.
+                    </p>
+                    <div class="row g-3 mb-4 align-items-start">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.CandidatePhotoUrl))
+                            {
+                                <img src="@Model.CandidatePhotoUrl" alt="Candidate"
+                                     style="width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6" />
+                                <div class="mt-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            asp-page-handler="RemoveCandidatePhoto"
+                                            name="userId" value="@Model.UserId"
+                                            formnovalidate
+                                            onclick="return confirm('Remove candidate photo?')">
+                                        <i class="bi bi-x-circle me-1"></i>Remove
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="bg-light border rounded d-flex align-items-center justify-content-center mx-auto"
+                                     style="width:110px;height:110px">
+                                    <i class="bi bi-person fs-1 text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="Input.CandidateName" class="form-label fw-semibold"></label>
+                                    <input asp-for="Input.CandidateName" class="form-control" placeholder="e.g. Ramesh Sharma" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="Input.CandidatePartyOrSymbol" class="form-label fw-semibold"></label>
+                                    <input asp-for="Input.CandidatePartyOrSymbol" class="form-control" placeholder="e.g. INC / Lotus" />
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="Input.CandidateSlogan" class="form-label fw-semibold"></label>
+                                    <input asp-for="Input.CandidateSlogan" class="form-control" placeholder="Optional short tagline" />
+                                </div>
+                                <div class="col-12">
+                                    <label asp-for="Input.CandidatePhoto" class="form-label fw-semibold"></label>
+                                    <input asp-for="Input.CandidatePhoto" type="file" class="form-control" accept="image/png,image/jpeg" />
+                                    <div class="form-text">JPG / PNG, up to 500 KB.</div>
+                                </div>
                             </div>
                         </div>
                     </div>

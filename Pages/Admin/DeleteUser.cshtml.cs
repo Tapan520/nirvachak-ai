@@ -11,7 +11,12 @@ namespace Nirvachak_AI.Pages.Admin;
 public class DeleteUserModel : PageModel
 {
     private readonly UserManager<AppUser> _userManager;
-    public DeleteUserModel(UserManager<AppUser> userManager) => _userManager = userManager;
+    private readonly IWebHostEnvironment _env;
+    public DeleteUserModel(UserManager<AppUser> userManager, IWebHostEnvironment env)
+    {
+        _userManager = userManager;
+        _env = env;
+    }
 
     public AppUser? TargetUser { get; set; }
 
@@ -42,7 +47,19 @@ public class DeleteUserModel : PageModel
 
         var result = await _userManager.DeleteAsync(user);
         if (result.Succeeded)
+        {
+            // Clean up any candidate photo from disk
+            if (!string.IsNullOrEmpty(user.CandidatePhotoUrl))
+            {
+                var rel = user.CandidatePhotoUrl.TrimStart('/');
+                var abs = Path.Combine(_env.WebRootPath, rel.Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(abs))
+                {
+                    try { System.IO.File.Delete(abs); } catch { /* ignore */ }
+                }
+            }
             TempData["Message"] = $"User '{user.FullName}' deleted.";
+        }
         else
             TempData["Error"] = "Error deleting user: " + string.Join(", ", result.Errors.Select(e => e.Description));
 

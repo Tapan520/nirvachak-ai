@@ -88,6 +88,19 @@ useEffect(() => {
           <Ionicons name="chevron-forward" size={18} color="#adb5bd" />
         </TouchableOpacity>
         <MenuItem icon="people-outline"        label="Volunteers"       desc="Field volunteer directory"        color="#3b5bdb" screen="Volunteers" />
+        <MenuItem icon="trophy-outline"        label="Leaderboard"      desc="Worker rankings & performance"    color="#f59f00" screen="Leaderboard" />
+        <MenuItem icon="swap-horizontal-outline" label="Swing Voters"   desc="Priority re-engagement list"      color="#e03131" screen="SwingVoters" />
+        <MenuItem icon="grid-outline"          label="Booth Heat Map"   desc="Coverage & sentiment per booth"   color="#7950f2" screen="BoothHeatMap" />
+        <MenuItem icon="checkbox-outline"      label="Election Day Checklist" desc="Booth-readiness ticks on the ground" color="#2f9e44" screen="ElectionDayChecklist" />
+        <MenuItem icon="pie-chart-outline"     label="Preference Analytics"  desc="Candidate & party preference charts" color="#3b5bdb" screen="PreferenceAnalytics" />
+        <MenuItem icon="analytics-outline"     label="Survey Demographics"   desc="Voter profile breakdowns"          color="#7950f2" screen="SurveyDemographics" />
+        {(user?.role === 'Admin' || user?.role === 'SuperAdmin' || user?.role === 'CampaignManager') && (
+          <>
+            <MenuItem icon="people-circle-outline" label="Candidates & Parties" desc="Manage survey candidates & parties" color="#e67700" screen="CandidatesParties" />
+            <MenuItem icon="map-outline"           label="Wards"                desc="Manage wards in constituency"     color="#0c8599" screen="Wards" />
+            <MenuItem icon="gift-outline"          label="Rewards"              desc="Coupon programs & redemption"     color="#e03131" screen="Rewards" />
+          </>
+        )}
         <MenuItem icon="megaphone-outline"     label="Campaign Events"  desc="Rallies, meetings & activities"   color="#e03131" screen="CampaignEvents" />
         <MenuItem icon="stats-chart-outline"   label="Analytics"        desc="Sentiment & voter insights"       color="#7950f2" screen="Analytics" />
         <MenuItem icon="clipboard-outline"     label="Surveys"          desc="Active surveys & responses"       color="#f59f00" screen="Surveys" />
@@ -122,6 +135,7 @@ useEffect(() => {
 
       <Text style={s.sectionTitle}>Account</Text>
       <View style={s.section}>
+        <MenuItem icon="shield-checkmark-outline" label="Two-Factor Auth" desc="Enable / disable 2FA on your account" color="#2f9e44" screen="TwoFactor" />
         <TouchableOpacity style={m.item} onPress={logout}>
           <View style={[m.iconBox, { backgroundColor: '#fff0f0' }]}>
             <Ionicons name="log-out-outline" size={24} color="#e03131" />

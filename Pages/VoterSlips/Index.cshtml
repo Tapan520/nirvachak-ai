@@ -248,12 +248,16 @@
                         </div>
 
                     </div>
+                    
+                    @* Suppressed QR code for now, as it may not be needed and can clutter the slip. Uncomment if required. *@
+                    @*
                     @if (!string.IsNullOrEmpty(Model.GetQrCode(v.Id)))
                     {
                         <img src="data:image/png;base64,@Model.GetQrCode(v.Id)"
                              width="44" height="44" alt="QR"
                              style="flex-shrink:0; border:1px solid #333; border-radius:3px" />
                     }
+                    *@
                 </div>
             </div>
         </div>

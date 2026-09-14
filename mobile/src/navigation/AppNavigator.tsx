@@ -41,6 +41,16 @@ import AdminScreen from '../screens/AdminScreen';
 import WinProbabilityScreen from '../screens/WinProbabilityScreen';
 import WhatsAppOutreachScreen from '../screens/WhatsAppOutreachScreen';
 import VolunteerMapScreen from '../screens/VolunteerMapScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
+import SwingVotersScreen from '../screens/SwingVotersScreen';
+import BoothHeatMapScreen from '../screens/BoothHeatMapScreen';
+import ElectionDayChecklistScreen from '../screens/ElectionDayChecklistScreen';
+import PreferenceAnalyticsScreen from '../screens/PreferenceAnalyticsScreen';
+import SurveyDemographicsScreen from '../screens/SurveyDemographicsScreen';
+import CandidatesPartiesScreen from '../screens/CandidatesPartiesScreen';
+import WardsScreen from '../screens/WardsScreen';
+import RewardsScreen from '../screens/RewardsScreen';
+import TwoFactorScreen from '../screens/TwoFactorScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -159,6 +169,26 @@ export default function AppNavigator() {
             <Stack.Screen name="WhatsAppOutreach" component={WhatsAppOutreachScreen}
               options={{ headerShown: true, title: 'WhatsApp Outreach', headerTintColor: '#25D366' }} />
             <Stack.Screen name="VolunteerMap" component={VolunteerMapScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Leaderboard" component={LeaderboardScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="SwingVoters" component={SwingVotersScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="BoothHeatMap" component={BoothHeatMapScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="ElectionDayChecklist" component={ElectionDayChecklistScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="PreferenceAnalytics" component={PreferenceAnalyticsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="SurveyDemographics" component={SurveyDemographicsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="CandidatesParties" component={CandidatesPartiesScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Wards" component={WardsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="Rewards" component={RewardsScreen}
+              options={{ headerShown: false }} />
+            <Stack.Screen name="TwoFactor" component={TwoFactorScreen}
               options={{ headerShown: false }} />
           </>
         ) : (

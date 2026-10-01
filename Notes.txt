@@ -1,0 +1,29 @@
+
+Run this application from Local
+
+cd C:\CursorProjects\nirvachak-ai
+dotnet run --project Nirvachak_AI.csproj -c Release
+
+http://localhost:5211
+
+https://nirvachakai.up.railway.app/
+https://nirvachak-ai.up.railway.app/
+
+
+
+
+
+
+**SuperAdmin**		superadmin@nirvachak.ai /	SuperAdmin@123
+**Admin**		admin@election.com /		Admin@123		Pune Cantonment
+**Campaign Manager**	manager@election.com /		Manager@123		Pune Cantonment
+**Field Worker**	worker@election.com /		Worker@123		Pune Cantonment
+
+Booth Agent1		boothagent1@election.com /	Booth@123		
+Booth Agent		boothagent@election.com /	Booth@123		
+
+Voter Manager		VoterManagerJaipurINC@election.com / VoterManager@123
+Voter Manager		VoterManagerJaipurBJP@election.com / VoterManager@123
+
+
+---------------------------------------------------------------------------------------------------

@@ -1,0 +1,28 @@
+[35mMarketing/brochure.html[m[36m:[m[32m189[m[36m:[m        <a href="https://[1;31mnirvachakai.up.railway[m.app">[1;31mnirvachakai.up.railway[m.app</a><br>
+[35mMarketing/landing-page.html[m[36m:[m[32m173[m[36m:[m        <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank" class="btn-primary">&#128640; Try Live Demo</a>
+[35mMarketing/landing-page.html[m[36m:[m[32m356[m[36m:[m    <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank" class="btn-primary">&#128640; Try Live Demo Now</a>
+[35mMarketing/landing-page.html[m[36m:[m[32m374[m[36m:[m      <li><a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank">Live Demo</a></li>
+[35mMarketing/landing-page.html[m[36m:[m[32m381[m[36m:[m      <li><a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank">Live Platform</a></li>
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m5[m[36m:[m# Demo URL: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m27[m[36m:[m*Live demo:* https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m56[m[36m:[mhttps://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m85[m[36m:[mDemo: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m116[m[36m:[mLive platform: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m142[m[36m:[mDemo link: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m172[m[36m:[mDemo: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m192[m[36m:[mLive demo: https://[1;31mnirvachakai.up.railway[m.app
+[35mMarketing/whatsapp-templates.md[m[36m:[m[32m200[m[36m:[mPlatform URL    : https://[1;31mnirvachakai.up.railway[m.app
+[35mmobile/src/api/client.ts[m[36m:[m[32m6[m[36m:[mexport const API_BASE_URL = 'https://[1;31mnirvachakai.up.railway[m.app';
+[35mmobile/src/context/OfflineSyncContext.tsx[m[36m:[m[32m98[m[36m:[m      await fetch('https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m/health', {
+[35mwwwroot/brochure.html[m[36m:[m[32m211[m[36m:[m      <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m">[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m</a><br>
+[35mwwwroot/marketing.html[m[36m:[m[32m211[m[36m:[m                    <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank" class="btn-primary">&#128640; Try Live Demo</a>
+[35mwwwroot/marketing.html[m[36m:[m[32m502[m[36m:[m            <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank" class="btn-primary">&#128640; Try Live Demo Now</a>
+[35mwwwroot/marketing.html[m[36m:[m[32m524[m[36m:[m                <li><a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank">Live Demo</a></li>
+[35mwwwroot/marketing.html[m[36m:[m[32m531[m[36m:[m                <li><a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank">Live Platform</a></li>
+[35mwwwroot/static-demo.html[m[36m:[m[32m296[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/Dashboard/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m369[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/Voters/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m428[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/Analytics/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m502[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/WinProbability/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m557[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/ElectionDay/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m612[m[36m:[m          <div class="url">[1;31mnirvachakai.up.railway[m.app/Leaderboard/Index</div>
+[35mwwwroot/static-demo.html[m[36m:[m[32m686[m[36m:[m      <a href="https://[1;31mnirvachakai-production[m.up.[1;31mrailway.app[m" target="_blank" class="cta-btn-outline">🚀 Try Live Platform Now</a>

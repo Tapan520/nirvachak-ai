@@ -95,7 +95,7 @@ syncNowRef.current = syncNow;
 useEffect(() => {
   const checkOnline = async () => {
     try {
-      await fetch('https://nirvachakai-production.up.railway.app/health', {
+      await fetch('https://nirvachakai.up.railway.app/health', {
         method: 'HEAD', cache: 'no-store',
         signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined,
       });

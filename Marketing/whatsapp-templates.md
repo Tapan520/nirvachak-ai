@@ -2,7 +2,7 @@
 # ===========================================
 # 7 ready-to-send templates for different audiences.
 # Replace [CANDIDATE NAME], [CONSTITUENCY], [YOUR NAME] before sending.
-# Demo URL: https://nirvachakai-production.up.railway.app
+# Demo URL: https://nirvachakai.up.railway.app
 # ===========================================
 
 
@@ -24,7 +24,7 @@ I would like to show you *Nirvachak AI* - India's first complete election campai
 
 It replaces WhatsApp groups and Excel sheets - everything in one place.
 
-*Live demo:* https://nirvachakai-production.up.railway.app
+*Live demo:* https://nirvachakai.up.railway.app
 
 Would you be open to a 30-minute demo this week?
 I can walk you through it with your own constituency data.
@@ -53,7 +53,7 @@ Is platform se aap kar sakte hain:
 Sabse badi baat - *WhatsApp groups aur Excel ki zaroorat khatam.*
 
 Live demo yahan dekhein:
-https://nirvachakai-production.up.railway.app
+https://nirvachakai.up.railway.app
 
 Kya aap is hafte 30 minute nikal sakte hain?
 Main aapko aapki constituency ke saath demo dikha sakta hoon.
@@ -82,7 +82,7 @@ It is a complete election platform that gives you:
 *Priced per election cycle - not a monthly subscription.*
 So you can offer it as a service to each of your candidate clients.
 
-Demo: https://nirvachakai-production.up.railway.app
+Demo: https://nirvachakai.up.railway.app
 Pricing starts at Rs. 15,000 per election per constituency.
 
 Happy to discuss a *consultant referral arrangement* too.
@@ -113,7 +113,7 @@ To summarize what we covered:
 *Pro Plan - Rs. 35,000 for the full election cycle.*
 Includes unlimited users + training + support throughout.
 
-Live platform: https://nirvachakai-production.up.railway.app
+Live platform: https://nirvachakai.up.railway.app
 
 Any questions? Available on call anytime.
 
@@ -139,7 +139,7 @@ Ab campaign management bilkul alag level par:
 
 *India ke MLA, Ward aur MP elections ke liye specially built.*
 
-Demo link: https://nirvachakai-production.up.railway.app
+Demo link: https://nirvachakai.up.railway.app
 Contact: [YOUR EMAIL / PHONE]
 
 Forward karein jinhe kaam aa sake
@@ -169,7 +169,7 @@ we can structure it per seat or as a flat package for your state unit.
 I would appreciate 30 minutes with your IT / strategy team
 to walk through it.
 
-Demo: https://nirvachakai-production.up.railway.app
+Demo: https://nirvachakai.up.railway.app
 
 Looking forward to your response.
 
@@ -189,7 +189,7 @@ Chunav lad rahe hain?
 - Win probability AI
 - EC expense compliance
 
-Live demo: https://nirvachakai-production.up.railway.app
+Live demo: https://nirvachakai.up.railway.app
 Rs. 15,000 se shuru - per election only.
 
 
@@ -197,7 +197,7 @@ Rs. 15,000 se shuru - per election only.
 QUICK REFERENCE - Key Numbers for Any Message
 =====================================================================
 
-Platform URL    : https://nirvachakai-production.up.railway.app
+Platform URL    : https://nirvachakai.up.railway.app
 Contact Email   : contact@nirvachak.ai
 Starter Price   : Rs. 15,000 per election cycle
 Pro Price       : Rs. 35,000 per election cycle
